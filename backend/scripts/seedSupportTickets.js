@@ -3,7 +3,7 @@ const SupportTicket = require('../models/supportTicket.js');
 
 async function seedSupportTickets() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/sublite', {
+    await mongoose.connect('mongodb+srv://CipherCrew:ciphercrew@sublite.4cjuy3h.mongodb.net/sublite', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
