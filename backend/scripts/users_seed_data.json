@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Michael Brown",
+    "email": "heathchad@ramirez.com",
+    "phone": "+1-299-737-6311",
+    "password": "hashedpassword",
+    "userType": "provider",
+    "profilePicture": "https://placeimg.com/882/725/any",
+    "isVerified": false,
+    "isActive": true,
+    "rating": 4.9,
+    "totalRatings": 50,
+    "walletBalance": 762,
+    "businessName": "Owens-Daniel",
+    "businessDescription": "innovate mission-critical markets",
+    "businessCategory": "Gaming",
+    "businessLocation": {
+      "address": "33387 Robert Harbors Suite 317\nNorth Deniseside, AL 12725",
+      "city": "East Richard",
+      "state": "New Mexico",
+      "pincode": "28517",
+      "coordinates": {
+        "latitude": 17.653432,
+        "longitude": -148.520358
+      }
+    },
+    "preferredLocation": {
+      "city": "South Aaron",
+      "state": "Missouri"
+    },
+    "createdAt": "2025-02-21T11:56:08",
+    "updatedAt": "2025-06-02T06:02:01"
+  },
+  {
+    "name": "Dominique Horton",
+    "email": "jamesrobinson@gmail.com",
+    "phone": "001-805-009-7882",
+    "password": "hashedpassword",
+    "userType": "client",
+    "profilePicture": "https://dummyimage.com/116x164",
+    "isVerified": false,
+    "isActive": true,
+    "rating": 3.0,
+    "totalRatings": 114,
+    "walletBalance": 348,
+    "businessName": "Larson Ltd",
+    "businessDescription": "cultivate web-enabled interfaces",
+    "businessCategory": "Streaming",
+    "businessLocation": {
+      "address": "909 Robert Prairie\nSarahborough, VT 41681",
+      "city": "West Randy",
+      "state": "Texas",
+      "pincode": "85108",
+      "coordinates": {
+        "latitude": -9.470148,
+        "longitude": 65.470574
+      }
+    },
+    "preferredLocation": {
+      "city": "Sarahland",
+      "state": "Alabama"
+    },
+    "createdAt": "2025-03-30T23:45:55",
+    "updatedAt": "2025-05-01T14:48:42"
+  },
+  {
+    "name": "Dr. Angel Lewis MD",
+    "email": "suarezmike@gmail.com",
+    "phone": "849.808.4124x118",
+    "password": "hashedpassword",
+    "userType": "client",
+    "profilePicture": "https://placekitten.com/318/557",
+    "isVerified": false,
+    "isActive": true,
+    "rating": 4.0,
+    "totalRatings": 166,
+    "walletBalance": 102,
+    "businessName": "Clark, Cooper and Watts",
+    "businessDescription": "iterate back-end mindshare",
+    "businessCategory": "Music",
+    "businessLocation": {
+      "address": "64005 Dana Greens\nLake Scott, NE 74020",
+      "city": "North Charlesberg",
+      "state": "Ohio",
+      "pincode": "05223",
+      "coordinates": {
+        "latitude": 9.1106615,
+        "longitude": 132.732442
+      }
+    },
+    "preferredLocation": {
+      "city": "South David",
+      "state": "Maryland"
+    },
+    "createdAt": "2025-03-12T19:23:57",
+    "updatedAt": "2025-06-04T14:11:55"
+  }
+]

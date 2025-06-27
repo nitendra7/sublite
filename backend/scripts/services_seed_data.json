@@ -1,0 +1,54 @@
+[
+  {
+    "providerId": "507f1f77bcf86cd799439011",
+    "serviceName": "Premium Netflix Account",
+    "serviceType": "Streaming",
+    "description": "Access to a premium Netflix account for 30 days.",
+    "originalPrice": 20,
+    "rentalPrice": 5,
+    "rentalDuration": 30,
+    "maxUsers": 5,
+    "currentUsers": 2,
+    "features": ["HD Streaming", "Multiple Devices", "No Ads"],
+    "credentials": {
+      "username": "netflixuser1",
+      "password": "pass1234",
+      "profileName": "John Doe"
+    },
+    "serviceStatus": "active",
+    "subscriptionExpiry": "2025-12-31T23:59:59Z",
+    "images": ["https://dummyimage.com/600x400/000/fff&text=Netflix"],
+    "terms": "No sharing outside allowed users.",
+    "location": {
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    }
+  },
+  {
+    "providerId": "507f1f77bcf86cd799439012",
+    "serviceName": "Spotify Family Plan",
+    "serviceType": "Music",
+    "description": "Spotify Family Plan for up to 6 users.",
+    "originalPrice": 15,
+    "rentalPrice": 3,
+    "rentalDuration": 30,
+    "maxUsers": 6,
+    "currentUsers": 4,
+    "features": ["Ad-free Music", "Offline Listening"],
+    "credentials": {
+      "username": "spotifyuser2",
+      "password": "musicpass",
+      "profileName": "Jane Smith"
+    },
+    "serviceStatus": "active",
+    "subscriptionExpiry": "2025-11-30T23:59:59Z",
+    "images": ["https://dummyimage.com/600x400/000/fff&text=Spotify"],
+    "terms": "No password change allowed.",
+    "location": {
+      "city": "Los Angeles",
+      "state": "CA",
+      "country": "USA"
+    }
+  }
+] 

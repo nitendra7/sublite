@@ -1,0 +1,22 @@
+[
+  {
+    "userId": "507f1f77bcf86cd799439021",
+    "title": "Booking Confirmed",
+    "message": "Your booking for Netflix is confirmed!",
+    "type": "booking",
+    "isRead": false,
+    "relatedId": "507f1f77bcf86cd799439041",
+    "relatedType": "booking",
+    "createdAt": "2025-07-01T12:05:00Z"
+  },
+  {
+    "userId": "507f1f77bcf86cd799439022",
+    "title": "Payment Received",
+    "message": "Your payment for Spotify has been received.",
+    "type": "payment",
+    "isRead": true,
+    "relatedId": "507f1f77bcf86cd799439042",
+    "relatedType": "payment",
+    "createdAt": "2025-08-01T12:05:00Z"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "bookingId": "507f1f77bcf86cd799439041",
+    "clientId": "507f1f77bcf86cd799439021",
+    "providerId": "507f1f77bcf86cd799439011",
+    "amount": 5,
+    "platformFee": 0.5,
+    "providerAmount": 4.5,
+    "paymentMethod": "wallet",
+    "transactionId": "PAY123456",
+    "gatewayResponse": {"status": "success"},
+    "status": "success",
+    "createdAt": "2025-07-01T01:00:00Z",
+    "processedAt": "2025-07-01T01:05:00Z"
+  },
+  {
+    "bookingId": "507f1f77bcf86cd799439042",
+    "clientId": "507f1f77bcf86cd799439022",
+    "providerId": "507f1f77bcf86cd799439012",
+    "amount": 3,
+    "platformFee": 0.3,
+    "providerAmount": 2.7,
+    "paymentMethod": "card",
+    "transactionId": "PAY654321",
+    "gatewayResponse": {"status": "success"},
+    "status": "success",
+    "createdAt": "2025-08-01T01:00:00Z",
+    "processedAt": "2025-08-01T01:05:00Z"
+  }
+] 
