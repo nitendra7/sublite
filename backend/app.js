@@ -13,6 +13,7 @@ const notificationRoutes = require('./routes/notification');
 const supportTicketRoutes = require('./routes/supportTicket');
 const walletTransactionRoutes = require('./routes/walletTransaction');
 const settingRoutes = require('./routes/setting');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/support-tickets', supportTicketRoutes);
 app.use('/api/wallet-transactions', walletTransactionRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/auth', authRoutes);
 
 module.exports = app; 
