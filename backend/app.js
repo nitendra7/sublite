@@ -17,21 +17,7 @@ const authRoutes = require('./routes/auth');
 
 const app = express();
 
-// More explicit CORS configuration
-app.use(cors({
-  origin: true, // Allow all origins
-  credentials: true, // Allow credentials
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
-
-// Debug middleware to log headers
-app.use((req, res, next) => {
-  console.log('Request Headers:', req.headers);
-  console.log('Request Method:', req.method);
-  console.log('Request URL:', req.url);
-  next();
-});
+app.use(cors());
 
 // Connect to DB
 connect();
@@ -51,15 +37,5 @@ app.use('/api/support-tickets', supportTicketRoutes);
 app.use('/api/wallet-transactions', walletTransactionRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/auth', authRoutes);
-
-// Test route for debugging
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'Test endpoint working',
-    headers: req.headers,
-    method: req.method,
-    url: req.url
-  });
-});
 
 module.exports = app; 
