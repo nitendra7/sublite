@@ -23,6 +23,8 @@ const tabs = [
   { name: 'Settings', icon: <FaCog className="me-2" />, component: <SettingList /> },
 ];
 
+const API_BASE = 'https://sublite-wmu2.onrender.com';
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -35,7 +37,7 @@ function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -93,7 +95,7 @@ function RegisterPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, userType })
