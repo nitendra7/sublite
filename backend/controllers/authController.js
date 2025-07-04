@@ -18,7 +18,9 @@ exports.register = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(409).json({ error: 'Email already registered' });
     const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ ...req.body, password: hashed });
+    // Prevent privilege escalation
+    const { isAdmin, ...safeBody } = req.body;
+    const user = new User({ ...safeBody, password: hashed });
     await user.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {

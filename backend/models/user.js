@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true }, // hashed
 
     userType: { type: String, enum: ['client', 'provider'], required: true },
+    isAdmin: { type: Boolean, default: false },
     profilePicture: String,
 
     isVerified: { type: Boolean, default: false },
