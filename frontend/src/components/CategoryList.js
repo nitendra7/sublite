@@ -1,40 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE, apiFetch } from '../App';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
-
-function CategoryList() {
+export default function CategoryList() {
   const [categories, setCategories] = useState([]);
-  const [error, setError] = useState(null);
-
+  const [error, setError] = useState('');
   useEffect(() => {
-    fetch(`${API_BASE}/api/categories`)
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
+    apiFetch(`${API_BASE}/api/categories`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCategories(data);
+        else setError(data.error || 'Failed to fetch categories');
       })
-      .then(data => setCategories(data))
-      .catch(err => setError(err.message));
+      .catch(() => setError('Failed to fetch categories'));
   }, []);
-
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
-
+  if (error) return <div className="alert alert-danger">{error}</div>;
   return (
     <div>
-      <h2 className="mb-4">Categories</h2>
-      <div className="row g-4">
-        {categories.map(c => (
-          <div key={c._id || c.id} className="col-md-6 col-lg-4">
-            <div className="card h-100 shadow-sm border-0 rounded-4">
-              <div className="card-body">
-                <h5 className="card-title text-primary fw-bold mb-3">{c.name || c.categoryName}</h5>
-                <div className="mb-2"><span className="fw-semibold">Description:</span> {c.description}</div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <h3>Categories</h3>
+      <ul>
+        {categories.map(c => <li key={c._id}>{c.name}</li>)}
+      </ul>
     </div>
   );
-}
-
-export default CategoryList; 
+} 

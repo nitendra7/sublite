@@ -1,27 +1,26 @@
 import React, { useEffect, useState } from 'react';
-
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
+import { API_BASE, apiFetch } from '../App';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function WalletTransactionList() {
+export default function WalletTransactionList() {
   const [transactions, setTransactions] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/wallet-transactions`)
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
+    apiFetch(`${API_BASE}/api/wallet-transactions`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setTransactions(data);
+        else setError(data.error || 'Failed to fetch wallet transactions');
       })
-      .then(data => setTransactions(data))
-      .catch(err => setError(err.message));
+      .catch(() => setError('Failed to fetch wallet transactions'));
   }, []);
 
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
+  if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
     <div>
@@ -45,6 +44,4 @@ function WalletTransactionList() {
       </div>
     </div>
   );
-}
-
-export default WalletTransactionList; 
+} 

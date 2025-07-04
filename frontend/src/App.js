@@ -1,29 +1,17 @@
+import { jwtDecode } from 'jwt-decode';
 import React, { useState } from 'react';
-import { FaBell, FaBook, FaCog, FaCreditCard, FaLifeRing, FaMoon, FaStar, FaSun, FaTags, FaThList, FaWallet } from 'react-icons/fa';
-import { Navigate, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
-import BookingList from './components/BookingList';
-import CategoryList from './components/CategoryList';
-import NotificationList from './components/NotificationList';
-import PaymentList from './components/PaymentList';
-import ReviewList from './components/ReviewList';
-import ServiceList from './components/ServiceList';
-import SettingList from './components/SettingList';
-import SupportTicketList from './components/SupportTicketList';
-import WalletTransactionList from './components/WalletTransactionList';
-
-const tabs = [
-  { name: 'Services', icon: <FaThList className="me-2" />, component: <ServiceList /> },
-  { name: 'Bookings', icon: <FaBook className="me-2" />, component: <BookingList /> },
-  { name: 'Payments', icon: <FaCreditCard className="me-2" />, component: <PaymentList /> },
-  { name: 'Reviews', icon: <FaStar className="me-2" />, component: <ReviewList /> },
-  { name: 'Categories', icon: <FaTags className="me-2" />, component: <CategoryList /> },
-  { name: 'Notifications', icon: <FaBell className="me-2" />, component: <NotificationList /> },
-  { name: 'Support Tickets', icon: <FaLifeRing className="me-2" />, component: <SupportTicketList /> },
-  { name: 'Wallet Transactions', icon: <FaWallet className="me-2" />, component: <WalletTransactionList /> },
-  { name: 'Settings', icon: <FaCog className="me-2" />, component: <SettingList /> },
-];
+import { FaBars, FaBell, FaBook, FaMoon, FaQuestionCircle, FaSearch, FaSignOutAlt, FaStar, FaSun, FaThLarge, FaUser, FaWallet } from 'react-icons/fa';
+import { Link, Navigate, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
+
+// Helper for authenticated API requests
+function apiFetch(url, options = {}) {
+  const token = localStorage.getItem('token');
+  const headers = { ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -45,6 +33,17 @@ function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
       localStorage.setItem('token', data.accessToken);
+      // Decode token to get user info
+      try {
+        const decoded = jwtDecode(data.accessToken);
+        if (decoded && decoded.name) {
+          localStorage.setItem('userName', decoded.name);
+        } else {
+          localStorage.removeItem('userName');
+        }
+      } catch (e) {
+        localStorage.removeItem('userName');
+      }
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -67,6 +66,10 @@ function LoginPage() {
         </div>
         {error && <div className="alert alert-danger">{error}</div>}
         <button type="submit" className="btn btn-primary w-100" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+        <div className="mt-3 text-center">
+          <span>New user? </span>
+          <Link to="/register">Sign up</Link>
+        </div>
       </form>
     </div>
   );
@@ -145,127 +148,184 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const brandColor = '#2bb6c4';
+const fontFamily = 'Inter, Roboto, Arial, sans-serif';
+
+const sidebarItems = [
+  { name: 'Dashboard', icon: <FaThLarge /> },
+  { name: 'My Subscriptions', icon: <FaBook /> },
+  { name: 'Wallet', icon: <FaWallet /> },
+  { name: 'Profile', icon: <FaUser /> },
+  { name: 'Reviews', icon: <FaStar /> },
+  { name: 'Support', icon: <FaQuestionCircle /> },
+  { name: 'Search', icon: <FaSearch /> },
+];
+
 function MainApp() {
-  const [tab, setTab] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [active, setActive] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
-  const mainBg = darkMode ? '#181a1b' : '#f8fafc';
-  const cardBg = darkMode ? '#23272b' : '#fff';
-  const textColor = darkMode ? '#f3f4f6' : '#222';
-  const accent = darkMode ? '#60a5fa' : '#2563eb';
+  const mainBg = darkMode ? '#f4f6f8' : '#f8fafc';
+  const accent = '#2bb6c4'; // Brand color from logo
+  const userName = localStorage.getItem('userName');
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem('token');
+
+  // Theme colors
+  const colors = darkMode
+    ? {
+        mainBg: '#181a1b',
+        sidebarBg: '#23272b',
+        headerBg: '#23272b',
+        cardBg: '#23272b',
+        text: '#f3f4f6',
+        sidebarText: '#f3f4f6',
+        sidebarActive: brandColor,
+        border: '#333',
+      }
+    : {
+        mainBg: '#f8fafc',
+        sidebarBg: '#fff',
+        headerBg: '#fff',
+        cardBg: '#fff',
+        text: '#222',
+        sidebarText: '#222',
+        sidebarActive: brandColor,
+        border: '#e5e7eb',
+      };
+
   return (
-    <div className={`container-fluid p-4${darkMode ? ' dark-mode' : ''}`} style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: mainBg, color: textColor }}>
-      <div className="mb-4" style={{
-        background: darkMode ? 'linear-gradient(90deg, #23272b 0%, #2563eb 100%)' : 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
-        borderRadius: '1rem',
-        padding: '2rem 2rem 1.5rem 2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 4px 24px rgba(37,99,235,0.08)',
-        color: darkMode ? '#f3f4f6' : '#fff'
-      }}>
-        <div className="d-flex align-items-center mb-3 justify-content-between">
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily, background: colors.mainBg }}>
+      {/* Sidebar */}
+      <nav className="d-flex flex-column align-items-center align-items-md-stretch shadow-sm" style={{ minWidth: sidebarOpen ? 200 : 64, width: sidebarOpen ? 200 : 64, transition: 'width 0.2s', zIndex: 1000, background: colors.sidebarBg, color: colors.sidebarText, borderRight: `1px solid ${colors.border}` }}>
+        <div className="d-flex flex-column align-items-center py-4" style={{ minHeight: 80 }}>
+          <img src="/logo.jpg" alt="logo" style={{ width: 48, height: 48, borderRadius: '50%', marginBottom: 8, cursor: 'pointer' }} onClick={() => setSidebarOpen(!sidebarOpen)} />
+          <button className="btn btn-link p-0" style={{ color: brandColor, fontSize: 24 }} onClick={() => setSidebarOpen(!sidebarOpen)}><FaBars /></button>
+        </div>
+        <ul className="nav flex-column w-100" style={{ marginTop: 24 }}>
+          {sidebarItems.map((item, idx) => (
+            <li key={item.name} className="nav-item">
+              <button
+                className={`nav-link d-flex align-items-center w-100 ${active === idx ? 'active' : ''}`}
+                style={{
+                  background: active === idx ? colors.sidebarActive : 'transparent',
+                  color: active === idx ? '#fff' : colors.sidebarText,
+                  fontWeight: active === idx ? 600 : 400,
+                  border: 'none',
+                  borderRadius: 8,
+                  margin: '4px 8px',
+                  padding: sidebarOpen ? '10px 16px' : '10px 8px',
+                  fontSize: 16,
+                  transition: 'all 0.2s',
+                  justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                }}
+                onClick={() => setActive(idx)}
+              >
+                {item.icon}
+                {sidebarOpen && <span className="ms-2">{item.name}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      {/* Main Content */}
+      <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: '100vh' }}>
+        {/* Header */}
+        <header className="d-flex align-items-center justify-content-between px-4 py-3 shadow-sm" style={{ minHeight: 72, background: colors.headerBg, color: colors.text, borderBottom: `1px solid ${colors.border}` }}>
           <div className="d-flex align-items-center">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="logo" style={{ width: 56, height: 56, marginRight: 16, borderRadius: '50%', background: '#fff', padding: 6, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} />
-            <h1 className="display-3 fw-bold mb-0" style={{ color: 'inherit', letterSpacing: '2px' }}>SubLite</h1>
+            <img src="/logo.jpg" alt="logo" style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 12 }} />
+            <h2 className="fw-bold mb-0" style={{ color: brandColor, letterSpacing: 1 }}>Sublite</h2>
           </div>
-          <div>
+          <div className="d-flex align-items-center">
             <button
-              className="btn btn-outline-light ms-2"
-              style={{ borderRadius: 24, fontSize: 24, background: darkMode ? '#23272b' : 'rgba(255,255,255,0.15)', color: darkMode ? '#f3f4f6' : '#fff', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'all 0.2s' }}
+              className="btn btn-outline-secondary me-2"
+              style={{ borderRadius: 24, fontSize: 20 }}
               onClick={() => setDarkMode(dm => !dm)}
               aria-label="Toggle dark mode"
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {darkMode ? <FaSun /> : <FaMoon />}
             </button>
-            {isAuthenticated ? (
-              <button className="btn btn-outline-light ms-2" onClick={() => { localStorage.removeItem('token'); navigate('/login'); }}>Logout</button>
-            ) : (
-              <>
-                <button className="btn btn-outline-light ms-2" onClick={() => navigate('/login')}>Login</button>
-                <button className="btn btn-outline-light ms-2" onClick={() => navigate('/register')}>Register</button>
-              </>
+            {userName && (
+              <span className="d-flex align-items-center ms-2">
+                <span style={{
+                  width: 36, height: 36, borderRadius: '50%', background: brandColor, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 18, marginRight: 8
+                }}>{getInitials(userName)}</span>
+                <span style={{ fontWeight: 500 }}>{userName}</span>
+              </span>
+            )}
+            {isAuthenticated && (
+              <button className="btn btn-link ms-3 text-danger" title="Logout" onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('userName'); navigate('/login'); }}><FaSignOutAlt size={22} /></button>
             )}
           </div>
-        </div>
-        <div className="btn-group flex-wrap" role="group" aria-label="Tabs">
-          {tabs.map((t, i) => (
-            <button
-              key={t.name}
-              onClick={() => setTab(i)}
-              className={`btn btn-outline-light mb-2 me-2 ${tab === i ? 'active' : ''}`}
-              style={{
-                fontWeight: tab === i ? 'bold' : 'normal',
-                borderWidth: tab === i ? 2 : 1,
-                background: tab === i ? '#fff' : 'transparent',
-                color: tab === i ? accent : '#fff',
-                boxShadow: tab === i ? '0 2px 8px rgba(37,99,235,0.08)' : 'none',
-                transition: 'all 0.2s',
-                borderRadius: 8
-              }}
-            >
-              {t.icon}{t.name}
-            </button>
-          ))}
-        </div>
+        </header>
+        {/* Main Content Area */}
+        <main className="flex-grow-1 p-4" style={{ background: colors.mainBg, color: colors.text, minHeight: 0 }}>
+          <div className="container-fluid">
+            {active === 0 && <Dashboard colors={colors} />}
+            {active === 1 && <MySubscriptions />}
+            {active === 2 && <Wallet />}
+            {active === 3 && <Profile />}
+            {active === 4 && <Reviews />}
+            {active === 5 && <Support />}
+            {active === 6 && <Search />}
+          </div>
+        </main>
       </div>
-      <div className="p-4 rounded shadow-sm border" style={{ background: cardBg, color: textColor }}>
-        {tabs[tab].component}
-      </div>
-      <style>{`
-        .card {
-          transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .card:hover {
-          box-shadow: 0 8px 32px rgba(37,99,235,0.15);
-          transform: translateY(-4px) scale(1.02);
-        }
-        .btn-outline-light.active, .btn-outline-light:active {
-          background: #fff !important;
-          color: #2563eb !important;
-          border-color: #fff !important;
-        }
-        .btn-outline-light:hover {
-          background: #e0e7ff !important;
-          color: #2563eb !important;
-        }
-        .dark-mode .btn-outline-light.active, .dark-mode .btn-outline-light:active {
-          background: #23272b !important;
-          color: #60a5fa !important;
-          border-color: #23272b !important;
-        }
-        .dark-mode .btn-outline-light:hover {
-          background: #181a1b !important;
-          color: #60a5fa !important;
-        }
-        .dark-mode .card {
-          background: #23272b !important;
-          color: #f3f4f6 !important;
-          border: none !important;
-        }
-        .dark-mode .card-title {
-          color: #60a5fa !important;
-        }
-        .dark-mode .bg-success {
-          background-color: #22c55e !important;
-        }
-        .dark-mode .bg-secondary {
-          background-color: #64748b !important;
-        }
-        .dark-mode .bg-warning {
-          background-color: #facc15 !important;
-        }
-        .dark-mode .bg-info {
-          background-color: #38bdf8 !important;
-        }
-        .dark-mode .bg-danger {
-          background-color: #ef4444 !important;
-        }
-      `}</style>
     </div>
   );
 }
+
+// Placeholder components for each page
+function Dashboard({ colors }) {
+  return (
+    <div className="row g-4">
+      <div className="col-12 col-md-6 col-lg-4">
+        <div className="card h-100 shadow-sm border-0 rounded-4 p-4" style={{ background: colors.cardBg, color: colors.text }}>
+          <div className="mb-3" style={{ fontSize: 32, color: brandColor }}><FaThLarge /></div>
+          <h5 className="card-title fw-bold mb-2" style={{ color: brandColor }}>Available Plans</h5>
+          <div>Browse and book shared subscriptions from providers. (Filters, ratings, price, slots, etc.)</div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-lg-4">
+        <div className="card h-100 shadow-sm border-0 rounded-4 p-4" style={{ background: colors.cardBg, color: colors.text }}>
+          <div className="mb-3" style={{ fontSize: 32, color: brandColor }}><FaBook /></div>
+          <h5 className="card-title fw-bold mb-2" style={{ color: brandColor }}>My Subscriptions</h5>
+          <div>View your active and past bookings, status, dates, and access info.</div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-lg-4">
+        <div className="card h-100 shadow-sm border-0 rounded-4 p-4" style={{ background: colors.cardBg, color: colors.text }}>
+          <div className="mb-3" style={{ fontSize: 32, color: brandColor }}><FaWallet /></div>
+          <h5 className="card-title fw-bold mb-2" style={{ color: brandColor }}>Wallet</h5>
+          <div>Check your balance, top up, and view transaction history.</div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-lg-4">
+        <div className="card h-100 shadow-sm border-0 rounded-4 p-4" style={{ background: colors.cardBg, color: colors.text }}>
+          <div className="mb-3" style={{ fontSize: 32, color: brandColor }}><FaBell /></div>
+          <h5 className="card-title fw-bold mb-2" style={{ color: brandColor }}>Notifications</h5>
+          <div>Booking confirmations, reminders, and messages.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function MySubscriptions() { return <div>My Subscriptions (active/past bookings, status, dates, access info)</div>; }
+function Wallet() { return <div>Wallet (balance, top up, transaction history, refunds)</div>; }
+function Profile() { return <div>Profile (edit info, upload pic, view reviews)</div>; }
+function Reviews() { return <div>Reviews (leave/view reviews for providers)</div>; }
+function Support() { return <div>Support (FAQs, contact, report provider)</div>; }
+function Search() { return <div>Search (by platform, price, rating, etc.)</div>; }
+
+export { API_BASE, apiFetch };
 
 export default function App() {
   return (
