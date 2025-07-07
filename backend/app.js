@@ -27,16 +27,26 @@ connect();
 app.use(express.json());
 
 // Mount routes
-app.use('/api/users', auth, userRoutes);
-app.use('/api/services', auth, serviceRoutes);
-app.use('/api/bookings', auth, bookingRoutes);
-app.use('/api/payments', auth, paymentRoutes);
-app.use('/api/reviews', auth, reviewRoutes);
-app.use('/api/categories', auth, categoryRoutes);
-app.use('/api/notifications', auth, notificationRoutes);
-app.use('/api/support-tickets', auth, supportTicketRoutes);
-app.use('/api/wallet-transactions', auth, walletTransactionRoutes);
-app.use('/api/settings', auth, settingRoutes);
+// app.use('/api/users', auth, userRoutes); // Disabled auth for teacher testing
+app.use('/api/users', userRoutes); // Open access for teacher
+// app.use('/api/services', auth, serviceRoutes); // Disabled auth for teacher testing
+app.use('/api/services', serviceRoutes); // Open access for teacher
+// app.use('/api/bookings', auth, bookingRoutes); // Disabled auth for teacher testing
+app.use('/api/bookings', bookingRoutes); // Open access for teacher
+// app.use('/api/payments', auth, paymentRoutes); // Disabled auth for teacher testing
+app.use('/api/payments', paymentRoutes); // Open access for teacher
+// app.use('/api/reviews', auth, reviewRoutes); // Disabled auth for teacher testing
+app.use('/api/reviews', reviewRoutes); // Open access for teacher
+// app.use('/api/categories', auth, categoryRoutes); // Disabled auth for teacher testing
+app.use('/api/categories', categoryRoutes); // Open access for teacher
+// app.use('/api/notifications', auth, notificationRoutes); // Disabled auth for teacher testing
+app.use('/api/notifications', notificationRoutes); // Open access for teacher
+// app.use('/api/support-tickets', auth, supportTicketRoutes); // Disabled auth for teacher testing
+app.use('/api/support-tickets', supportTicketRoutes); // Open access for teacher
+// app.use('/api/wallet-transactions', auth, walletTransactionRoutes); // Disabled auth for teacher testing
+app.use('/api/wallet-transactions', walletTransactionRoutes); // Open access for teacher
+// app.use('/api/settings', auth, settingRoutes); // Disabled auth for teacher testing
+app.use('/api/settings', settingRoutes); // Open access for teacher
 app.use('/api/auth', authRoutes);
 
 module.exports = app; 
