@@ -4,6 +4,9 @@
   margin: auto;
 }
 
+
+
+
 .notifications-heading {
   font-size: 1.875rem;
   font-weight: bold;
@@ -13,6 +16,8 @@
   gap: 0.5rem;
 }
 
+
+/*  css file  */
 .tabs-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
