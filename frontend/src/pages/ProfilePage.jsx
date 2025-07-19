@@ -12,8 +12,10 @@ export default function ProfilePage() {
     image: null,
   });
 
+  const API_BASE = 'https://sublite-wmu2.onrender.com';
+
   useEffect(() => {
-    fetch(`http://localhost:3000/api/users/${userId}`)
+    fetch(`${API_BASE}/api/users/${userId}`)
       .then((res) => res.json())
       .then((data) => setProfile({ ...data, image: null }))
       .catch((err) => console.error("Error fetching user:", err));
@@ -35,7 +37,7 @@ export default function ProfilePage() {
     const updatedProfile = { ...profile };
     delete updatedProfile.image; // Image upload not handled in backend
 
-    fetch(`http://localhost:3000/api/users/${userId}`, {
+    fetch(`${API_BASE}/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

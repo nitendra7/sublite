@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Subscriptions.css';
+// import './Subscriptions.css';
 import { FaMoon, FaSun } from 'react-icons/fa';
 
 const Subscriptions = () => {

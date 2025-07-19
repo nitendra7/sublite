@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Star, User } from 'lucide-react';
 
+const API_BASE = 'https://sublite-wmu2.onrender.com';
+
 const ReviewPage = () => {
   const StarRating = ({ rating }) => (
     <div className="flex items-center gap-1">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 import { BadgeIndianRupee, Clock } from "lucide-react";
 
 const transactions = [
@@ -31,15 +31,15 @@ export default function WalletPage() {
 
       {/* Balance Section */}
       <Card className="mb-6">
-        <CardContent className="p-4">
+        {/* <CardContent className="p-4"> */}
           <h2 className="text-xl font-semibold text-sky-600 mb-2">Current Balance</h2>
           <p className="text-black text-2xl font-medium">₹{balance}</p>
-        </CardContent>
+        {/* </CardContent> */}
       </Card>
 
       {/* Top-Up Section */}
       <Card className="mb-6">
-        <CardContent className="p-4">
+        {/* <CardContent className="p-4"> */}
           <h2 className="text-xl font-semibold text-sky-600 mb-2">Top-Up Wallet</h2>
           <div className="flex items-center gap-4">
             <Input
@@ -53,12 +53,12 @@ export default function WalletPage() {
               Add Money
             </Button>
           </div>
-        </CardContent>
+        {/* </CardContent> */}
       </Card>
 
       {/* Transaction History */}
       <Card>
-        <CardContent className="p-4">
+        {/* <CardContent className="p-4"> */}
           <h2 className="text-xl font-semibold text-sky-600 mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5" /> Transaction History
           </h2>
@@ -83,7 +83,7 @@ export default function WalletPage() {
           ) : (
             <p className="text-sm text-gray-500">No transactions found.</p>
           )}
-        </CardContent>
+        {/* </CardContent> */}
       </Card>
     </div>
   );
