@@ -21,10 +21,10 @@ const authRoutes = require('./routes/auth');
 
 
 
-app.use(cors() , {
+app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000', 
   credentials: true, // Allow credentials
-});
+}));
 // Middleware
 app.use(express.json());
 
@@ -45,7 +45,7 @@ app.use('/api/auth', authRoutes);
 
 
 
-const PORT =  process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (_req, res) => {
   res.send('Hello World');
@@ -53,6 +53,6 @@ app.get('/', (_req, res) => {
 // Connect to DB
 connect();
 
-app.listen(port, () => {
+app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
