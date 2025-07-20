@@ -1,16 +1,17 @@
 import { jwtDecode } from 'jwt-decode';
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
-import AvailablePlans from './pages/Availableplans';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Signup';
 import ProfilePage from './pages/ProfilePage';
-import ReviewPage from './pages/review_page';
-import Subscriptions from './pages/Subscriptions';
-import WalletPage from './pages/wallet_page (1)';
-import Notifications from './pages/Notifications';
-import Home from './pages/home';
+import AvailablePlans from './pages/Availableplans';
+import Subscriptions from './pages/SubscriptionsPage';
+import WalletPage from './pages/WalletPage';
+import ReviewPage from './pages/ReviewPage';
+import Notifications from './pages/NotificationsPage.jsx';
+
 
 function LogoutPage() {
   const navigate = useNavigate();
