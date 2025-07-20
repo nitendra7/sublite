@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, User, Edit2 } from 'lucide-react';
+import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
 
 const ReviewPage = () => {
-  // Simulate current user name (replace with real user logic if available)
-  const currentUser = 'You';
+  const { user, loading: userContextLoading, error: userContextError } = useUser();
+  const currentUser = user?.name || user?.username || 'Guest'; // Use user's name or username from context
+  const currentUserId = user?._id; // Get user ID for identifying own reviews
 
   const [reviews, setReviews] = useState([
+    // Existing mock data - this should eventually be fetched from backend
     {
       _id: '1',
       clientName: 'Rahul Mehta',
@@ -37,6 +40,23 @@ const ReviewPage = () => {
   const [editComment, setEditComment] = useState('');
   const [editRating, setEditRating] = useState(5);
 
+  // You would typically fetch reviews from your API here
+  // useEffect(() => {
+  //   const fetchReviews = async () => {
+  //     if (!userContextLoading && !userContextError) {
+  //       try {
+  //         const res = await fetch(`${API_BASE}/api/reviews`); // Replace with your reviews API
+  //         const data = await res.json();
+  //         setReviews(data);
+  //       } catch (error) {
+  //         console.error("Failed to fetch reviews:", error);
+  //       }
+  //     }
+  //   };
+  //   fetchReviews();
+  // }, [userContextLoading, userContextError]);
+
+
   const StarRating = ({ rating, onChange, editable }) => (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -62,15 +82,24 @@ const ReviewPage = () => {
   const handleAddComment = (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    if (!currentUserId) { // Ensure user is logged in to add a review
+      alert("You must be logged in to add a review.");
+      return;
+    }
+
+    const newReview = {
+      _id: Date.now().toString(), // In a real app, this would be from backend
+      clientName: currentUser, // Use current user's name from context
+      // avatar: user?.image || '/api/placeholder/40/40', // Use user's image if available
+      avatar: '/api/placeholder/40/40',
+      rating: newRating,
+      comment: newComment,
+      createdAt: new Date().toISOString()
+      // You'd send this to your backend via API call
+    };
+
     setReviews([
-      {
-        _id: Date.now().toString(),
-        clientName: currentUser,
-        avatar: '/api/placeholder/40/40',
-        rating: newRating,
-        comment: newComment,
-        createdAt: new Date().toISOString()
-      },
+      newReview,
       ...reviews
     ]);
     setNewComment('');
@@ -79,6 +108,7 @@ const ReviewPage = () => {
 
   // Start editing (only allow if review is by current user)
   const handleEdit = (review) => {
+    // In a real app, you might check review.userId === currentUserId
     if (review.clientName !== currentUser) return;
     setEditingId(review._id);
     setEditComment(review.comment);
@@ -87,6 +117,7 @@ const ReviewPage = () => {
 
   // Save edit
   const handleSaveEdit = (id) => {
+    // You'd send this update to your backend via API call
     setReviews(reviews.map(r =>
       r._id === id ? { ...r, comment: editComment, rating: editRating } : r
     ));
@@ -97,6 +128,23 @@ const ReviewPage = () => {
   const handleCancelEdit = () => {
     setEditingId(null);
   };
+
+  if (userContextLoading) {
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-xl font-semibold text-[#2bb6c4]">Loading user data for reviews...</div>
+        </div>
+    );
+  }
+
+  // Display error if user context failed to load or no user
+  if (userContextError || !currentUserId) {
+    return (
+      <div className="min-h-screen py-10 px-4 relative overflow-hidden flex items-center justify-center">
+         <div className="text-xl font-semibold text-red-500">Please log in to add or view personal reviews.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-10 px-4 relative overflow-hidden">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Bell, CheckCircle, XCircle, Info, Gift } from "lucide-react";
+import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
 
 const API_BASE = "https://sublite-wmu2.onrender.com";
 
@@ -21,23 +22,58 @@ export default function NotificationPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Simulate userId from localStorage
-  const userId = localStorage.getItem("userId");
+  // Get userId, loading, and error from context
+  const { user, loading: userContextLoading, error: userContextError } = useUser();
+  const userId = user?._id; // Get userId from the user object in context
 
   useEffect(() => {
-    async function fetchNotifications() {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_BASE}/api/notifications?userId=${userId}`);
-        const data = await res.json();
-        setNotifications(data.reverse());
-      } catch {
-        setNotifications([]);
+    // Only fetch if userId is available and not still loading from context
+    if (!userContextLoading && !userContextError && userId) {
+      async function fetchNotifications() {
+        setLoading(true);
+        try {
+          // You might need to send a token with this request as well if notifications are protected
+          const token = localStorage.getItem("token"); // Assuming token is needed
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+          const res = await fetch(`${API_BASE}/api/notifications?userId=${userId}`, { headers });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || `HTTP error! Status: ${res.status}`);
+          }
+          setNotifications(data.reverse());
+        } catch (err) {
+          console.error("Error fetching notifications:", err.message);
+          setNotifications([]); // Clear notifications on error
+          // Optionally set a local error state for display
+        }
+        setLoading(false);
       }
-      setLoading(false);
+      fetchNotifications();
+    } else if (!userContextLoading && !userId) {
+        // If user is not available after context loading, clear notifications
+        setNotifications([]);
+        setLoading(false);
     }
-    fetchNotifications();
-  }, [userId]);
+  }, [userId, userContextLoading, userContextError]); // Depend on userId and context loading/error
+
+  // Handle global loading/error from context for initial page render
+  if (userContextLoading) {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 py-10 px-4 relative overflow-hidden">
+            <div className="text-xl font-semibold text-[#2bb6c4] dark:text-gray-200">Loading user data...</div>
+        </div>
+    );
+  }
+
+  if (userContextError || !userId) { // If there's a context error or no userId available
+      return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 py-10 px-4 relative overflow-hidden">
+              <div className="text-xl font-semibold text-red-500">Authentication required to view notifications.</div>
+          </div>
+      );
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 py-10 px-4 relative overflow-hidden animate-fade-in">
@@ -47,7 +83,7 @@ export default function NotificationPage() {
           <h1 className="text-3xl font-bold text-[#2bb6c4] drop-shadow">Notifications</h1>
         </div>
         <div className="bg-white/90 rounded-2xl shadow-xl p-6 min-h-[300px] animate-fade-in">
-          {loading ? (
+          {loading ? ( // This 'loading' is specific to fetching notifications
             <div className="flex justify-center items-center h-40">
               <svg className="animate-spin h-8 w-8 text-[#2bb6c4]" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#2bb6c4" strokeWidth="4" fill="none" />

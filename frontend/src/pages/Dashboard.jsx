@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Outlet } from 'react-router-dom'; // Added Outlet
 import {
   FaBars, FaBook, FaMoon, FaQuestionCircle, FaStar, FaSun, FaThLarge,
   FaUser, FaWallet, FaSignOutAlt, FaBell
 } from 'react-icons/fa';
+import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
 
 const brandColor = '#2bb6c4';
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
+// Adjusted routes for nested structure under /dashboard
 const sidebarItems = [
-  { name: 'Dashboard', icon: <FaThLarge />, route: '/' },
-  { name: 'My Subscriptions', icon: <FaBook />, route: '/subscriptions' },
-  { name: 'Wallet', icon: <FaWallet />, route: '/wallet' },
-  { name: 'Profile', icon: <FaUser />, route: '/profile' },
-  { name: 'Reviews', icon: <FaStar />, route: '/reviews' },
-  { name: 'Support', icon: <FaQuestionCircle />, route: '/support' }, // Add this route if you have a support page
+  { name: 'Dashboard', icon: <FaThLarge />, route: '/dashboard' },
+  { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
+  { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
+  { name: 'Profile', icon: <FaUser />, route: '/dashboard/profile' },
+  { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
+  { name: 'Support', icon: <FaQuestionCircle />, route: '/dashboard/support' },
 ];
 
 function getInitials(name) {
@@ -25,12 +27,16 @@ function getInitials(name) {
 
 function DashboardApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [active, setActive] = useState(0);
-  const [darkMode, setDarkMode] = useState(false);
-  const userName = localStorage.getItem('userName') || 'John Doe';
+  const [active, setActive] = useState(0); // This state should reflect current active route
+  const [darkMode, setDarkMode] = useState(false); // Consider centralizing this with a ThemeContext
   const navigate = useNavigate();
-  const isAuthenticated = !!localStorage.getItem('token');
+  
+  // Get user, loading, and clearAuthData from context
+  const { user, loading, clearAuthData } = useUser();
+  const userName = user?.name || localStorage.getItem('userName') || 'User'; // Use user.name from context, fallback to localStorage
+  const isAuthenticated = !!user || !!localStorage.getItem('token'); // Check if authenticated via context or localStorage
 
+  // Colors for dark/light mode
   const colors = darkMode
     ? {
         mainBg: '#181a1b',
@@ -58,6 +64,36 @@ function DashboardApp() {
     setActive(idx);
     navigate(route);
   };
+
+  // Effect to handle initial sidebar active state based on current route
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const activeIndex = sidebarItems.findIndex(item => currentPath.startsWith(item.route));
+    if (activeIndex !== -1) {
+      setActive(activeIndex);
+    }
+  }, [sidebarItems]);
+
+  // Logout handler
+  const handleLogout = () => {
+    clearAuthData(); // Use the context function to clear auth data
+    navigate('/login'); // Navigate to login page
+  };
+
+  // Display loading state from UserContext
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.mainBg, color: colors.text }}>
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  // If not authenticated after loading, redirect to login
+  if (!isAuthenticated && !loading) {
+      navigate('/login');
+      return null; // Return null to prevent rendering until redirection
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily, background: colors.mainBg }}>
@@ -164,6 +200,7 @@ function DashboardApp() {
               className="btn btn-outline-secondary me-2"
               style={{ borderRadius: 24, fontSize: 20 }}
               title="Notifications"
+              onClick={() => navigate('/dashboard/notifications')} // Adjusted for nested route
             >
               <FaBell />
             </button>
@@ -193,11 +230,7 @@ function DashboardApp() {
               <button
                 className="btn btn-link ms-3 text-danger"
                 title="Logout"
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('userName');
-                  navigate('/login');
-                }}
+                onClick={handleLogout}
               >
                 <FaSignOutAlt size={22} />
               </button>
@@ -207,8 +240,8 @@ function DashboardApp() {
 
         <main className="flex-grow-1 p-4" style={{ background: colors.mainBg, color: colors.text }}>
           <div className="container-fluid">
-            {/* You can optionally render children or nested routes here */}
-            {/* Example: <Outlet /> if using nested routes */}
+            {/* THIS IS CRUCIAL FOR NESTED ROUTES: Renders child routes */}
+            <Outlet /> 
           </div>
         </main>
       </div>
@@ -216,4 +249,4 @@ function DashboardApp() {
   );
 }
 
-export default DashboardApp
+export default DashboardApp;
