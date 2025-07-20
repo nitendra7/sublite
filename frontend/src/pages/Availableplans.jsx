@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useUser } from '../context/UserContext';
 
 const API_BASE = "https://sublite-wmu2.onrender.com";
 
@@ -9,21 +10,57 @@ function formatCurrency(amount) {
 export default function Plans() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Add a dedicated state for handling errors during the fetch.
+  const [error, setError] = useState(null);
+  // Get the logout function from context to handle auth failures gracefully.
+  const { logout } = useUser() || {};
 
   useEffect(() => {
     async function fetchPlans() {
       setLoading(true);
+      setError(null); // Reset error state on a new fetch attempt.
+
+      // 1. Get the authentication token from local storage.
+      //    This is required to access protected API routes.
+      const token = localStorage.getItem('token');
+
+      // 2. If no token is found, we cannot make an authenticated request.
+      if (!token) {
+        setError('Authentication required. Please log in.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch(`${API_BASE}/api/services`);
+        // 3. Add the 'Authorization' header to the fetch request.
+        //    The "Bearer" scheme is the standard way to send JWTs.
+        const res = await fetch(`${API_BASE}/api/services`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        // 4. Check for authentication errors from the server.
+        if (res.status === 401 || res.status === 403) {
+          if (logout) logout(); // Log the user out if the token is invalid/expired.
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        if (!res.ok) {
+          throw new Error(`Failed to fetch plans: ${res.statusText}`);
+        }
+
         const data = await res.json();
-        setPlans(data);
-      } catch {
-        setPlans([]); // Set to empty array on error
+        // 5. Safely set plans. Check if data is an array to prevent .map errors.
+        setPlans(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching plans:", err);
+        setError(err.message || 'An unexpected error occurred.');
+        setPlans([]); // Ensure plans is an empty array on error.
       }
       setLoading(false);
     }
     fetchPlans();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [logout]); // Re-run if the logout function changes.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 py-10 px-4 relative overflow-hidden animate-fade-in">
@@ -31,7 +68,10 @@ export default function Plans() {
         <h1 className="text-4xl font-bold text-center text-[#2bb6c4] mb-10 drop-shadow animate-slide-in-down">
           Available Plans
         </h1>
-        {loading ? (
+        {/* Handle the new error and loading states for a better UI */}
+        {error ? (
+          <div className="text-center text-red-400 text-lg mt-20">{error}</div>
+        ) : loading ? (
           <div className="flex justify-center items-center h-60">
             <svg className="animate-spin h-10 w-10 text-[#2bb6c4]" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#2bb6c4" strokeWidth="4" fill="none" />
