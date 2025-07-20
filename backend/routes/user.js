@@ -7,11 +7,11 @@ const admin = require('../middleware/admin');
 // Get all users
 router.get('/', admin, userController.getAllUsers); // Disabled admin for teacher testing
 // Get user by ID
-router.get('/:id', admin, userController.getUserById); // Disabled admin for teacher testing
+router.get('/:id', userController.getUserById); // User can get their own profile, admin can get any
 // Create a new user
 router.post('/', admin, userController.createUser); // Disabled admin for teacher testing
 // Update a user by ID
-router.put('/:id', admin, userController.updateUser); // Disabled admin for teacher testing
+router.put('/:id', userController.updateUser); // User can update their own profile, admin can update any
 // Delete a user by ID
 router.delete('/:id', admin, userController.deleteUser); // Disabled admin for teacher testing
 module.exports = router; 
