@@ -1,9 +1,9 @@
 import { jwtDecode } from 'jwt-decode';
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
-import Home from './pages/Home';
+import Home from './pages/Home.jsx';
 import Dashboard from './pages/Dashboard';
-import LoginPage from './pages/Login';
+import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Signup';
 import ProfilePage from './pages/ProfilePage';
 import AvailablePlans from './pages/Availableplans';
