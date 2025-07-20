@@ -5,7 +5,7 @@ const router = express.Router();
 // --- Dependencies for Razorpay Integration ---
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-const authMiddleware = require('../middleware/authMiddleware'); // Assuming you have auth middleware to get req.user
+const authMiddleware = require('../middleware/auth'); // Assuming you have auth middleware to get req.user
 
 // --- Razorpay Instance Initialization ---
 // IMPORTANT: These keys should be stored securely in your .env file
