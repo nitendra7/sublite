@@ -1,20 +1,19 @@
-// Dashboard.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaBars, FaBook, FaMoon, FaQuestionCircle, FaStar, FaSun, FaThLarge,
-  FaUser, FaWallet, FaSignOutAlt
+  FaUser, FaWallet, FaSignOutAlt, FaBell
 } from 'react-icons/fa';
 
 const brandColor = '#2bb6c4';
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 const sidebarItems = [
-  { name: 'Dashboard', icon: <FaThLarge /> },
-  { name: 'My Subscriptions', icon: <FaBook /> },
-  { name: 'Wallet', icon: <FaWallet /> },
-  { name: 'Profile', icon: <FaUser /> },
-  { name: 'Reviews', icon: <FaStar /> },
-  { name: 'Support', icon: <FaQuestionCircle /> },
+  { name: 'Dashboard', icon: <FaThLarge />, route: '/' },
+  { name: 'My Subscriptions', icon: <FaBook />, route: '/subscriptions' },
+  { name: 'Wallet', icon: <FaWallet />, route: '/wallet' },
+  { name: 'Profile', icon: <FaUser />, route: '/profile' },
+  { name: 'Reviews', icon: <FaStar />, route: '/reviews' },
+  { name: 'Support', icon: <FaQuestionCircle />, route: '/support' }, // Add this route if you have a support page
 ];
 
 function getInitials(name) {
@@ -54,6 +53,12 @@ function DashboardApp() {
         border: '#e5e7eb',
       };
 
+  // Handle sidebar navigation
+  const handleSidebarClick = (idx, route) => {
+    setActive(idx);
+    navigate(route);
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily, background: colors.mainBg }}>
       {/* Sidebar */}
@@ -66,7 +71,7 @@ function DashboardApp() {
           zIndex: 1000,
           background: colors.sidebarBg,
           color: colors.sidebarText,
-          borderRight: 1px solid ${colors.border},
+          borderRight: `1px solid ${colors.border}`,
         }}
       >
         <div className="d-flex flex-column align-items-center py-4" style={{ minHeight: 80 }}>
@@ -88,7 +93,9 @@ function DashboardApp() {
           {sidebarItems.map((item, idx) => (
             <li key={item.name} className="nav-item">
               <button
-                className={nav-link d-flex align-items-center w-100 ${active === idx ? 'active' : ''}}
+                className={
+                  `nav-link d-flex align-items-center w-100${active === idx ? ' active' : ''}`
+                }
                 style={{
                   background: active === idx ? colors.sidebarActive : 'transparent',
                   color: active === idx ? '#fff' : colors.sidebarText,
@@ -100,8 +107,10 @@ function DashboardApp() {
                   fontSize: 16,
                   transition: 'all 0.2s',
                   justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
-                onClick={() => setActive(idx)}
+                onClick={() => handleSidebarClick(idx, item.route)}
               >
                 {item.icon}
                 {sidebarOpen && <span className="ms-2">{item.name}</span>}
@@ -115,7 +124,12 @@ function DashboardApp() {
       <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: '100vh' }}>
         <header
           className="d-flex align-items-center justify-content-between px-4 py-3 shadow-sm flex-wrap gap-3"
-          style={{ minHeight: 72, background: colors.headerBg, color: colors.text, borderBottom: 1px solid ${colors.border} }}
+          style={{
+            minHeight: 72,
+            background: colors.headerBg,
+            color: colors.text,
+            borderBottom: `1px solid ${colors.border}`,
+          }}
         >
           <div className="d-flex align-items-center gap-3 flex-wrap">
             <div className="d-flex align-items-center">
@@ -131,7 +145,7 @@ function DashboardApp() {
                 minWidth: 180,
                 borderRadius: 24,
                 padding: '6px 16px',
-                border: 1px solid ${colors.border},
+                border: `1px solid ${colors.border}`,
                 background: darkMode ? '#2a2e33' : '#fff',
                 color: colors.text,
               }}
@@ -144,6 +158,14 @@ function DashboardApp() {
               onClick={() => setDarkMode((dm) => !dm)}
             >
               {darkMode ? <FaSun /> : <FaMoon />}
+            </button>
+            {/* Notification Icon */}
+            <button
+              className="btn btn-outline-secondary me-2"
+              style={{ borderRadius: 24, fontSize: 20 }}
+              title="Notifications"
+            >
+              <FaBell />
             </button>
             {userName && (
               <span className="d-flex align-items-center ms-2">
@@ -185,12 +207,8 @@ function DashboardApp() {
 
         <main className="flex-grow-1 p-4" style={{ background: colors.mainBg, color: colors.text }}>
           <div className="container-fluid">
-            {active === 0 && <div>Dashboard content here.</div>}
-            {active === 1 && <div>My Subscriptions</div>}
-            {active === 2 && <div>Wallet</div>}
-            {active === 3 && <div>Profile</div>}
-            {active === 4 && <div>Reviews</div>}
-            {active === 5 && <div>Support</div>}
+            {/* You can optionally render children or nested routes here */}
+            {/* Example: <Outlet /> if using nested routes */}
           </div>
         </main>
       </div>
@@ -198,4 +216,4 @@ function DashboardApp() {
   );
 }
 
-export default DashboardApp;
+export default DashboardApp
