@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from '../context/UserContext';
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://sublite-wmu2.onrender.com";
 
@@ -7,24 +8,19 @@ function formatCurrency(amount) {
   return `₹${amount.toLocaleString()}`;
 }
 
-export default function Plans() {
+export default function AvailablePlans() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Add a dedicated state for handling errors during the fetch.
   const [error, setError] = useState(null);
-  // Get the logout function from context to handle auth failures gracefully.
   const { logout } = useUser() || {};
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchPlans() {
       setLoading(true);
-      setError(null); // Reset error state on a new fetch attempt.
-
-      // 1. Get the authentication token from local storage.
-      //    This is required to access protected API routes.
+      setError(null);
       const token = localStorage.getItem('token');
 
-      // 2. If no token is found, we cannot make an authenticated request.
       if (!token) {
         setError('Authentication required. Please log in.');
         setLoading(false);
@@ -32,45 +28,46 @@ export default function Plans() {
       }
 
       try {
-        // 3. Add the 'Authorization' header to the fetch request.
-        //    The "Bearer" scheme is the standard way to send JWTs.
         const res = await fetch(`${API_BASE}/api/services`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
-        // 4. Check for authentication errors from the server.
         if (res.status === 401 || res.status === 403) {
-          if (logout) logout(); // Log the user out if the token is invalid/expired.
+          if (logout) logout();
           throw new Error('Authentication failed. Please log in again.');
         }
+
         if (!res.ok) {
           throw new Error(`Failed to fetch plans: ${res.statusText}`);
         }
 
         const data = await res.json();
-        // 5. Safely set plans. Check if data is an array to prevent .map errors.
         setPlans(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching plans:", err);
         setError(err.message || 'An unexpected error occurred.');
-        setPlans([]); // Ensure plans is an empty array on error.
+        setPlans([]);
       }
       setLoading(false);
     }
     fetchPlans();
-  }, [logout]); // Re-run if the logout function changes.
+  }, [logout]);
+
+  const handleBookNow = (planId) => {
+    navigate(`/subscription/${planId}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 py-10 px-4 relative overflow-hidden animate-fade-in">
+    <div className="min-h-screen bg-[#f0faff] py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-[#2bb6c4] mb-10 drop-shadow animate-slide-in-down">
+        <h1 className="text-4xl font-bold text-center text-[#2bb6c4] mb-10 animate-slide-in-down">
           Available Plans
         </h1>
-        {/* Handle the new error and loading states for a better UI */}
+
         {error ? (
-          <div className="text-center text-red-400 text-lg mt-20">{error}</div>
+          <div className="text-center text-red-500 text-lg mt-20">{error}</div>
         ) : loading ? (
           <div className="flex justify-center items-center h-60">
             <svg className="animate-spin h-10 w-10 text-[#2bb6c4]" viewBox="0 0 24 24">
@@ -79,64 +76,73 @@ export default function Plans() {
             </svg>
           </div>
         ) : plans.length === 0 ? (
-          <div className="text-center text-gray-300 text-lg mt-20">No plans available right now.</div>
+          <div className="text-center text-gray-500 text-lg mt-20">No plans available right now.</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan, idx) => (
               <div
                 key={plan._id}
-                className={`
-                  bg-gradient-to-br from-slate-800 via-gray-900 to-blue-900
-                  rounded-3xl shadow-2xl p-7 flex flex-col gap-4
-                  text-white border border-[#2bb6c4]/30
-                  hover:scale-[1.03] hover:shadow-blue-900/40 transition-all duration-500
+                className={`bg-white rounded-2xl shadow-lg border border-[#2bb6c4]/30
+                  p-6 flex flex-col gap-4
+                  hover:scale-[1.02] hover:shadow-md transition-all duration-300
                   animate-fade-in
-                  ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
-                `}
+                  ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}`}
                 style={{ animationDelay: `${idx * 100 + 200}ms` }}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xl font-bold">{plan.serviceName}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#2bb6c4] text-white ml-auto">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-bold text-gray-800">{plan.serviceName}</h2>
+                  <span className="ml-auto px-3 py-1 text-xs font-semibold rounded-full bg-[#2bb6c4] text-white">
                     {plan.serviceType}
                   </span>
                 </div>
-                <div className="text-gray-300 text-sm mb-2">{plan.description}</div>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {plan.features && plan.features.map((f, i) => (
-                    <span key={i} className="bg-[#2bb6c4]/20 text-[#2bb6c4] px-2 py-0.5 rounded text-xs">{f}</span>
+
+                <p className="text-gray-600 text-sm">{plan.description}</p>
+
+                <div className="flex flex-wrap gap-2">
+                  {plan.features?.map((f, i) => (
+                    <span key={i} className="bg-[#2bb6c4]/10 text-[#2bb6c4] px-2 py-0.5 rounded text-xs">
+                      {f}
+                    </span>
                   ))}
                 </div>
-                <div className="flex flex-wrap gap-4 items-center mb-2">
+
+                <div className="flex flex-wrap gap-4 items-center text-sm text-gray-700">
                   <div>
-                    <span className="block text-xs text-gray-400">Rental Price</span>
-                    <span className="text-lg font-bold">{formatCurrency(plan.rentalPrice)}</span>
+                    <div className="text-xs text-gray-500">Rental Price</div>
+                    <div className="font-bold">{formatCurrency(plan.rentalPrice)}</div>
                   </div>
                   <div>
-                    <span className="block text-xs text-gray-400">Duration</span>
-                    <span className="font-semibold">{plan.rentalDuration} days</span>
+                    <div className="text-xs text-gray-500">Duration</div>
+                    <div className="font-medium">{plan.rentalDuration} days</div>
                   </div>
                   <div>
-                    <span className="block text-xs text-gray-400">Slots</span>
-                    <span className="font-semibold">{plan.availableSlots - plan.currentUsers}/{plan.maxUsers}</span>
+                    <div className="text-xs text-gray-500">Slots</div>
+                    <div className="font-medium">
+                      {plan.availableSlots - plan.currentUsers}/{plan.maxUsers}
+                    </div>
                   </div>
                   <div>
-                    <span className="block text-xs text-gray-400">Status</span>
-                    <span className={`font-semibold ${plan.serviceStatus === "active" ? "text-green-400" : "text-red-400"}`}>
+                    <div className="text-xs text-gray-500">Status</div>
+                    <div className={`font-semibold ${plan.serviceStatus === "active" ? "text-green-500" : "text-red-500"}`}>
                       {plan.serviceStatus}
-                    </span>
+                    </div>
                   </div>
                 </div>
+
                 {plan.location && (
-                  <div className="text-xs text-gray-400 mb-2">
+                  <div className="text-xs text-gray-500">
                     {plan.location.city}, {plan.location.state}, {plan.location.country}
                   </div>
                 )}
-                <div className="flex gap-2 mt-2">
-                  <button className="flex-1 py-2 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow transition-all duration-200">
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    className="flex-1 py-2 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold transition-all"
+                    onClick={() => handleBookNow(plan._id)}
+                  >
                     Book Now
                   </button>
-                  <button className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#2bb6c4] font-bold shadow transition-all duration-200">
+                  <button className="flex-1 py-2 rounded-xl bg-[#2bb6c4]/10 hover:bg-[#2bb6c4]/20 text-[#2bb6c4] font-semibold transition-all">
                     Details
                   </button>
                 </div>
@@ -145,6 +151,7 @@ export default function Plans() {
           </div>
         )}
       </div>
+
       <style>
         {`
           @keyframes fade-in {
@@ -152,28 +159,28 @@ export default function Plans() {
             to { opacity: 1; }
           }
           .animate-fade-in {
-            animation: fade-in 0.7s ease both;
+            animation: fade-in 0.6s ease both;
           }
           @keyframes slide-in-left {
-            from { opacity: 0; transform: translateX(-40px);}
+            from { opacity: 0; transform: translateX(-30px);}
             to { opacity: 1; transform: translateX(0);}
           }
           .animate-slide-in-left {
-            animation: slide-in-left 0.7s cubic-bezier(.4,0,.2,1) both;
+            animation: slide-in-left 0.6s ease-out both;
           }
           @keyframes slide-in-right {
-            from { opacity: 0; transform: translateX(40px);}
+            from { opacity: 0; transform: translateX(30px);}
             to { opacity: 1; transform: translateX(0);}
           }
           .animate-slide-in-right {
-            animation: slide-in-right 0.7s cubic-bezier(.4,0,.2,1) both;
+            animation: slide-in-right 0.6s ease-out both;
           }
           @keyframes slide-in-down {
-            from { opacity: 0; transform: translateY(-40px);}
+            from { opacity: 0; transform: translateY(-20px);}
             to { opacity: 1; transform: translateY(0);}
           }
           .animate-slide-in-down {
-            animation: slide-in-down 0.7s cubic-bezier(.4,0,.2,1) both;
+            animation: slide-in-down 0.6s ease-out both;
           }
         `}
       </style>
