@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaMoon, FaSun } from 'react-icons/fa';
+import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
+
+const API_BASE = "https://sublite-wmu2.onrender.com"; // Define API_BASE if needed for fetching
 
 const Subscriptions = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(false); // Consider centralizing with ThemeContext
+  
+  // Get user from context
+  const { user, loading: userContextLoading, error: userContextError } = useUser();
+  const currentUserId = user?._id; // The ID of the currently logged-in user
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
-  const subscriptions = [
+  // This should eventually be fetched from your backend API
+  const [subscriptions, setSubscriptions] = useState([
     {
       id: 1,
       name: 'Netflix Premium',
@@ -16,7 +24,7 @@ const Subscriptions = () => {
       duration: '30 days',
       startDate: '2024-07-01',
       expiryDate: '2024-07-31',
-      user: 'rahul@email.com'
+      user: 'rahul@email.com' // This 'user' might be the email of the person who owns/shares it
     },
     {
       id: 2,
@@ -51,7 +59,53 @@ const Subscriptions = () => {
       expiryDate: '2024-08-10',
       user: 'rohan@email.com'
     }
-  ];
+  ]);
+
+  // Example of where you would fetch data from backend based on currentUserId
+  // useEffect(() => {
+  //   const fetchUserSubscriptions = async () => {
+  //     if (currentUserId) { // Only fetch if user ID is available
+  //       try {
+  //         const token = localStorage.getItem('token'); // Get token for auth
+  //         const response = await fetch(`${API_BASE}/api/subscriptions/${currentUserId}`, { // Replace with your actual API endpoint
+  //           headers: {
+  //             'Authorization': `Bearer ${token}`
+  //           }
+  //         });
+  //         const data = await response.json();
+  //         if (response.ok) {
+  //           setSubscriptions(data);
+  //         } else {
+  //           console.error("Failed to fetch subscriptions:", data.message);
+  //         }
+  //       } catch (error) {
+  //         console.error("Error fetching subscriptions:", error);
+  //       }
+  //     }
+  //   };
+  //   if (!userContextLoading && !userContextError) { // Ensure user context has loaded
+  //     fetchUserSubscriptions();
+  //   }
+  // }, [currentUserId, userContextLoading, userContextError]);
+
+
+  // Display loading/error from context if user data isn't ready
+  if (userContextLoading) {
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-xl font-semibold text-gray-700">Loading user data for subscriptions...</div>
+        </div>
+    );
+  }
+
+  if (userContextError || !currentUserId) {
+      return (
+          <div className="min-h-screen flex items-center justify-center">
+              <div className="text-xl font-semibold text-red-500">Authentication required to view your subscriptions.</div>
+          </div>
+      );
+  }
+
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen transition-colors duration-500 bg-gray-100 dark:bg-gray-900`}>

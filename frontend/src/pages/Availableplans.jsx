@@ -18,12 +18,12 @@ export default function Plans() {
         const data = await res.json();
         setPlans(data);
       } catch {
-        setPlans([]);
+        setPlans([]); // Set to empty array on error
       }
       setLoading(false);
     }
     fetchPlans();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 py-10 px-4 relative overflow-hidden animate-fade-in">

@@ -1,6 +1,7 @@
 import { jwtDecode } from 'jwt-decode';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
 
@@ -17,15 +18,19 @@ function SubliteLogo() {
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { setAuthError, fetchUserProfile } = useUser(); // Get context functions
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); // Local error for login form
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(''); // Clear local error
+    setAuthError(null); // Clear context-level auth error from previous attempts
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
@@ -33,21 +38,36 @@ function LoginPage() {
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
-      localStorage.setItem('token', data.accessToken);
-      try {
-        const decoded = jwtDecode(data.accessToken);
-        if (decoded && decoded.name) {
-          localStorage.setItem('userName', decoded.name);
-        } else {
-          localStorage.removeItem('userName');
-        }
-      } catch (e) {
-        localStorage.removeItem('userName');
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
       }
-      navigate('/');
+
+      const token = data.accessToken;
+      const decoded = jwtDecode(token); // Decode the JWT token
+
+      // Extract userId from the decoded token payload
+      const userId = decoded.userId || decoded.id || decoded.sub;
+
+      if (!userId) {
+        console.error("Decoded token payload:", decoded);
+        throw new Error('Login failed: User ID missing from authentication token.');
+      }
+
+      // Store authentication data in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', userId);
+      // Store userName from decoded token if available for display purposes
+      if (decoded.name) localStorage.setItem('userName', decoded.name);
+
+      // Trigger a re-fetch of user profile in context after successful login.
+      // This ensures the UserContext immediately has the latest user data.
+      await fetchUserProfile(); 
+
+      // Navigate to the dashboard after successful login
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.message); // Set local error for the login form
+      setAuthError(err.message); // Also set context error if needed for broader app state
     } finally {
       setLoading(false);
     }

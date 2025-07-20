@@ -33,7 +33,10 @@ function Signup() {
         body: JSON.stringify({ name, email, password, userType })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+      // On successful registration, navigate to login page
       navigate('/login');
     } catch (err) {
       setError(err.message);
