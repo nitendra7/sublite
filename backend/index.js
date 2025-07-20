@@ -3,7 +3,6 @@ const app = express();
 
 
 require('dotenv').config();
-const express = require('express');
 const cors = require('cors');
 const connect = require('./lib/db');
 const auth = require('./middleware/auth');
