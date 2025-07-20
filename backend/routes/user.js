@@ -2,6 +2,7 @@ const express = require('express');
 const userController = require('../controllers/userController');
 // const admin = require('../middleware/admin'); // Disabled admin for teacher testing
 const router = express.Router();
+const admin = require('../middleware/admin');
 
 // Get all users
 router.get('/', admin, userController.getAllUsers); // Disabled admin for teacher testing
