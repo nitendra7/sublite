@@ -1,10 +1,9 @@
 import { jwtDecode } from 'jwt-decode';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext'; // Correct path from src/pages to src/context
+import { useUser } from '../context/UserContext';
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
-
 
 function SubliteLogo() {
   // Simple stylized S logo SVG
@@ -29,8 +28,8 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(''); // Clear local error
-    setAuthError(null); // Clear context-level auth error from previous attempts
+    setError('');
+    setAuthError(null);
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -44,9 +43,8 @@ function LoginPage() {
       }
 
       const token = data.accessToken;
-      const decoded = jwtDecode(token); // Decode the JWT token
+      const decoded = jwtDecode(token);
 
-      // Extract userId from the decoded token payload
       const userId = decoded.userId || decoded.id || decoded.sub;
 
       if (!userId) {
@@ -54,21 +52,19 @@ function LoginPage() {
         throw new Error('Login failed: User ID missing from authentication token.');
       }
 
-      // Store authentication data in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('userId', userId);
-      // Store userName from decoded token if available for display purposes
       if (decoded.name) localStorage.setItem('userName', decoded.name);
 
-      // Trigger a re-fetch of user profile in context after successful login.
-      // This ensures the UserContext immediately has the latest user data.
-      await fetchUserProfile(); 
+      // --- MODIFIED LINE ---
+      // Pass the new userId and token directly to the function to ensure the context updates correctly.
+      await fetchUserProfile(userId, token);
 
-      // Navigate to the dashboard after successful login
+      // Navigate to the dashboard only AFTER the user profile has been fetched.
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message); // Set local error for the login form
-      setAuthError(err.message); // Also set context error if needed for broader app state
+      setError(err.message);
+      setAuthError(err.message);
     } finally {
       setLoading(false);
     }
@@ -136,9 +132,6 @@ function LoginPage() {
               <img src="https://www.svgrepo.com/show/475700/facebook-color.svg" alt="Facebook" className="w-6 h-6" />
             </button>
           </div>
-          <div className="mt-4 text-center text-gray-400 text-xs">
-            Join the millions of smart users who trust us to manage their subscriptions. Log in to access your personalized dashboard, track your portfolio, and make informed decisions.
-          </div>
         </div>
         {/* Right: Illustration */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#e0f7fa] via-[#b2ebf2] to-[#81d4fa] items-center justify-center relative">
@@ -150,25 +143,6 @@ function LoginPage() {
           />
         </div>
       </div>
-      {/* Animations */}
-      <style>
-        {`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.7s ease both;
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0);}
-            50% { transform: translateY(-18px);}
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-        `}
-      </style>
     </div>
   );
 }
