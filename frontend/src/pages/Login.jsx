@@ -5,24 +5,13 @@ import { useUser } from '../context/UserContext';
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
 
-function SubliteLogo() {
-  // Simple stylized S logo SVG
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-      <circle cx="22" cy="22" r="22" fill="#2bb6c4" />
-      <path d="M14 28c0 2.5 2.5 4 6 4s6-1.5 6-4-2.5-3-6-3-6-1-6-4 2.5-4 6-4 6 1.5 6 4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="32" cy="32" r="2" fill="#fff"/>
-    </svg>
-  );
-}
-
 function LoginPage() {
   const navigate = useNavigate();
-  const { setAuthError, fetchUserProfile } = useUser(); // Get context functions
+  const { setAuthError, fetchUserProfile } = useUser();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); // Local error for login form
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -37,7 +26,9 @@ function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
@@ -45,6 +36,8 @@ function LoginPage() {
       const token = data.accessToken;
       const decoded = jwtDecode(token);
 
+      // Extract the userId from the decoded token payload
+      // It might be named 'userId', 'id', or 'sub' depending on your token structure
       const userId = decoded.userId || decoded.id || decoded.sub;
 
       if (!userId) {
@@ -56,11 +49,9 @@ function LoginPage() {
       localStorage.setItem('userId', userId);
       if (decoded.name) localStorage.setItem('userName', decoded.name);
 
-      // --- MODIFIED LINE ---
-      // Pass the new userId and token directly to the function to ensure the context updates correctly.
+      // Pass the new userId and token directly to ensure the context updates correctly
       await fetchUserProfile(userId, token);
 
-      // Navigate to the dashboard only AFTER the user profile has been fetched.
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -73,10 +64,14 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-2">
       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in">
-        {/* Left: Login Form */}
+        {/* Left: Login Form Section */}
         <div className="w-full md:w-1/2 flex flex-col justify-center px-8 py-12">
           <div className="flex items-center gap-3 mb-8">
-            <SubliteLogo />
+            <img
+              src="/sub.jpg" // Source of your JPG logo in the public folder
+              alt="Sublite Logo"
+              className="w-11 h-11"
+            />
             <span className="text-2xl font-extrabold text-[#2bb6c4] tracking-tight">Sublite</span>
           </div>
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Welcome Back</h2>
@@ -122,6 +117,7 @@ function LoginPage() {
             <div className="flex-1 h-px bg-gray-200" />
           </div>
           <div className="flex gap-4 justify-center mb-2">
+            {/* Social login buttons with external SVG images */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
             </button>
@@ -133,7 +129,7 @@ function LoginPage() {
             </button>
           </div>
         </div>
-        {/* Right: Illustration */}
+        {/* Right: Illustration Section */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#e0f7fa] via-[#b2ebf2] to-[#81d4fa] items-center justify-center relative">
           <img
             src="https://cdn3d.iconscout.com/3d/premium/thumb/safe-box-6770327-5587972.png"
