@@ -190,10 +190,10 @@ function LoginPage() {
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Welcome Back</h2>
           <p className="text-gray-500 mb-8">Please enter your details</p>
           <div className="flex mb-6">
-            {/* Sign In button (active styling when on LoginPage) */}
-            <button className="flex-1 py-2 rounded-l-xl bg-[#f4f8fa] text-[#2bb6c4] font-semibold shadow-inner text-center">Sign In</button>
-            {/* Signup Link (inactive styling) - now with bg-gray-50 and text-[#2bb6c4] */}
-            <Link to="/register" className="flex-1 py-2 rounded-r-xl bg-gray-50 text-[#2bb6c4] font-semibold border border-l-0 border-gray-200 shadow-inner hover:text-[#2bb6c4] transition text-center">Signup</Link>
+            {/* Active 'Sign In' button */}
+            <button className="flex-1 py-2 rounded-l-xl bg-[#2bb6c4] text-white font-semibold shadow-md text-center transition-colors">Sign In</button>
+            {/* Inactive 'Signup' link */}
+            <Link to="/register" className="flex-1 py-2 rounded-r-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition text-center">Signup</Link>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

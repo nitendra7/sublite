@@ -58,15 +58,15 @@ function Signup() {
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Create Account</h2>
           <p className="text-gray-500 mb-8">Sign up to get started</p>
           <div className="flex mb-6">
-            {/* Inactive 'Sign In' link - consistent with LoginPage's inactive state */}
+            {/* Inactive 'Sign In' link */}
             <Link
               to="/login"
-              className="flex-1 py-2 rounded-l-xl bg-gray-50 text-[#2bb6c4] font-semibold border border-r-0 border-gray-200 shadow-inner hover:text-[#2bb6c4] transition text-center"
+              className="flex-1 py-2 rounded-l-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition text-center"
             >
               Sign In
             </Link>
-            {/* Active 'Signup' button - consistent with LoginPage's active state */}
-            <button className="flex-1 py-2 rounded-r-xl bg-[#f4f8fa] text-[#2bb6c4] font-semibold shadow-inner text-center">Signup</button>
+            {/* Active 'Signup' button */}
+            <button className="flex-1 py-2 rounded-r-xl bg-[#2bb6c4] text-white font-semibold shadow-md text-center transition-colors">Signup</button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
