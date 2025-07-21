@@ -1,22 +1,24 @@
+// App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
+import { useTheme } from './context/ThemeContext';
 
-import { ThemeProvider } from './context/ThemeContext';
 // Page components
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/Login';
-import SignupPage from './pages/Signup'; // Your signup page is named Signup.jsx
+import SignupPage from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-import ProfilePage from './pages/ProfilePage';
+import Availableplans from './pages/Availableplans';
 import SubscriptionsPage from './pages/SubscriptionsPage';
-import Availableplans from './pages/Availableplans'; // Your available plans page
-import NotificationsPage from './pages/NotificationsPage';
-import ReviewPage from './pages/ReviewPage';
 import WalletPage from './pages/WalletPage';
-import HomePage from './pages/HomePage'; // Correctly imported as HomePage
+import ProfilePage from './pages/ProfilePage';
+import ReviewPage from './pages/ReviewPage';
+import NotificationsPage from './pages/NotificationsPage';
 import SubscriptionDetails from './pages/SubscriptionDetails';
 
-// 🔐 Auth-protected wrapper
+
+// PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.
 const PrivateRoute = () => {
   const { user, loading } = useUser();
   const token = localStorage.getItem('token');
@@ -32,43 +34,52 @@ const PrivateRoute = () => {
   return user || token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
+// ProtectedLayout component: A layout component for protected routes.
+// It receives theme state from the top-level App component and passes it down.
+const ProtectedLayout = ({ darkMode, toggleDarkMode }) => {
+  return <Outlet />;
+};
+
+
 function App() {
+  // Consume ThemeContext at the top level to provide theme state globally.
+  const { darkMode, toggleDarkMode } = useTheme();
+
   return (
     <Router>
-      <ThemeProvider>
-        <UserProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} /> {/* Using HomePage component */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<SignupPage />} /> {/* Route for SignupPage is /register */}
+      {/* UserProvider wraps the application to provide user authentication context. */}
+      <UserProvider>
+        {/* Routes define the different paths and their corresponding components. */}
+        <Routes>
+          {/* Public routes: Accessible without authentication. */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<SignupPage />} />
 
-            {/* Protected Routes */}
-            <Route element={<PrivateRoute />}>
-              {/* Dashboard Layout Routes */}
-              <Route path="/dashboard" element={<Dashboard />}>
-                {/* This index route means that if you go to exactly /dashboard, it will render Availableplans as the default content inside Dashboard's Outlet.
-                    If you want DashboardApp itself to render the overview (with AvailablePlansCard), and then nested routes for other pages,
-                    you would set index element={null} and DashboardApp would handle its own index content.
-                    Given previous discussions, I'll assume you want the Dashboard overview to be at /, and Availableplans at /available-plans. */}
-                <Route index element={<Availableplans />}/> {/* Default content for /dashboard */}
-                <Route path="available-plans" element={<Availableplans />} /> {/* Explicit route for available plans */}
-                <Route path="subscriptions" element={<SubscriptionsPage />} />
-                <Route path="wallet" element={<WalletPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="reviews" element={<ReviewPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
+          {/* Protected routes group: Access is guarded by PrivateRoute. */}
+          {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
+          <Route element={<PrivateRoute />}>
+              <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+                  {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
+                  <Route path="/dashboard" element={<Dashboard />}>
+                    <Route index element={<Availableplans />}/>
+                    <Route path="available-plans" element={<Availableplans />} />
+                    <Route path="subscriptions" element={<SubscriptionsPage />} />
+                    <Route path="wallet" element={<WalletPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                    <Route path="reviews" element={<ReviewPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
+                  </Route>
+
+                  {/* Standalone protected pages. */}
+                  <Route path="/subscription-details" element={<SubscriptionDetails />} />
               </Route>
+          </Route>
 
-              {/* Standalone protected page */}
-              <Route path="/subscription-details" element={<SubscriptionDetails />} />
-            </Route>
-
-            {/* Fallback Route: Redirects to home page for any unmatched paths */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </UserProvider>
-      </ThemeProvider>
+          {/* Fallback route: Redirects to home page for any undefined paths. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </UserProvider>
     </Router>
   );
 }
