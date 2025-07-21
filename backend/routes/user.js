@@ -1,17 +1,26 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-// const admin = require('../middleware/admin'); // Disabled admin for teacher testing
-const router = express.Router();
-const admin = require('../middleware/admin');
+const auth = require('../middleware/auth'); // Import the authentication middleware
+const admin = require('../middleware/admin'); // Import the admin middleware
+const upload = require('../middleware/upload'); // Import the Multer upload middleware (for Cloudinary)
 
-// Get all users
-router.get('/', admin, userController.getAllUsers); // Disabled admin for teacher testing
-// Get user by ID
-router.get('/:id', userController.getUserById); // User can get their own profile, admin can get any
-// Create a new user
-router.post('/', admin, userController.createUser); // Disabled admin for teacher testing
-// Update a user by ID
-router.put('/:id', userController.updateUser); // User can update their own profile, admin can update any
-// Delete a user by ID
-router.delete('/:id', admin, userController.deleteUser); // Disabled admin for teacher testing
-module.exports = router; 
+const router = express.Router();
+
+// Get all users (Admin protected)
+router.get('/', admin, userController.getAllUsers);
+
+// Get user by ID (Authenticated user can get their own profile, admin can get any)
+router.get('/:id', auth, userController.getUserById);
+
+// Create a new user (Admin protected - typically for backend creation, not user registration)
+router.post('/', admin, userController.createUser);
+
+// Update a user by ID (Protected: User can update their own profile, with file upload capability)
+// 'auth' middleware ensures user is logged in.
+// 'upload' middleware processes 'profilePicture' file and sends it to Cloudinary.
+router.put('/:id', auth, upload, userController.updateUser);
+
+// Delete a user by ID (Admin protected)
+router.delete('/:id', admin, userController.deleteUser);
+
+module.exports = router;
