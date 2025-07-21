@@ -30,11 +30,6 @@ export const UserProvider = ({ children }) => {
 
   const API_BASE = 'https://sublite-wmu2.onrender.com';
 
-  // Read userId and token directly inside the provider.
-  // This helps react to localStorage changes if another part of the app modifies it.
-  const currentUserId = localStorage.getItem("userId");
-  const currentToken = localStorage.getItem("token");
-
   // Function to clear all authentication-related data
   const clearAuthData = useCallback(() => {
     console.log("UserContext: Clearing authentication data.");
@@ -47,72 +42,72 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   // Function to fetch the user profile from the backend
+  // It now reads userId and token directly inside the function when called
   const fetchUserProfile = useCallback(async () => {
-    // If no userId or token, immediately set error and stop loading
-    if (!currentUserId || !currentToken) {
-      console.warn("UserContext: User ID or Token not found in localStorage. Cannot fetch profile.");
+    setLoading(true);
+    setError(null); // Clear previous errors before a new fetch
+
+    const userIdToFetch = localStorage.getItem("userId"); // Read inside useCallback
+    const tokenToFetch = localStorage.getItem("token");   // Read inside useCallback
+
+    if (!userIdToFetch || !tokenToFetch) {
+      console.warn("UserContext: User ID or Token not found in localStorage during fetch attempt. Cannot fetch profile.");
+      // No need to clearAuthData here, as there's nothing to clear or it was just cleared.
       setError("Please log in to view your profile.");
       setLoading(false);
       setUser(null);
       return;
     }
 
-    setLoading(true);
-    setError(null); // Clear previous errors before a new fetch
-
     try {
-      const res = await fetch(`${API_BASE}/api/users/${currentUserId}`, {
-        headers: { Authorization: `Bearer ${currentToken}` }
+      const res = await fetch(`${API_BASE}/api/users/${userIdToFetch}`, {
+        headers: { Authorization: `Bearer ${tokenToFetch}` }
       });
 
       if (!res.ok) {
-        // Specifically handle 401 (Unauthorized) or 403 (Forbidden) statuses.
-        // This implies the token is invalid or the user doesn't have access.
         if (res.status === 401 || res.status === 403) {
           console.error(`UserContext: Authentication error (${res.status}). Clearing data.`);
           clearAuthData(); // Clear invalid credentials
           throw new Error("Authentication failed. Please log in again.");
         }
-        // For other HTTP errors, parse and throw
         const errorData = await res.json();
         throw new Error(errorData.message || `HTTP error! Status: ${res.status}`);
       }
 
       const data = await res.json();
       console.log("UserContext: Fetched user data successfully:", data);
-      setUser(data); // Set the full user object received from the API
+      setUser(data);
     } catch (err) {
       console.error("UserContext: Error fetching user profile:", err.message);
       setError(`Failed to load user profile: ${err.message}`);
-      setUser(null); // Clear user data on error
+      setUser(null);
     } finally {
-      setLoading(false); // Always set loading to false when fetch completes or fails
+      setLoading(false);
     }
-  }, [currentUserId, currentToken, clearAuthData]); // Dependencies for useCallback
+  }, [clearAuthData]); // Dependencies for useCallback: only clearAuthData
 
   // Effect to trigger fetching the user profile when the component mounts
-  // or when currentUserId/currentToken changes.
+  // or when the token/userId *in localStorage* might have changed (indirectly via a re-render)
+  // We'll use a simple check for localStorage existence.
   useEffect(() => {
-    // Only attempt fetch if auth data exists, otherwise the `if` block in `fetchUserProfile` handles it.
-    if (currentUserId && currentToken) {
+    const initialUserId = localStorage.getItem("userId");
+    const initialToken = localStorage.getItem("token");
+
+    if (initialUserId && initialToken) {
       fetchUserProfile();
     } else {
-      // If no auth data, explicitly set state to non-loading, no user, and set error.
       setLoading(false);
       setUser(null);
       setError("Please log in to view your profile.");
     }
-  }, [currentUserId, currentToken, fetchUserProfile]); // Dependencies for useEffect
+  }, [fetchUserProfile]); // fetchUserProfile is stable due to useCallback, so it won't re-run endlessly
 
   // Function to update the user object within the context directly.
-  // This is used by components like ProfilePage after a successful update.
   const updateUserContext = useCallback((updatedUserData) => {
     setUser(prevUser => {
-      // If there's no previous user, just set the new data. Otherwise, merge.
       if (!prevUser) return updatedUserData;
       return { ...prevUser, ...updatedUserData };
     });
-    // Also update userName in localStorage if it's part of the updated data
     if (updatedUserData.name) {
       localStorage.setItem('userName', updatedUserData.name);
     }
@@ -123,19 +118,24 @@ export const UserProvider = ({ children }) => {
     setError(message);
   }, []);
 
-  // Memoize the context value to prevent unnecessary re-renders of consuming components.
-  // This ensures consumers only re-render when the actual values they depend on change.
-  const contextValue = useMemo(() => ({
-    user,
-    loading,
-    error,
-    userId: user?._id || currentUserId, // Prefer user._id if available, fallback to currentUserId
-    token: currentToken, // Token comes directly from localStorage, managed by Login/Logout
-    fetchUserProfile,
-    updateUserContext,
-    setAuthError,
-    clearAuthData,
-  }), [user, loading, error, currentUserId, currentToken, fetchUserProfile, updateUserContext, setAuthError, clearAuthData]);
+  // Memoize the context value
+  const contextValue = useMemo(() => {
+    // Read userId and token for contextValue only, they are not dependencies of fetchUserProfile itself anymore
+    const userIdInContext = localStorage.getItem("userId");
+    const tokenInContext = localStorage.getItem("token");
+
+    return {
+      user,
+      loading,
+      error,
+      userId: user?._id || userIdInContext, // Prefer user._id if available, fallback to localStorage
+      token: tokenInContext, // Token comes directly from localStorage
+      fetchUserProfile,
+      updateUserContext,
+      setAuthError,
+      clearAuthData,
+    };
+  }, [user, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData]);
 
   return (
     <UserContext.Provider value={contextValue}>

@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Apple, Facebook } from 'lucide-react'; // Import Lucide icons for consistency
+import { Apple, Facebook } from 'lucide-react';
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
-
-function SubliteLogo() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-      <circle cx="22" cy="22" r="22" fill="#2bb6c4" />
-      <path d="M14 28c0 2.5 2.5 4 6 4s6-1.5 6-4-2.5-3-6-3-6-1-6-4 2.5-4 6-4 6 1.5 6 4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="32" cy="32" r="2" fill="#fff"/>
-    </svg>
-  );
-}
 
 function Signup() {
   const navigate = useNavigate();
@@ -37,7 +27,6 @@ function Signup() {
       if (!res.ok) {
         throw new Error(data.error || 'Registration failed');
       }
-      // On successful registration, navigate to login page
       navigate('/login');
     } catch (err) {
       setError(err.message);
@@ -52,20 +41,26 @@ function Signup() {
         {/* Left: Signup Form */}
         <div className="w-full md:w-1/2 flex flex-col justify-center px-8 py-12">
           <div className="flex items-center gap-3 mb-8">
-            <SubliteLogo />
+            {/* Logo remains <img> */}
+            <img
+              src="/logo.jpg"
+              alt="Sublite Logo"
+              style={{ width: '48px', height: '48px', borderRadius: '50%' }}
+            />
             <span className="text-2xl font-extrabold text-[#2bb6c4] tracking-tight">Sublite</span>
           </div>
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Create Account</h2>
           <p className="text-gray-500 mb-8">Sign up to get started</p>
+          {/* REVERTED: Segmented Control Container Styling to previous desired state */}
           <div className="flex mb-6">
-            {/* Inactive 'Sign In' link */}
+            {/* INACTIVE Sign In Link */}
             <Link
               to="/login"
               className="flex-1 py-2 rounded-l-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition text-center"
             >
               Sign In
             </Link>
-            {/* Active 'Signup' button */}
+            {/* ACTIVE Signup Button */}
             <button className="flex-1 py-2 rounded-r-xl bg-[#2bb6c4] text-white font-semibold shadow-md text-center transition-colors">Signup</button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -126,15 +121,12 @@ function Signup() {
             <div className="flex-1 h-px bg-gray-200" />
           </div>
           <div className="flex gap-4 justify-center mb-2">
-            {/* Google Icon (remains img tag, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
             </button>
-            {/* Apple Icon (now Lucide, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
               <Apple size={24} className="text-gray-700" />
             </button>
-            {/* Facebook Icon (now Lucide, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
               <Facebook size={24} className="text-blue-600" />
             </button>
@@ -143,17 +135,16 @@ function Signup() {
             Already have an account? <Link to="/login" className="text-[#2bb6c4] hover:underline">Sign In</Link>
           </div>
         </div>
-        {/* Right: Illustration - now using /sub.png */}
+        {/* Right: Illustration - using /sub.png and proper sizing */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#e0f7fa] via-[#b2ebf2] to-[#81d4fa] items-center justify-center relative">
           <img
-            src="/sub.png" // Changed image source to /sub.png
-            alt="Sublite Illustration" // Updated alt text
+            src="/sub.png"
+            alt="Sublite Illustration"
             className="w-full h-auto object-contain drop-shadow-xl animate-float"
             draggable="false"
           />
         </div>
       </div>
-      {/* Animations - these remain unchanged */}
       <style>
         {`
           @keyframes fade-in {
@@ -162,13 +153,6 @@ function Signup() {
           }
           .animate-fade-in {
             animation: fade-in 0.7s ease both;
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0);}
-            50% { transform: translateY(-18px);}
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
           }
         `}
       </style>
