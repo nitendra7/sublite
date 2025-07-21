@@ -1,22 +1,8 @@
 import React, { useState } from 'react';
+import { useTheme } from '../context/ThemeContext'; // Import useTheme
 
-const brandColor = '#2bb6c4';
-
-const lightColors = {
-  cardBg: '#fff',
-  cardText: '#222',
-  badgeOwned: 'bg-blue-100 text-blue-700',
-  badgeBorrowed: 'bg-green-100 text-green-700',
-  statusActive: 'bg-green-200 text-green-800',
-  statusPending: 'bg-yellow-200 text-yellow-800',
-  statusCompleted: 'bg-gray-200 text-gray-800',
-  pageBgStart: '#e0f7fa',
-  pageBgEnd: '#e0f2f1',
-  modalBg: '#ffffffcc', // translucent white modal background
-};
-
-const Subscriptions = ({ darkMode = false }) => {
-  const colors = lightColors;
+const Subscriptions = () => {
+  const { darkMode } = useTheme(); // Consume dark mode state
   const [selectedSub, setSelectedSub] = useState(null);
   const [modalType, setModalType] = useState(null);
 
@@ -54,18 +40,27 @@ const Subscriptions = ({ darkMode = false }) => {
       expiryDate: '2024-07-15',
       user: 'nishant@email.com',
     },
-    {
-      id: 4,
-      name: 'Adobe Creative Cloud',
-      type: 'Owned',
-      status: 'pending',
-      price: 499,
-      duration: '30 days',
-      startDate: '2024-07-10',
-      expiryDate: '2024-08-10',
-      user: 'rohan@email.com',
-    },
   ];
+
+  // Helper function to get badge/status colors based on Tailwind classes.
+  const getBadgeClasses = (type) => {
+    return type === 'Owned'
+      ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100'
+      : 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-100';
+  };
+
+  const getStatusClasses = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-100';
+      case 'pending':
+        return 'bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100';
+      case 'completed':
+        return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      default:
+        return '';
+    }
+  };
 
   const openModal = (sub, type) => {
     setSelectedSub(sub);
@@ -78,17 +73,16 @@ const Subscriptions = ({ darkMode = false }) => {
   };
 
   return (
+    // Main page container with dark mode adaptable background and text colors.
     <div
-      className="w-full min-h-screen py-10 px-4"
-      style={{
-        background: `linear-gradient(to bottom right, ${colors.pageBgStart}, ${colors.pageBgEnd})`,
-      }}
+      className="w-full min-h-screen py-10 px-4 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
     >
-      <div className="max-w-5xl mx-auto text-center mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: colors.cardText }}>
+      {/* Removed text-center from this div to align heading left */}
+      <div className="max-w-5xl mx-auto mb-8"> 
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100"> {/* Heading is now left-aligned */}
           My Subscriptions
         </h1>
-        <p style={{ color: '#64748b' }}>
+        <p className="text-gray-600 dark:text-gray-300">
           Track your owned and borrowed services
         </p>
       </div>
@@ -97,37 +91,32 @@ const Subscriptions = ({ darkMode = false }) => {
         {subscriptions.map((sub, idx) => (
           <div
             key={sub.id}
+            // Card background and text color adapting to dark mode.
             className={`
               relative rounded-2xl shadow-2xl p-6 w-full sm:w-[360px]
               transform transition-all duration-500
               hover:scale-105 hover:shadow-[0_8px_32px_0_rgba(43,182,196,0.15)]
               animate-fade-in
               ${idx % 2 === 0 ? 'animate-slide-in-left' : 'animate-slide-in-right'}
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
             `}
             style={{
-              background: colors.cardBg,
-              color: colors.cardText,
               animationDelay: `${idx * 100}ms`,
             }}
           >
+            {/* Type badge styling */}
             <span className={`
               absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold
-              ${sub.type === 'Owned' ? colors.badgeOwned : colors.badgeBorrowed}
+              ${getBadgeClasses(sub.type)}
             `}>
               {sub.type}
             </span>
 
+            {/* Subscription details */}
             <div className="text-xl font-semibold mb-2">{sub.name}</div>
             <div className="mb-1">
               <strong>Status:</strong>
-              <span className={`
-                ml-2 px-2 py-0.5 rounded-full text-xs font-bold
-                ${sub.status === 'active'
-                  ? colors.statusActive
-                  : sub.status === 'pending'
-                    ? colors.statusPending
-                    : colors.statusCompleted}
-              `}>
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${getStatusClasses(sub.status)}`}>
                 {sub.status}
               </span>
             </div>
@@ -149,11 +138,8 @@ const Subscriptions = ({ darkMode = false }) => {
                 </button>
               )}
               <button
-                className="px-4 py-1 rounded-lg transition-all duration-300 shadow"
-                style={{
-                  background: '#e0f7fa',
-                  color: '#222',
-                }}
+                // View Details button styling
+                className="px-4 py-1 rounded-lg transition-all duration-300 shadow bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 onClick={() => openModal(sub, 'details')}
               >
                 View Details
@@ -165,16 +151,18 @@ const Subscriptions = ({ darkMode = false }) => {
 
       {/* Modal */}
       {selectedSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div // Overlay background
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{
-            background: `linear-gradient(to bottom right, #b2ebf2aa, #e0f2f1aa)`,
+            background: `linear-gradient(to bottom right, ${darkMode ? '#1f2937dd' : '#b2ebf2aa'}, ${darkMode ? '#1f2937dd' : '#e0f2f1aa'})`, // Adapt modal overlay to dark mode
           }}
         >
           <div
-            className="bg-white border border-blue-200 text-black p-6 rounded-xl w-[90%] max-w-md shadow-xl relative"
+            // Modal content box
+            className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 text-gray-900 dark:text-gray-100 p-6 rounded-xl w-[90%] max-w-md shadow-xl relative"
           >
             <button
-              className="absolute top-2 right-3 text-xl font-bold text-gray-500 hover:text-black"
+              className="absolute top-2 right-3 text-xl font-bold text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-gray-100" // Close button styling
               onClick={closeModal}
             >
               ×
@@ -182,7 +170,7 @@ const Subscriptions = ({ darkMode = false }) => {
 
             {modalType === 'details' && (
               <>
-                <h2 className="text-2xl font-bold mb-3 text-[#2bb6c4]">{selectedSub.name}</h2>
+                <h2 className="text-2xl font-bold mb-3 text-[#2bb6c4] dark:text-[#5ed1dc]">{selectedSub.name}</h2>
                 <p><strong>Type:</strong> {selectedSub.type}</p>
                 <p><strong>Status:</strong> {selectedSub.status}</p>
                 <p><strong>Price:</strong> ₹{selectedSub.price}</p>
@@ -195,7 +183,7 @@ const Subscriptions = ({ darkMode = false }) => {
 
             {modalType === 'renew' && (
               <>
-                <h2 className="text-2xl font-bold mb-4 text-[#2bb6c4]">Renew Subscription</h2>
+                <h2 className="text-2xl font-bold mb-4 text-[#2bb6c4] dark:text-[#5ed1dc]">Renew Subscription</h2>
                 <p>
                   Are you sure you want to renew <strong>{selectedSub.name}</strong> for another {selectedSub.duration} at ₹{selectedSub.price}?
                 </p>
@@ -210,7 +198,7 @@ const Subscriptions = ({ darkMode = false }) => {
                     Confirm
                   </button>
                   <button
-                    className="bg-gray-200 text-black px-4 py-1 rounded-lg"
+                    className="bg-gray-200 text-gray-900 px-4 py-1 rounded-lg dark:bg-gray-700 dark:text-gray-200" // Adapt cancel button
                     onClick={closeModal}
                   >
                     Cancel
@@ -222,7 +210,7 @@ const Subscriptions = ({ darkMode = false }) => {
         </div>
       )}
 
-      {/* Animations */}
+      {/* Animations (kept inline for simplicity and directness) */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; }

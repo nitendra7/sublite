@@ -8,15 +8,21 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Default button styling with dark mode variants.
+        default: "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:text-gray-100 dark:hover:bg-blue-800",
+        // Destructive button styling with dark mode variants.
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-red-500 text-white hover:bg-red-600 dark:bg-red-700 dark:text-gray-100 dark:hover:bg-red-800",
+        // Outline button styling with dark mode variants.
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-gray-300 bg-white hover:bg-gray-100 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 dark:hover:text-gray-100",
+        // Secondary button styling with dark mode variants.
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+        // Ghost button styling with dark mode variants.
+        ghost: "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+        // Link button styling with dark mode variants.
+        link: "text-blue-500 underline-offset-4 hover:underline dark:text-blue-400 dark:hover:text-blue-300",
       },
       size: {
         default: "h-10 px-4 py-2",
