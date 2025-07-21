@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Apple, Facebook } from 'lucide-react'; // Import Lucide icons for consistency
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
 
@@ -57,8 +58,15 @@ function Signup() {
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Create Account</h2>
           <p className="text-gray-500 mb-8">Sign up to get started</p>
           <div className="flex mb-6">
-            <Link to="/login" className="flex-1 py-2 rounded-l-xl bg-white text-gray-400 font-semibold border border-r-0 border-gray-200 shadow-inner hover:text-[#2bb6c4] transition">Sign In</Link>
-            <button className="flex-1 py-2 rounded-r-xl bg-[#f4f8fa] text-[#2bb6c4] font-semibold shadow-inner">Signup</button>
+            {/* Inactive 'Sign In' link - consistent with LoginPage's inactive state */}
+            <Link
+              to="/login"
+              className="flex-1 py-2 rounded-l-xl bg-gray-50 text-[#2bb6c4] font-semibold border border-r-0 border-gray-200 shadow-inner hover:text-[#2bb6c4] transition text-center"
+            >
+              Sign In
+            </Link>
+            {/* Active 'Signup' button - consistent with LoginPage's active state */}
+            <button className="flex-1 py-2 rounded-r-xl bg-[#f4f8fa] text-[#2bb6c4] font-semibold shadow-inner text-center">Signup</button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -118,31 +126,34 @@ function Signup() {
             <div className="flex-1 h-px bg-gray-200" />
           </div>
           <div className="flex gap-4 justify-center mb-2">
+            {/* Google Icon (remains img tag, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
             </button>
+            {/* Apple Icon (now Lucide, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
-              <img src="https://www.svgrepo.com/show/452234/apple.svg" alt="Apple" className="w-6 h-6" />
+              <Apple size={24} className="text-gray-700" />
             </button>
+            {/* Facebook Icon (now Lucide, consistent with LoginPage) */}
             <button className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
-              <img src="https://www.svgrepo.com/show/475700/facebook-color.svg" alt="Facebook" className="w-6 h-6" />
+              <Facebook size={24} className="text-blue-600" />
             </button>
           </div>
           <div className="mt-4 text-center text-gray-400 text-xs">
             Already have an account? <Link to="/login" className="text-[#2bb6c4] hover:underline">Sign In</Link>
           </div>
         </div>
-        {/* Right: Illustration */}
+        {/* Right: Illustration - now using /sub.png */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#e0f7fa] via-[#b2ebf2] to-[#81d4fa] items-center justify-center relative">
           <img
-            src="https://cdn3d.iconscout.com/3d/premium/thumb/safe-box-6770327-5587972.png"
-            alt="Sublite Safe"
-            className="w-80 h-80 object-contain drop-shadow-xl animate-float"
+            src="/sub.png" // Changed image source to /sub.png
+            alt="Sublite Illustration" // Updated alt text
+            className="w-full h-auto object-contain drop-shadow-xl animate-float"
             draggable="false"
           />
         </div>
       </div>
-      {/* Animations */}
+      {/* Animations - these remain unchanged */}
       <style>
         {`
           @keyframes fade-in {
