@@ -50,10 +50,10 @@ exports.getAllServices = async (req, res) => {
 };
 
 
-// @desc    Get services created by the logged-in user
-// @route   GET /api/services/my-services
-// @access  Private
-const getMyServices = async (req, res) => {
+/**
+ * @desc    Get services created by the logged-in user
+ */
+exports.getMyServices = async (req, res) => { // Changed from const to exports.getMyServices
     try {
         const services = await Service.find({ providerId: req.user.id });
         res.status(200).json(services);
@@ -93,5 +93,29 @@ exports.updateService = async (req, res) => {
         res.json(updatedService);
     } catch (err) {
         res.status(400).json({ message: 'Failed to update service.', error: err.message });
+    }
+};
+
+/**
+ * @desc    Delete a service owned by the user
+ */
+exports.deleteService = async (req, res) => { // ADDED THIS ENTIRE FUNCTION
+    try {
+        const service = await Service.findById(req.params.id);
+
+        if (!service) {
+            return res.status(404).json({ message: 'Service not found' });
+        }
+
+        // Authorization Check
+        if (service.providerId.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'User not authorized to delete this service' });
+        }
+        
+        await service.deleteOne();
+
+        res.status(200).json({ message: 'Service removed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

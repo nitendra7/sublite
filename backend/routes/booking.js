@@ -1,22 +1,27 @@
 const express = require('express');
-const bookingController = require('../controllers/bookingController');
+const router = express.Router();
+const {
+    createBooking,
+    sendMessageToBooking,
+    getAllBookingsForUser,
+    getBookingById,
+    getMyJoinedBookings
+} = require('../controllers/bookingController');
 const { auth } = require('../middleware/auth');
 
-const router = express.Router();
+// Create a new booking
+router.post('/', auth, createBooking);
 
-// --- Core Booking Flow ---
-// Create a new booking (client action)
-router.post('/', auth, bookingController.createBooking);
+// Get all bookings where the user is either the provider or client
+router.get('/all', auth, getAllBookingsForUser);
 
-// Send access details/message to a booking (provider action)
-router.post('/:bookingId/messages', auth, bookingController.sendMessageToBooking);
-
-
-// --- Data Retrieval ---
-// Get all bookings for the currently logged-in user (as either client or provider)
-router.get('/', auth, bookingController.getAllBookingsForUser);
+// Get only the bookings the user has JOINED
+router.get('/my-bookings', auth, getMyJoinedBookings);
 
 // Get a single booking by its ID
-router.get('/:id', auth, bookingController.getBookingById);
+router.get('/:id', auth, getBookingById);
+
+// Provider sends access details for a specific booking
+router.post('/:bookingId/send-message', auth, sendMessageToBooking);
 
 module.exports = router;

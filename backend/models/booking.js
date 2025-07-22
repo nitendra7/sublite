@@ -7,11 +7,11 @@ const bookingSchema = new mongoose.Schema({
   paymentId: { type: mongoose.Schema.ObjectId, ref: 'Payment', required: true }, // REPLACED paymentDetails
 
   bookingDetails: {
-    serviceName: String,
-    rentalPrice: Number,
-    rentalDuration: Number, // in days
+   serviceName: { type: String, required: true },
+    rentalPrice: { type: Number, required: true },
+    rentalDuration: { type: Number, required: true },
     startDate: { type: Date, default: Date.now },
-    endDate: Date
+    endDate: { type: Date, required: true }
   },
 
   bookingStatus: {

@@ -1,22 +1,32 @@
 const express = require('express');
 const serviceController = require('../controllers/serviceController');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../middleware/auth'); // Using your 'auth' middleware
 
 const router = express.Router();
 
 // --- Public Routes ---
-// Get all active and available services
 router.get('/', serviceController.getAllServices);
 
-// Get a single service by its ID
-router.get('/:id', serviceController.getServiceById);
+// --- Protected Routes ---
 
+// IMPORTANT: This route must come BEFORE the '/:id' route
+// Get services created by the currently logged-in user
+router.get('/my-services', auth, serviceController.getMyServices);
 
-// --- Protected Routes (for logged-in users/providers) ---
 // Create a new service
 router.post('/', auth, serviceController.createService);
 
+
+// --- Routes for a specific service by ID ---
+
+// Get a single service by its ID (can remain public)
+router.get('/:id', serviceController.getServiceById);
+
 // Update a service that you own
 router.put('/:id', auth, serviceController.updateService);
+
+// Delete a service that you own
+router.delete('/:id', auth, serviceController.deleteService);
+
 
 module.exports = router;

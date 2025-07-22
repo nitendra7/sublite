@@ -8,10 +8,7 @@ const { isProviderActive } = require('../utils/availability');
 const cancellationTimers = new Map();
 const CANCELLATION_WINDOW_MS = 15 * 60 * 1000;
 
-/**
- * @desc    Create a new booking
- */
-exports.createBooking = async (req, res) => {
+const createBooking = async (req, res) => {
   const { serviceId, paymentMethod = 'wallet' } = req.body;
   const clientId = req.user.id;
   let service;
@@ -82,10 +79,7 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-/**
- * @desc    Provider sends access details to a booking
- */
-exports.sendMessageToBooking = async (req, res) => {
+const sendMessageToBooking = async (req, res) => {
     const { bookingId } = req.params;
     const providerId = req.user.id;
 
@@ -151,10 +145,7 @@ async function cancelBookingDueToTimeout(bookingId) {
     }
 }
 
-/**
- * @desc    Get all bookings for the logged-in user
- */
-exports.getAllBookingsForUser = async (req, res) => {
+const getAllBookingsForUser = async (req, res) => {
     try {
         const bookings = await Booking.find({ $or: [{ clientId: req.user.id }, { providerId: req.user.id }] })
             .sort({ createdAt: -1 });
@@ -164,10 +155,18 @@ exports.getAllBookingsForUser = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get a single booking by ID
- */
-exports.getBookingById = async (req, res) => {
+const getMyJoinedBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({ clientId: req.user.id })
+            .populate('providerId', 'name username')
+            .sort({ createdAt: -1 });
+        res.json(bookings);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch your joined subscriptions: ' + err.message });
+    }
+};
+
+const getBookingById = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: req.params.id, $or: [{ clientId: req.user.id }, { providerId: req.user.id }] });
         if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
@@ -175,4 +174,12 @@ exports.getBookingById = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+};
+
+module.exports = {
+    createBooking,
+    sendMessageToBooking,
+    getAllBookingsForUser,
+    getMyJoinedBookings,
+    getBookingById
 };
