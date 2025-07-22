@@ -23,7 +23,8 @@ exports.createRazorpayOrder = async (req, res) => {
         const order = await razorpayInstance.orders.create(options);
         res.json(order);
     } catch (error) {
-        res.status(500).send("Error creating Razorpay order");
+        console.error("Error creating Razorpay order:", error);
+        res.status(500).json({ message: "Error creating Razorpay order" });
     }
 };
 
@@ -69,7 +70,11 @@ exports.verifyRazorpayPayment = async (req, res) => {
         return res.status(200).json({ message: "Payment verified and wallet updated successfully" });
 
     } catch (error) {
-        res.status(500).send("Error verifying payment");
+        // ======================= THIS IS THE FIX =======================
+        // It now sends a JSON response for errors, which the frontend expects.
+        console.error("Error verifying payment:", error);
+        res.status(500).json({ message: `Error verifying payment: ${error.message}` });
+        // ===============================================================
     }
 };
 
