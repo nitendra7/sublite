@@ -1,26 +1,26 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-const auth = require('../middleware/auth'); // Import the authentication middleware
-const admin = require('../middleware/admin'); // Import the admin middleware
-const upload = require('../middleware/upload'); // Import the Multer upload middleware (for Cloudinary)
+const { auth } = require('../middleware/auth');
+const { admin } = require('../middleware/admin');
 
 const router = express.Router();
 
-// Get all users (Admin protected)
-router.get('/', admin, userController.getAllUsers);
+// --- User-specific Routes ---
+// Get the currently logged-in user's profile
+router.get('/me', auth, userController.getMe);
 
-// Get user by ID (Authenticated user can get their own profile, admin can get any)
-router.get('/:id', auth, userController.getUserById);
+// Update the currently logged-in user's profile
+router.put('/me', auth, userController.updateMe);
 
-// Create a new user (Admin protected - typically for backend creation, not user registration)
-router.post('/', admin, userController.createUser);
+// Deactivate the currently logged-in user's account
+router.delete('/me', auth, userController.deactivateMe);
 
-// Update a user by ID (Protected: User can update their own profile, with file upload capability)
-// 'auth' middleware ensures user is logged in.
-// 'upload' middleware processes 'profilePicture' file and sends it to Cloudinary.
-router.put('/:id', auth, upload, userController.updateUser);
 
-// Delete a user by ID (Admin protected)
-router.delete('/:id', admin, userController.deleteUser);
+// --- Admin-only Routes ---
+// Get all users
+router.get('/', auth, admin, userController.getAllUsers);
+
+// Get a single user by their ID
+router.get('/:id', auth, admin, userController.getUserById);
 
 module.exports = router;
