@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle } from 'lucide-react';
+// Import the reusable Input component
+import { Input } from '../components/ui/input'; // Adjust the path if input.jsx is in a different directory
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
 
@@ -10,8 +12,7 @@ export default function ProfilePage() {
   const { darkMode } = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
-  // Renamed from formData to profile to match usage in JSX
-  const [profile, setProfile] = useState({ 
+  const [profile, setProfile] = useState({
     name: '',
     username: '',
     password: '',
@@ -28,7 +29,7 @@ export default function ProfilePage() {
     businessDescription: '',
     businessCategory: '',
     businessLocation: { address: '', city: '', state: '', pincode: '' },
-    coordinates: { latitude: 0, longitude: 0 }, // Added coordinates from schema
+    coordinates: { latitude: 0, longitude: 0 },
     preferredLocation: { city: '', state: '' },
   });
   const [initialProfile, setInitialProfile] = useState(null);
@@ -64,7 +65,7 @@ export default function ProfilePage() {
           state: user.businessLocation?.state || '',
           pincode: user.businessLocation?.pincode || '',
         },
-        coordinates: { // Initialize coordinates
+        coordinates: {
           latitude: user.coordinates?.latitude || 0,
           longitude: user.coordinates?.longitude || 0,
         },
@@ -124,7 +125,7 @@ export default function ProfilePage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
+
     if (!userId || !token) {
       setLocalError("Authentication required to save changes. Please log in.");
       return;
@@ -152,7 +153,7 @@ export default function ProfilePage() {
       }
       if (initialProfile?.coordinates?.latitude !== profile.coordinates?.latitude) dataToUpdate.append('coordinates.latitude', profile.coordinates.latitude);
       if (initialProfile?.coordinates?.longitude !== profile.coordinates?.longitude) dataToUpdate.append('coordinates.longitude', profile.coordinates.longitude);
-      
+
       if (initialProfile?.businessName !== profile.businessName) dataToUpdate.append('businessName', profile.businessName);
       if (initialProfile?.businessDescription !== profile.businessDescription) dataToUpdate.append('businessDescription', profile.businessDescription);
       if (initialProfile?.businessCategory !== profile.businessCategory) dataToUpdate.append('businessCategory', profile.businessCategory);
@@ -266,7 +267,7 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center mb-10">
           <div className="relative group animate-fade-in">
             <img
-              src={imagePreview || `https://placehold.co/150x150/e0e0e0/6c757d?text=${getInitialsAvatar(profile.name)}`} // Changed from formData.name to profile.name
+              src={imagePreview || `https://placehold.co/150x150/e0e0e0/6c757d?text=${getInitialsAvatar(profile.name)}`}
               alt="Profile"
               className="w-36 h-36 rounded-full object-cover shadow-lg border-4 border-white dark:border-gray-700 transition-transform duration-500 group-hover:scale-105"
             />
@@ -276,7 +277,7 @@ export default function ProfilePage() {
                 <label htmlFor="profilePictureInput" className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white cursor-pointer rounded-full">
                   <Camera size={32} />
                 </label>
-                <input
+                <input // This remains a standard input because it's type="file" and handles file selection
                   type="file"
                   id="profilePictureInput"
                   name="profilePicture"
@@ -300,62 +301,60 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Full Name</label>
-              <input
+              <Input
                 type="text"
                 id="name"
                 name="name"
-                value={profile.name} // Changed from formData.name to profile.name
+                value={profile.name}
                 onChange={handleChange}
                 readOnly={!isEditing}
-                className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
+                // The className from input.jsx will be applied, you can add more here if needed
+                // className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
               />
             </div>
             <div>
               <label htmlFor="username" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Username</label>
-              <input
+              <Input
                 type="text"
                 id="username"
                 name="username"
-                value={profile.username} // Changed from formData.username to profile.username
+                value={profile.username}
                 onChange={handleChange}
                 readOnly={!isEditing}
-                className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
               />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Email ID</label>
-              <input
+              <Input
                 type="email"
                 id="email"
                 name="email"
-                value={profile.email} // Changed from formData.email to profile.email
+                value={profile.email}
                 readOnly // Email is usually read-only
-                className="w-full px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300 read-only:bg-gray-100 dark:read-only:bg-gray-700"
+                className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300" // Added specific class for read-only background
               />
             </div>
             <div>
               <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Phone Number</label>
-              <input
+              <Input
                 type="tel"
                 id="phone"
                 name="phone"
-                value={profile.phone} // Changed from formData.phone to profile.phone
+                value={profile.phone}
                 onChange={handleChange}
                 readOnly={!isEditing}
-                className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
               />
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">New Password</label>
-              <input
+              <Input
                 type="password"
                 id="password"
                 name="password"
-                value={profile.password} // Changed from formData.password to profile.password
+                value={profile.password}
                 onChange={handleChange}
                 readOnly={!isEditing}
                 placeholder={isEditing ? "Enter new password" : "********"}
-                className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
               />
             </div>
             {/* User Status */}
@@ -388,35 +387,33 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label htmlFor="businessName" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Business Name</label>
-                  <input
+                  <Input
                     type="text"
                     id="businessName"
                     name="businessName"
-                    value={profile.businessName} // Changed from formData.businessName to profile.businessName
+                    value={profile.businessName}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
                   />
                 </div>
                 <div>
                   <label htmlFor="businessCategory" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category</label>
-                  <input
+                  <Input
                     type="text"
                     id="businessCategory"
                     name="businessCategory"
-                    value={profile.businessCategory} // Changed from formData.businessCategory to profile.businessCategory
+                    value={profile.businessCategory}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
                   />
                 </div>
               </div>
               <div className="mb-4">
                 <label htmlFor="businessDescription" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Business Description</label>
-                <textarea
+                <textarea // This remains a textarea
                   id="businessDescription"
                   name="businessDescription"
-                  value={profile.businessDescription} // Changed from formData.businessDescription to profile.businessDescription
+                  value={profile.businessDescription}
                   onChange={handleChange}
                   readOnly={!isEditing}
                   rows="3"
@@ -431,19 +428,19 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="businessLocation.address" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Address</label>
-                    <input type="text" id="businessLocation.address" name="businessLocation.address" value={profile.businessLocation.address} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                    <Input type="text" id="businessLocation.address" name="businessLocation.address" value={profile.businessLocation.address} onChange={handleChange} readOnly={!isEditing} />
                   </div>
                   <div>
                     <label htmlFor="businessLocation.city" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">City</label>
-                    <input type="text" id="businessLocation.city" name="businessLocation.city" value={profile.businessLocation.city} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                    <Input type="text" id="businessLocation.city" name="businessLocation.city" value={profile.businessLocation.city} onChange={handleChange} readOnly={!isEditing} />
                   </div>
                   <div>
                     <label htmlFor="businessLocation.state" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">State</label>
-                    <input type="text" id="businessLocation.state" name="businessLocation.state" value={profile.businessLocation.state} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                    <Input type="text" id="businessLocation.state" name="businessLocation.state" value={profile.businessLocation.state} onChange={handleChange} readOnly={!isEditing} />
                   </div>
                   <div>
                     <label htmlFor="businessLocation.pincode" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Pincode</label>
-                    <input type="text" id="businessLocation.pincode" name="businessLocation.pincode" value={profile.businessLocation.pincode} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                    <Input type="text" id="businessLocation.pincode" name="businessLocation.pincode" value={profile.businessLocation.pincode} onChange={handleChange} readOnly={!isEditing} />
                   </div>
                 </div>
               </div>
@@ -465,11 +462,11 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="preferredLocation.city" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">City</label>
-                  <input type="text" id="preferredLocation.city" name="preferredLocation.city" value={profile.preferredLocation.city} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                  <Input type="text" id="preferredLocation.city" name="preferredLocation.city" value={profile.preferredLocation.city} onChange={handleChange} readOnly={!isEditing} />
                 </div>
                 <div>
                   <label htmlFor="preferredLocation.state" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">State</label>
-                  <input type="text" id="preferredLocation.state" name="preferredLocation.state" value={profile.preferredLocation.state} onChange={handleChange} readOnly={!isEditing} className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700" />
+                  <Input type="text" id="preferredLocation.state" name="preferredLocation.state" value={profile.preferredLocation.state} onChange={handleChange} readOnly={!isEditing} />
                 </div>
               </div>
             </div>
