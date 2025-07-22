@@ -1,15 +1,16 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking', required: true },
-  clientId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
-  providerId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+  userId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+  
+  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking' },
+  providerId: { type: mongoose.Schema.ObjectId, ref: 'User' },
 
   amount: { type: Number, required: true },
   platformFee: Number,
   providerAmount: Number,
 
-  paymentMethod: { type: String, enum: ['wallet', 'card', 'upi'], required: true },
+  paymentMethod: { type: String, enum: ['wallet', 'card', 'upi', 'razorpay'] },
   transactionId: String,
   gatewayResponse: Object,
 
@@ -23,8 +24,8 @@ const paymentSchema = new mongoose.Schema({
   processedAt: Date
 });
 
+paymentSchema.index({ userId: 1 });
 paymentSchema.index({ bookingId: 1 });
-paymentSchema.index({ clientId: 1 });
 paymentSchema.index({ providerId: 1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ createdAt: -1 });
