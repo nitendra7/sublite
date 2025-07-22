@@ -9,7 +9,7 @@ router.post('/create-order', authMiddleware, paymentController.createRazorpayOrd
 // Route to verify the payment
 router.post('/verify', authMiddleware, paymentController.verifyRazorpayPayment);
 
-// Route to get all payments
-router.get('/', paymentController.getAllPayments);
+// Route to get all payments for the logged-in user
+router.get('/', authMiddleware, paymentController.getAllPayments);
 
 module.exports = router;

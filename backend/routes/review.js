@@ -1,11 +1,8 @@
-const express = require('express');
-const reviewController = require('../controllers/reviewController');
-const router = express.Router();
-
+// PUBLIC
 router.get('/', reviewController.getAllReviews);
 router.get('/:id', reviewController.getReviewById);
-router.post('/', reviewController.createReview);
-router.put('/:id', reviewController.updateReview);
-router.delete('/:id', reviewController.deleteReview);
 
-module.exports = router; 
+// PROTECTED
+router.post('/', authMiddleware, reviewController.createReview);
+router.put('/:id', authMiddleware, reviewController.updateReview);
+router.delete('/:id', authMiddleware, reviewController.deleteReview);

@@ -1,58 +1,72 @@
+// Import core libraries
 const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+// Import custom modules
+const connectDB = require('./lib/db');
+
+// --- Import all route files with direct names ---
+const auth = require('./routes/auth');
+const user = require('./routes/user');
+const service = require('./routes/service');
+const booking = require('./routes/booking');
+const payment = require('./routes/payment');
+const review = require('./routes/review');
+const notification = require('./routes/notification');
+const supportTicket = require('./routes/supportTicket');
+const category = require('./routes/category');
+const setting = require('./routes/setting');
+const walletTransaction = require('./routes/walletTransaction');
+
+
+// --- Initialize Express App ---
 const app = express();
 
 
-require('dotenv').config();
-const cors = require('cors');
-const connect = require('./lib/db');
-const auth = require('./middleware/auth');
-
-const userRoutes = require('./routes/user');
-const serviceRoutes = require('./routes/service');
-const bookingRoutes = require('./routes/booking');
-const paymentRoutes = require('./routes/payment');
-const reviewRoutes = require('./routes/review');
-const categoryRoutes = require('./routes/category');
-const notificationRoutes = require('./routes/notification');
-const supportTicketRoutes = require('./routes/supportTicket');
-const walletTransactionRoutes = require('./routes/walletTransaction');
-const settingRoutes = require('./routes/setting');
-const authRoutes = require('./routes/auth');
-
-
-
+// --- Core Middleware ---
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000', 
-  credentials: true, // Allow credentials
+  credentials: true,
 }));
-// Middleware
 app.use(express.json());
 
-// Mount routes
-app.use('/api/users', auth, userRoutes); 
- app.use('/api/services', auth, serviceRoutes); 
- app.use('/api/bookings', auth, bookingRoutes); 
- app.use('/api/payments', auth, paymentRoutes); 
- app.use('/api/reviews', auth, reviewRoutes); 
-app.use('/api/categories', auth, categoryRoutes);
-app.use('/api/notifications', auth, notificationRoutes); 
- app.use('/api/support-tickets', auth, supportTicketRoutes); 
- app.use('/api/wallet-transactions', auth, walletTransactionRoutes); 
- app.use('/api/settings', auth, settingRoutes); 
-app.use('/api/auth', authRoutes);
+
+// --- API Routes ---
+// Mount all the route handlers using the direct names
+app.use('/api/auth', auth);
+app.use('/api/users', user);
+app.use('/api/services', service);
+app.use('/api/bookings', booking);
+app.use('/api/payments', payment);
+app.use('/api/reviews', review);
+app.use('/api/notifications', notification);
+app.use('/api/support-tickets', supportTicket);
+app.use('/api/categories', category);
+app.use('/api/settings', setting);
+app.use('/api/wallettransactions', walletTransaction);
 
 
-
-
-
-const PORT = process.env.PORT || 3000;
+// --- Server Initialization ---
+const PORT = process.env.PORT || 5000;
 
 app.get('/', (_req, res) => {
-  res.send('Hello World');
+  res.send('Sublite API is running successfully!');
 });
-// Connect to DB
-connect();
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    bookingScheduler.start(); 
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to the database", error);
+    process.exit(1);
+  }
+};
+
+startServer();
