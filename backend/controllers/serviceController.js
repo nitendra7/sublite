@@ -49,6 +49,19 @@ exports.getAllServices = async (req, res) => {
   }
 };
 
+
+// @desc    Get services created by the logged-in user
+// @route   GET /api/services/my-services
+// @access  Private
+const getMyServices = async (req, res) => {
+    try {
+        const services = await Service.find({ providerId: req.user.id });
+        res.status(200).json(services);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error: Could not fetch your services.', error: error.message });
+    }
+};
+
 /**
  * @desc    Get a single service by its ID
  */
