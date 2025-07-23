@@ -5,12 +5,11 @@ require('dotenv').config();
 
 // Import custom modules
 const connectDB = require('./lib/db');
-const { start: initializeScheduler } = require('./jobs/bookingScheduler'); // Correct import
+const { start: initializeScheduler } = require('./jobs/bookingScheduler');
 
-// Firebase Admin SDK and JWT verification are now handled within middleware/auth.js.
 
 // Import all route files
-const authRoutes = require('./routes/auth'); // Will be an empty router
+const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const serviceRoutes = require('./routes/service');
 const bookingRoutes = require('./routes/booking');
@@ -33,8 +32,8 @@ app.use(cors({
 app.use(express.json());
 
 // API Routes
-// All authentication middleware (middleware/auth.js) will be applied within individual route files.
-app.use('/api/auth', authRoutes); // This router will now be empty or removed
+// Authentication middleware is applied within individual route files (middleware/auth.js).
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
