@@ -61,10 +61,12 @@ const isAuthenticated = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('Middleware: No token or malformed header.'); // Log the basic failure
         return res.status(401).send('Unauthorized: No token provided or malformed header.');
     }
 
     const token = authHeader.split('Bearer ')[1];
+    console.log('Middleware: Token received:', token.substring(0, 30) + '...'); // Log received token (first 30 chars)
 
     try {
         const firebaseDecodedToken = await admin.auth().verifyIdToken(token);
@@ -73,18 +75,30 @@ const isAuthenticated = async (req, res, next) => {
             _id: firebaseDecodedToken.uid,
             tokenType: 'firebase'
         };
+        console.log('Middleware: Firebase Token verified successfully. User UID:', req.user._id); // Log success
         return next();
     } catch (firebaseError) {
+        console.log('Middleware: Firebase Token verification failed:', firebaseError.message); // Log Firebase failure reason
         try {
+            // Check if ACCESS_TOKEN_SECRET is defined
+            if (!process.env.ACCESS_TOKEN_SECRET) {
+                console.error('Middleware: ACCESS_TOKEN_SECRET is NOT set!');
+                return res.status(500).send('Server Error: ACCESS_TOKEN_SECRET not configured.');
+            }
+            console.log('Middleware: Attempting custom JWT verification...');
+            // Log the secret being used (for debugging only, remove in production)
+            // console.log('Middleware: Using secret:', process.env.ACCESS_TOKEN_SECRET);
+
             const customDecodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
             req.user = {
                 ...customDecodedToken,
-                _id: customDecodedToken.id,
+                _id: customDecodedToken.id, // Assuming 'id' is in your custom JWT payload
                 tokenType: 'custom_jwt'
             };
+            console.log('Middleware: Custom JWT Verified successfully. User ID:', req.user._id); // Log success
             return next();
         } catch (customJwtError) {
-            console.error('Authentication Error:', customJwtError.message);
+            console.error('Middleware: Custom JWT Verification Failed! Error:', customJwtError.message); // Log custom JWT failure
             return res.status(403).send('Unauthorized: Invalid or expired token.');
         }
     }
