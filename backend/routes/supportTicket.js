@@ -8,4 +8,4 @@ router.post('/', supportTicketController.createSupportTicket);
 router.put('/:id', supportTicketController.updateSupportTicket);
 router.delete('/:id', supportTicketController.deleteSupportTicket);
 
-module.exports = router;
+module.exports = router; 

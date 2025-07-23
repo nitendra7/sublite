@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const {
     createBooking,
     sendMessageToBooking,
@@ -8,12 +9,19 @@ const {
     getMyJoinedBookings
 } = require('../controllers/bookingController');
 
-// All routes here are assumed to be protected by isAuthenticated middleware in index.js
+// Create a new booking
+router.post('/', auth, createBooking);
 
-router.post('/', createBooking);
-router.get('/all', getAllBookingsForUser);
-router.get('/my-bookings', getMyJoinedBookings);
-router.get('/:id', getBookingById);
-router.post('/:bookingId/send-message', sendMessageToBooking);
+// Get all bookings where the user is either the provider or client
+router.get('/all', auth, getAllBookingsForUser);
+
+// Get only the bookings the user has JOINED
+router.get('/my-bookings', auth, getMyJoinedBookings);
+
+// Get a single booking by its ID
+router.get('/:id', auth, getBookingById);
+
+// Provider sends access details for a specific booking
+router.post('/:bookingId/send-message', auth, sendMessageToBooking);
 
 module.exports = router;
