@@ -1,23 +1,7 @@
+// AuthPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useGoogleLogin } from '@react-oauth/google'; // Import the useGoogleLogin hook
 
-/**
- * AuthPage component provides a common wrapper for login and signup pages.
- * It contains shared UI elements like the logo, title, and social login buttons.
- *
- * @param {object} props - Component props.
- * @param {string} props.pageTitle - The main title for the page (e.g., "Welcome Back", "Create Account").
- * @param {string} props.pageSubtitle - The subtitle for the page (e.g., "Please enter your details", "Sign up to get started").
- * @param {string} props.activeTab - Indicates the currently active tab ('signin' or 'signup').
- * @param {JSX.Element} props.children - The content (form) to be rendered within the layout.
- * @param {string} props.error - An error message to display.
- * @param {boolean} props.loading - Loading state to disable buttons.
- * @param {Function} props.handleGoogleSuccess - Callback for successful Google login/signup.
- * @param {Function} props.handleGoogleError - Callback for Google login/signup errors.
- * @param {Function} props.handleFacebookLogin - Placeholder callback for Facebook login.
- * @param {Function} props.handleAppleLogin - Placeholder callback for Apple login.
- */
 function AuthPage({
   pageTitle,
   pageSubtitle,
@@ -25,25 +9,11 @@ function AuthPage({
   children,
   error,
   loading,
-  handleGoogleSuccess, // This will now be directly called by our custom button
-  handleGoogleError,   // This will now be directly called by our custom button
+  onGoogleClick,
+  onEmailPasswordSubmit, // New prop for email/password form submission
   handleFacebookLogin,
   handleAppleLogin,
 }) {
-  // Use the useGoogleLogin hook to get a function to initiate the login flow
-  const googleLogin = useGoogleLogin({
-    onSuccess: handleGoogleSuccess, // Pass the success handler from parent (Login/Signup)
-    onError: handleGoogleError,     // Pass the error handler from parent
-    flow: 'auth-code', // Recommended for robust server-side verification, or 'implicit' for client-side
-                       // Based on your previous backend explanation, 'implicit' (id_token) is what you were using directly.
-                       // If you want to continue sending the ID token directly from frontend, use 'implicit'.
-                       // If your backend handles authorization codes, use 'auth-code'.
-                       // For consistency with your previous LoginPage.js, let's assume 'implicit' (default for useGoogleLogin if not specified)
-                       // which means onSuccess receives credentialResponse directly.
-                       // For `credentialResponse.credential` you'll typically use `implicit` flow or omit `flow` which defaults to 'implicit'.
-  });
-
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 font-sans">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
@@ -78,7 +48,11 @@ function AuthPage({
           </Link>
         </div>
 
-        {children} {/* This is where the specific Login or Signup form will be rendered */}
+        {/* This is where the specific Login or Signup form will be rendered */}
+        {/* Pass onEmailPasswordSubmit to the form's onSubmit if needed */}
+        {React.Children.map(children, child =>
+            React.cloneElement(child, { onSubmit: onEmailPasswordSubmit || child.props.onSubmit })
+        )}
 
         <div className="my-5 flex items-center gap-2">
           <div className="flex-1 h-px bg-gray-200" />
@@ -87,10 +61,9 @@ function AuthPage({
         </div>
 
         <div className="flex gap-4 justify-center mb-4">
-          {/* NOW USING A CUSTOM BUTTON WITH useGoogleLogin HOOK */}
           <button
-            onClick={() => googleLogin()} // Call the login function from the hook
-            disabled={loading} // Disable if overall form is loading
+            onClick={onGoogleClick}
+            disabled={loading}
             className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
           >
             <img src="/google.svg" alt="Google" className="w-5 h-5" />
@@ -104,10 +77,8 @@ function AuthPage({
           </button>
         </div>
 
-        {/* Error display moved here for consistency across login/signup */}
         {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg mt-4">{error}</div>}
 
-        {/* Common "Already have an account?" link */}
         {activeTab === 'signup' && (
           <div className="text-center text-gray-400 text-xs mt-4">
             Already have an account?{' '}
