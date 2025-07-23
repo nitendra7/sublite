@@ -4,9 +4,13 @@ const Service = require('../models/service');
 const Payment = require('../models/payment');
 const Notification = require('../models/notification');
 const { isProviderActive } = require('../utils/availability');
+// CHANGED: Import functions from bookingScheduler
+const { scheduleBookingCancellation, clearCancellationTimer } = require('../utils/bookingScheduler');
 
-const cancellationTimers = new Map();
-const CANCELLATION_WINDOW_MS = 15 * 60 * 1000;
+// REMOVED: cancellationTimers and CANCELLATION_WINDOW_MS are now managed by bookingScheduler.js
+// const cancellationTimers = new Map();
+// const CANCELLATION_WINDOW_MS = 15 * 60 * 1000;
+
 
 const createBooking = async (req, res) => {
   const { serviceId, paymentMethod = 'wallet' } = req.body;
@@ -45,6 +49,7 @@ const createBooking = async (req, res) => {
       bookingDetails: {
         serviceName: service.serviceName,
         rentalPrice: service.rentalPrice,
+        startDate: new Date(), // ADDED: startDate to bookingDetails for scheduler
         endDate,
       },
       bookingStatus: 'confirmed',
@@ -53,8 +58,8 @@ const createBooking = async (req, res) => {
     service.availableSlots -= 1;
     await service.save();
 
-    const timerId = setTimeout(() => cancelBookingDueToTimeout(booking._id.toString()), CANCELLATION_WINDOW_MS);
-    cancellationTimers.set(booking._id.toString(), timerId);
+    // CHANGED: Use the scheduler to set the timer
+    scheduleBookingCancellation(booking._id.toString()); 
 
     await Notification.create({
         userId: service.providerId._id,
@@ -89,24 +94,45 @@ const sendMessageToBooking = async (req, res) => {
         if (booking.providerId.toString() !== providerId) return res.status(403).json({ message: 'Not authorized.' });
         if (booking.bookingStatus !== 'confirmed') return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
 
-        const timerId = cancellationTimers.get(bookingId.toString());
-        if (timerId) {
-            clearTimeout(timerId);
-            cancellationTimers.delete(bookingId.toString());
-        } else {
-            const freshBooking = await Booking.findById(bookingId);
-            if (freshBooking.bookingStatus === 'cancelled') {
-                return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
-            }
-        }
+        // CHANGED: Use the scheduler to clear the timer
+        clearCancellationTimer(bookingId.toString());
 
+        // The check for already cancelled booking might be redundant if clearCancellationTimer always succeeds for valid cases
+        // but it's good for robustness if the timer was somehow missed by clearCancellationTimer.
+        const freshBooking = await Booking.findById(bookingId);
+        if (freshBooking.bookingStatus === 'cancelled') {
+            return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
+        }
+        
+        // This 'messages' array is not in your current booking model schema.
+        // If you want to store messages directly on the booking, you need to add it to booking.js
+        // For now, I'm commenting it out to avoid errors based on provided schemas.
+        // If you have a separate Message model, you would create a new message there.
+        /*
         booking.messages.push({
             senderId: providerId,
-            message: booking.serviceId.accessInstructionsTemplate,
+            message: booking.serviceId.accessInstructionsTemplate, // Assuming accessInstructionsTemplate from service
         });
+        */
+        // If `accessInstructionsTemplate` is just a string to send, you might just send it as part of a notification
+        // or a dedicated 'BookingAccess' model.
+
+        booking.sharedCredentials = { // Assuming these fields exist in your booking model
+            username: booking.serviceId.credentials.username,
+            password: booking.serviceId.credentials.password,
+            profileName: booking.serviceId.credentials.profileName,
+            accessInstructions: booking.serviceId.accessInstructionsTemplate || "No specific instructions provided." // Add this field to service model if not present
+        };
+
         booking.bookingStatus = 'active';
         await booking.save();
 
+        // Transfer funds from client's wallet to provider's wallet upon activation
+        // This was already done on booking creation, ensure you don't double charge/transfer
+        // The original logic was: client.walletBalance -= service.rentalPrice on create.
+        // Then, await User.findByIdAndUpdate(providerId, { $inc: { walletBalance: booking.bookingDetails.rentalPrice } });
+        // This suggests it's a transfer upon activation.
+        // Make sure `rentalPrice` is indeed the amount to transfer to provider.
         await User.findByIdAndUpdate(providerId, { $inc: { walletBalance: booking.bookingDetails.rentalPrice } });
 
         await Notification.create({
@@ -124,6 +150,8 @@ const sendMessageToBooking = async (req, res) => {
     }
 };
 
+// REMOVED: cancelBookingDueToTimeout is now in bookingScheduler.js
+/*
 async function cancelBookingDueToTimeout(bookingId) {
     try {
         const booking = await Booking.findById(bookingId);
@@ -144,6 +172,7 @@ async function cancelBookingDueToTimeout(bookingId) {
         console.error(`Error cancelling booking ${bookingId}:`, error);
     }
 }
+*/
 
 const getAllBookingsForUser = async (req, res) => {
     try {

@@ -5,6 +5,7 @@ require('dotenv').config();
 
 // Import custom modules
 const connectDB = require('./lib/db');
+const { initializeScheduler } = require('./utils/bookingScheduler'); // ADDED: Import initializeScheduler
 
 // --- Import all route files with direct names ---
 const auth = require('./routes/auth');
@@ -58,7 +59,7 @@ const startServer = async () => {
   try {
     await connectDB();
     
-    bookingScheduler.start(); 
+    await initializeScheduler(); // CHANGED: Call initializeScheduler instead of bookingScheduler.start()
 
     app.listen(PORT, () => {
       console.log(`🚀 Server is listening on port ${PORT}`);
