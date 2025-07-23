@@ -10,5 +10,7 @@ router.post('/login', authController.login);
 router.post('/refresh', authController.refreshToken);
 // Logout
 router.post('/logout', authController.logout);
+// Google login
+router.post('/google-login', authController.googleLogin); 
 
 module.exports = router; 
