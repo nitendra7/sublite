@@ -11,10 +11,9 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         minlength: 3,
         // unique is commented in your original, but recommended for username
-        unique: true,
     },
     
-    email: { type: String, required: true, trim: true, lowercase: true, unique: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
     
     phone: String,
 
@@ -73,7 +72,7 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ email: 1 });
 userSchema.index({ username: 1 });
 userSchema.index({ isProvider: 1 });
-userSchema.index({ firebaseUid: 1 });  // index firebaseUid for fast lookups
+//userSchema.index({ firebaseUid: 1 });  // index firebaseUid for fast lookups
 
 // Password hashing hook
 userSchema.pre('save', async function (next) {

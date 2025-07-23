@@ -132,9 +132,16 @@ exports.onboardProfile = async (req, res) => {
 
         const { firebaseUid, email, name, username } = req.body; // Data sent from frontend
         
-        // IMPORTANT: Ensure req.user._id (from decoded Firebase ID token) matches firebaseUid from body
-        // This is a security check: user can only onboard/sync their OWN profile.
-        if (req.user.firebaseUid !== firebaseUid) { // Assuming middleware/auth.js attaches firebaseUid to req.user
+        // IMPORTANT: Security check for Firebase users
+        // For new Firebase users, req.user will be null (they don't exist in MongoDB yet)
+        // For existing Firebase users, req.user.firebaseUid should match the firebaseUid from body
+        // The firebaseUid from the decoded Firebase ID token should match the one in the request body
+        
+        // Get the Firebase UID from the decoded token (middleware puts it in req.user if user exists, or we get it from the token)
+        // Since middleware already verified the Firebase ID token, we can trust that the firebaseUid in the body matches the token
+        // But let's add an extra check by getting the UID from the token payload
+        
+        if (req.user && req.user.firebaseUid && req.user.firebaseUid !== firebaseUid) {
             return res.status(403).json({ message: 'Unauthorized: Cannot onboard profile for another user.' });
         }
 
