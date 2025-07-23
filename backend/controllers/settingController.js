@@ -1,5 +1,7 @@
 const Setting = require('../models/setting');
 
+// Authentication and admin check for these routes are handled in routes/setting.js and index.js.
+
 exports.getAllSettings = async (req, res) => {
   try {
     const settings = await Setting.find();
@@ -47,4 +49,4 @@ exports.deleteSetting = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}; 
+};

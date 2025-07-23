@@ -1,12 +1,14 @@
 const Service = require('../models/service');
 const User = require('../models/user');
 
+// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
+
 /**
  * @desc    Create a new service
  */
 const createService = async (req, res) => {
   try {
-    const provider = await User.findById(req.user.id);
+    const provider = await User.findById(req.user._id); // Uses req.user._id
     if (!provider.providerSettingsCompleted) {
         return res.status(403).json({ message: 'Please complete your provider settings (Active Hours and Timezone) before creating a service.' });
     }
@@ -19,7 +21,7 @@ const createService = async (req, res) => {
 
     const service = new Service({
       ...req.body,
-      providerId: req.user.id,
+      providerId: req.user._id, // Uses req.user._id
     });
     await service.save();
 
@@ -55,17 +57,15 @@ const getAllServices = async (req, res) => {
  */
 const getMyServices = async (req, res) => {
     try {
-        // Ensure req.user and req.user.id are available from the auth middleware
-        if (!req.user || !req.user.id) {
+        if (!req.user || !req.user._id) { // Uses req.user._id
             return res.status(401).json({ message: 'User not authenticated or user ID missing.' });
         }
 
-        const userId = req.user.id; // This is the ID of the authenticated user
+        const userId = req.user._id;
 
-        // Find services where the authenticated user is the provider
         const services = await Service.find({ providerId: userId })
-                                    .populate('categoryId') // Optionally populate category details
-                                    .select('-credentials'); // Exclude sensitive credentials if you don't want to expose them
+                                    .populate('categoryId')
+                                    .select('-credentials');
         res.status(200).json(services);
     } catch (error) {
         console.error('Error fetching services offered by user:', error);
@@ -97,7 +97,7 @@ const updateService = async (req, res) => {
         if (!service) {
             return res.status(404).json({ message: 'Service not found.' });
         }
-        if (service.providerId.toString() !== req.user.id) {
+        if (service.providerId.toString() !== req.user._id) { // Uses req.user._id
             return res.status(403).json({ message: 'You are not authorized to update this service.' });
         }
         const updatedService = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -118,11 +118,10 @@ const deleteService = async (req, res) => {
             return res.status(404).json({ message: 'Service not found' });
         }
 
-        // Authorization Check
-        if (service.providerId.toString() !== req.user.id) {
+        if (service.providerId.toString() !== req.user._id) { // Uses req.user._id
             return res.status(403).json({ message: 'User not authorized to delete this service' });
         }
-        
+
         await service.deleteOne();
 
         res.status(200).json({ message: 'Service removed successfully' });

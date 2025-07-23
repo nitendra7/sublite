@@ -9,9 +9,8 @@ const { v4: uuidv4 } = require('uuid');
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
-/**
- * @desc    Register a new user (MANUAL EMAIL/PASSWORD)
- */
+// These functions handle manual email/password registration, login, token refreshing, and logout.
+
 exports.register = async (req, res) => {
   try {
     const { name, username, email, password } = req.body;
@@ -38,9 +37,6 @@ exports.register = async (req, res) => {
   }
 };
 
-/**
- * @desc    Login a user and return tokens (MANUAL EMAIL/PASSWORD)
- */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -57,23 +53,22 @@ exports.login = async (req, res) => {
     const newRefreshToken = uuidv4();
     const refreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
 
-    // Assuming RefreshToken model has 'token', 'userId', and 'expiresAt' fields
-    await RefreshToken.deleteOne({ userId: user._id }); // Invalidate any previous refresh token for this user
+    await RefreshToken.deleteOne({ userId: user._id });
     await RefreshToken.create({ token: newRefreshToken, userId: user._id, expiresAt: new Date(refreshTokenExpiry) });
 
     const accessTokenPayload = {
-      id: user._id, // This is your MongoDB user ID
+      id: user._id,
       username: user.username,
       isProvider: user.isProvider,
       isAdmin: user.isAdmin,
-      tokenType: 'custom_jwt' // Explicitly mark token type
+      tokenType: 'custom_jwt'
     };
-    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' }); // Short-lived access token
+    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 
     res.json({
       accessToken,
       refreshToken: newRefreshToken,
-      user: { // Send back relevant user info
+      user: {
         id: user._id,
         name: user.name,
         username: user.username,
@@ -89,9 +84,6 @@ exports.login = async (req, res) => {
   }
 };
 
-/**
- * @desc    Generate a new access token using refresh token (for MANUAL EMAIL/PASSWORD JWTs)
- */
 exports.refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
@@ -105,7 +97,7 @@ exports.refreshToken = async (req, res) => {
     }
 
     if (storedToken.expiresAt && storedToken.expiresAt < new Date()) {
-        await RefreshToken.deleteOne({ token: refreshToken }); // Delete expired token
+        await RefreshToken.deleteOne({ token: refreshToken });
         return res.status(403).json({ message: 'Refresh token expired. Please log in again.' });
     }
 
@@ -115,10 +107,9 @@ exports.refreshToken = async (req, res) => {
         return res.status(403).json({ message: 'User not found for this refresh token. Please log in again.' });
     }
 
-    // Refresh Token Rotation: Invalidate the old refresh token and generate a new one
     await RefreshToken.deleteOne({ token: refreshToken });
     const newRefreshToken = uuidv4();
-    const newRefreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days expiry for new token
+    const newRefreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
     await RefreshToken.create({
         token: newRefreshToken,
         userId: user._id,
@@ -142,11 +133,8 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-/**
- * @desc    Logout a user (for MANUAL EMAIL/PASSWORD JWTs)
- */
 exports.logout = async (req, res) => {
-  const { refreshToken } = req.body; // Expect refresh token in body to invalidate it
+  const { refreshToken } = req.body;
   if (refreshToken) {
     try {
       await RefreshToken.deleteOne({ token: refreshToken });

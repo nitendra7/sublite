@@ -92,17 +92,18 @@ const isAuthenticated = async (req, res, next) => {
 
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', isAuthenticated, userRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/bookings', isAuthenticated, bookingRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/support-tickets', supportTicketRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/settings', settingRoutes);
-app.use('/api/wallettransactions', walletTransactionRoutes);
+app.use('/api/auth', auth);
+app.use('/api/users', isAuthenticated, user);
+app.use('/api/services', isAuthenticated, service); // <-- ADDED isAuthenticated
+app.use('/api/bookings', isAuthenticated, booking);
+app.use('/api/payments', isAuthenticated, payment); // <-- ADDED isAuthenticated
+app.use('/api/reviews', isAuthenticated, review); // <-- ADDED isAuthenticated (if needed)
+app.use('/api/notifications', isAuthenticated, notification); // <-- ADDED isAuthenticated (if needed)
+app.use('/api/support-tickets', isAuthenticated, supportTicket); // <-- ADDED isAuthenticated (if needed)
+app.use('/api/categories', isAuthenticated, category); // <-- ADDED isAuthenticated (if needed)
+app.use('/api/settings', isAuthenticated, setting); // <-- ADDED isAuthenticated (if needed)
+app.use('/api/wallettransactions', isAuthenticated, walletTransaction); // <-- ADDED isAuthenticated (if needed)
+
 
 
 const PORT = process.env.PORT || 5000;

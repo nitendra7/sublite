@@ -9,6 +9,8 @@ const razorpayInstance = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
+// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
+
 /**
  * @desc    Creates a Razorpay order
  */
@@ -33,7 +35,7 @@ exports.createRazorpayOrder = async (req, res) => {
  */
 exports.verifyRazorpayPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id; // Uses req.user._id
 
     try {
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -70,11 +72,8 @@ exports.verifyRazorpayPayment = async (req, res) => {
         return res.status(200).json({ message: "Payment verified and wallet updated successfully" });
 
     } catch (error) {
-        // ======================= THIS IS THE FIX =======================
-        // It now sends a JSON response for errors, which the frontend expects.
         console.error("Error verifying payment:", error);
         res.status(500).json({ message: `Error verifying payment: ${error.message}` });
-        // ===============================================================
     }
 };
 
@@ -83,7 +82,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
  */
 exports.getAllPayments = async (req, res) => {
     try {
-        const payments = await Payment.find({ userId: req.user.id }).sort({ createdAt: -1 });
+        const payments = await Payment.find({ userId: req.user._id }).sort({ createdAt: -1 }); // Uses req.user._id
         res.json(payments);
     } catch (err) {
         res.status(500).json({ error: "Error fetching payments" });
@@ -95,7 +94,7 @@ exports.getAllPayments = async (req, res) => {
  */
 exports.getPaymentById = async (req, res) => {
     try {
-        const payment = await Payment.findOne({ _id: req.params.id, userId: req.user.id });
+        const payment = await Payment.findOne({ _id: req.params.id, userId: req.user._id }); // Uses req.user._id
         if (!payment) {
             return res.status(404).json({ error: 'Payment not found' });
         }

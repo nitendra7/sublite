@@ -1,13 +1,15 @@
 const User = require('../models/user');
-const RefreshToken = require('../models/refreshtoken'); // Needed to log user out
+const RefreshToken = require('../models/refreshtoken');
 const bcrypt = require('bcryptjs');
+
+// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
 /**
  * @desc    Get current authenticated user's profile
  */
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password'); // Uses req.user._id
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -22,7 +24,7 @@ exports.getMe = async (req, res) => {
  */
 exports.updateMe = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id; // Uses req.user._id
     const { name, phone, password, providerSettings } = req.body;
 
     const user = await User.findById(userId);
@@ -60,24 +62,24 @@ exports.updateMe = async (req, res) => {
 
 /**
  * @desc    Deactivate the currently logged-in user's account
- * @route   DELETE /api/users/me
  */
 exports.deactivateMe = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id; // Uses req.user._id
         const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        // Set the user to inactive
         user.isActive = false;
-        // You might want to anonymize some data here as well, e.g., user.email = `${user._id}@deleted.com`;
         await user.save();
 
-        // Log the user out by deleting all their refresh tokens
-        await RefreshToken.deleteMany({ userId: userId });
+        // For manual JWTs, also delete refresh tokens to log out
+        // For Firebase users, their session is managed by Firebase client SDK
+        if (req.user.tokenType === 'custom_jwt') {
+            await RefreshToken.deleteMany({ userId: userId });
+        }
 
         res.status(200).json({ message: 'Your account has been successfully deactivated.' });
 
@@ -86,16 +88,10 @@ exports.deactivateMe = async (req, res) => {
     }
 };
 
-
-// --- Admin-only functions ---
-// (getAllUsers, getUserById, etc. remain the same)
-
-
 /**
  * @desc    Get a single user by ID (Admin only)
- * @route   GET /api/users/:id
  */
-exports.getUserById = async (req, res) => { // 
+exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
@@ -103,14 +99,12 @@ exports.getUserById = async (req, res) => { //
     }
     res.json(user);
   } catch (err) {
-    // Handle CastError for invalid IDs (e.g., if ID is not a valid MongoDB ObjectId)
     if (err.name === 'CastError') {
       return res.status(400).json({ message: 'Invalid user ID.' });
     }
     res.status(500).json({ message: 'Server error.', error: err.message });
   }
 };
-
 
 /**
  * @desc    Get all users (Admin only)

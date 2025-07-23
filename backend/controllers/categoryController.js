@@ -1,5 +1,7 @@
 const Category = require('../models/category');
 
+// Authentication for protected routes and admin check are handled in routes/category.js and index.js
+
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -47,4 +49,4 @@ exports.deleteCategory = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}; 
+};
