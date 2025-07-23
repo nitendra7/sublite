@@ -1,8 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-// FIX: Import the middleware functions directly, not as destructured properties
-const auth = require('../middleware/auth'); // Correct import for directly exported function
-const admin = require('../middleware/admin'); // Assuming admin.js also directly exports a function
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin'); 
 
 const router = express.Router();
 
