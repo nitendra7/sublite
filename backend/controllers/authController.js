@@ -1,7 +1,7 @@
 // controllers/authController.js
 
 const User = require('../models/user');
-const RefreshToken = require('../models/refreshToken'); // NEW: For persistent sessions
+const RefreshToken = require('../models/refreshtoken'); // NEW: For persistent sessions
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library'); // For Google Login
