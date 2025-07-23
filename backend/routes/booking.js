@@ -8,7 +8,6 @@ const {
     getBookingById,
     getMyJoinedBookings
 } = require('../controllers/bookingController');
-const { auth } = require('../middleware/auth');
 
 // Create a new booking
 router.post('/', auth, createBooking);
