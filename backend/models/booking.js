@@ -4,7 +4,7 @@ const bookingSchema = new mongoose.Schema({
   clientId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
   providerId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
   serviceId: { type: mongoose.Schema.ObjectId, ref: 'Service', required: true },
-  paymentId: { type: mongoose.Schema.ObjectId, ref: 'Payment', required: true }, // REPLACED paymentDetails
+  paymentId: { type: mongoose.Schema.ObjectId, ref: 'Payment', required: false }, 
 
   bookingDetails: {
    serviceName: { type: String, required: true },
