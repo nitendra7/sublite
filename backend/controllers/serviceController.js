@@ -4,7 +4,7 @@ const User = require('../models/user');
 /**
  * @desc    Create a new service
  */
-exports.createService = async (req, res) => {
+const createService = async (req, res) => {
   try {
     const provider = await User.findById(req.user.id);
     if (!provider.providerSettingsCompleted) {
@@ -38,7 +38,7 @@ exports.createService = async (req, res) => {
 /**
  * @desc    Get all active and available services
  */
-exports.getAllServices = async (req, res) => {
+const getAllServices = async (req, res) => {
   try {
     const services = await Service.find({ serviceStatus: 'active', availableSlots: { $gt: 0 } })
                                   .populate('providerId', 'username name rating providerSettings')
@@ -51,13 +51,24 @@ exports.getAllServices = async (req, res) => {
 
 
 /**
- * @desc    Get services created by the logged-in user
+ * @desc    Get services created by the logged-in user (as a provider)
  */
-exports.getMyServices = async (req, res) => { // Changed from const to exports.getMyServices
+const getMyServices = async (req, res) => {
     try {
-        const services = await Service.find({ providerId: req.user.id });
+        // Ensure req.user and req.user.id are available from the auth middleware
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated or user ID missing.' });
+        }
+
+        const userId = req.user.id; // This is the ID of the authenticated user
+
+        // Find services where the authenticated user is the provider
+        const services = await Service.find({ providerId: userId })
+                                    .populate('categoryId') // Optionally populate category details
+                                    .select('-credentials'); // Exclude sensitive credentials if you don't want to expose them
         res.status(200).json(services);
     } catch (error) {
+        console.error('Error fetching services offered by user:', error);
         res.status(500).json({ message: 'Server Error: Could not fetch your services.', error: error.message });
     }
 };
@@ -65,7 +76,7 @@ exports.getMyServices = async (req, res) => { // Changed from const to exports.g
 /**
  * @desc    Get a single service by its ID
  */
-exports.getServiceById = async (req, res) => {
+const getServiceById = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id).populate('providerId', 'username name rating providerSettings');
     if (!service) {
@@ -80,7 +91,7 @@ exports.getServiceById = async (req, res) => {
 /**
  * @desc    Update a service owned by the user
  */
-exports.updateService = async (req, res) => {
+const updateService = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id);
         if (!service) {
@@ -99,7 +110,7 @@ exports.updateService = async (req, res) => {
 /**
  * @desc    Delete a service owned by the user
  */
-exports.deleteService = async (req, res) => { // ADDED THIS ENTIRE FUNCTION
+const deleteService = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id);
 
@@ -118,4 +129,14 @@ exports.deleteService = async (req, res) => { // ADDED THIS ENTIRE FUNCTION
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
+};
+
+
+module.exports = {
+    createService,
+    getAllServices,
+    getMyServices,
+    getServiceById,
+    updateService,
+    deleteService
 };
