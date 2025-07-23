@@ -90,6 +90,28 @@ exports.deactivateMe = async (req, res) => {
 // --- Admin-only functions ---
 // (getAllUsers, getUserById, etc. remain the same)
 
+
+/**
+ * @desc    Get a single user by ID (Admin only)
+ * @route   GET /api/users/:id
+ */
+exports.getUserById = async (req, res) => { // 
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    res.json(user);
+  } catch (err) {
+    // Handle CastError for invalid IDs (e.g., if ID is not a valid MongoDB ObjectId)
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid user ID.' });
+    }
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
+};
+
+
 /**
  * @desc    Get all users (Admin only)
  */
