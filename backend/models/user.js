@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         minlength: 3
     },
-    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
     phone: String,
     // MODIFIED: Password is required only if it's NOT a social login
     password: {
