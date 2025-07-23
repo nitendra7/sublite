@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // Import custom modules
 const connectDB = require('./lib/db');
-const { initializeScheduler } = require('./utils/bookingScheduler');
+const { initializeScheduler } = require('./jobs/bookingScheduler');
 
 // Firebase Admin SDK Import
 const admin = require('firebase-admin');

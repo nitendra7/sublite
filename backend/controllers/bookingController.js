@@ -4,7 +4,7 @@ const Service = require('../models/service');
 const Payment = require('../models/payment');
 const Notification = require('../models/notification');
 const { isProviderActive } = require('../utils/availability');
-const { scheduleBookingCancellation, clearCancellationTimer } = require('../utils/bookingScheduler');
+const { scheduleBookingCancellation, clearCancellationTimer } = require('../jobs/bookingScheduler');
 
 // All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
