@@ -117,3 +117,59 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error.', error: err.message });
   }
 };
+
+/**
+ * @desc    (NEW) Onboard / Sync user profile data to MongoDB after Firebase signup/login.
+ * This endpoint is protected by middleware/auth.js which verifies Firebase ID token.
+ * @route   POST /api/users/onboard-profile
+ * @access  Private (Firebase authenticated user)
+ */
+exports.onboardProfile = async (req, res) => {
+    try {
+        // req.user is populated by middleware/auth.js with the MongoDB user document
+        // if user already exists in DB from a previous sync or manual creation.
+        // If it's a completely new user to MongoDB, req.user might be null or you'd rely on req.body for initial data.
+
+        const { firebaseUid, email, name, username } = req.body; // Data sent from frontend
+        
+        // IMPORTANT: Ensure req.user._id (from decoded Firebase ID token) matches firebaseUid from body
+        // This is a security check: user can only onboard/sync their OWN profile.
+        if (req.user.firebaseUid !== firebaseUid) { // Assuming middleware/auth.js attaches firebaseUid to req.user
+            return res.status(403).json({ message: 'Unauthorized: Cannot onboard profile for another user.' });
+        }
+
+        let user = await User.findOne({ firebaseUid });
+
+        if (user) {
+            // User already exists in DB, update their profile
+            // This happens if a user logs in with Google (Firebase) and then later sets a username.
+            // Or if a user existed manually before, and now signs up via Firebase.
+            let updated = false;
+            if (name && user.name !== name) { user.name = name; updated = true; }
+            if (username && user.username !== username) { user.username = username; updated = true; }
+            if (updated) {
+                await user.save();
+                return res.status(200).json({ message: 'User profile updated successfully.', userProfile: user });
+            } else {
+                return res.status(200).json({ message: 'User profile already up to date.' });
+            }
+        } else {
+            // New user, create a new entry in your MongoDB
+            // Ensure your User model can accommodate users without a 'password' if they're Firebase-only.
+            user = new User({
+                firebaseUid: firebaseUid,
+                email: email,
+                name: name,
+                username: username,
+                isSocialLogin: true, // Mark this user as originating from social/Firebase
+                // You might set default values for other fields here
+            });
+            await user.save();
+            return res.status(201).json({ message: 'User profile created successfully.', userProfile: user });
+        }
+
+    } catch (error) {
+        console.error('Server error during profile onboarding/sync:', error);
+        res.status(500).json({ message: 'Server error during profile sync.', error: error.message });
+    }
+};

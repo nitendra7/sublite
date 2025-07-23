@@ -6,6 +6,10 @@ const admin = require('../middleware/admin');
 const router = express.Router();
 
 // --- User-specific Routes ---
+
+// This route is for onboarding/syncing user profile data after Firebase signup/login.
+router.post('/onboard-profile', auth, userController.onboardProfile);
+
 // Get the currently logged-in user's profile
 // Now 'auth' correctly refers to the middleware function
 router.get('/me', auth, userController.getMe);
