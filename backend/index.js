@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const connectDB = require('./lib/db');
-const { initializeScheduler } = require('./utils/bookingScheduler');
+const { initializeScheduler } = require('./jobs/bookingScheduler');
 
 const admin = require('firebase-admin');
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
