@@ -1,12 +1,32 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Apple, Facebook } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AuthPage from './AuthPage'; // Correctly importing AuthPage
+
+const jwtDecode = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decoding JWT:', e);
+    return {};
+  }
+};
 
 const API_BASE = 'https://sublite-wmu2.onrender.com';
 
 function Signup() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,13 +40,70 @@ function Signup() {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, username, email, password })
       });
-      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
+        let errorData;
+        try {
+          errorData = await res.json();
+        } catch (jsonError) {
+          throw new Error(res.statusText || 'Registration request failed');
+        }
+        throw new Error(errorData.error || 'Registration failed');
       }
-      navigate('/login');
+
+      navigate('/login'); // Redirect to login after successful registration
+
+    } catch (err) {
+      setError(err.message || 'Failed to connect to the server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Handles successful Google signup/login.
+   * Receives the credential response from Google, sends it to the backend for verification,
+   * and then processes the backend's JWT.
+   * Note: This assumes your backend's `/api/auth/google-login` endpoint
+   * handles both creating a new user if they don't exist and logging them in.
+   * @param {object} credentialResponse The response object containing the Google JWT.
+   */
+  const handleGoogleSignupSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Send the Google credential (JWT) to your backend for verification
+      const res = await fetch(`${API_BASE}/api/auth/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Google signup/login failed.');
+      }
+
+      // Your backend returns its own JWT, which you save and use for your app's session
+      const token = data.accessToken;
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId || decoded.id || decoded.sub;
+
+      if (!userId) {
+        console.error('Decoded token payload:', decoded);
+        throw new Error('Google signup/login failed: User ID missing from authentication token.');
+      }
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', userId);
+      if (decoded.name) localStorage.setItem('userName', decoded.name);
+
+      // After successful signup/login via Google, navigate to dashboard
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,109 +111,88 @@ function Signup() {
     }
   };
 
+  /**
+   * Handles errors during Google signup/login.
+   */
+  const handleGoogleSignupError = () => {
+    setError('Google signup/login failed. Please try again.');
+    setLoading(false);
+  };
+
+  // --- Placeholder Functions for other Social Logins (kept for structure) ---
+
+  const handleAppleLogin = () => {
+    console.log('Initiating Apple Signup...');
+    setError('Apple signup is not implemented yet.');
+  };
+
+  const handleFacebookLogin = () => {
+    console.log('Initiating Facebook Signup...');
+    setError('Facebook signup is not implemented yet.');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
-        <div className="flex items-center gap-3 mb-6 justify-center">
-          <img
-            src="/logo.jpg"
-            alt="Sublite Logo"
-            className="w-12 h-12 rounded-full"
+    <AuthPage // Now using AuthPage to wrap the form
+      pageTitle="Create Account"
+      pageSubtitle="Sign up to get started"
+      activeTab="signup"
+      error={error}
+      loading={loading}
+      handleGoogleSuccess={handleGoogleSignupSuccess}
+      handleGoogleError={handleGoogleSignupError}
+      handleFacebookLogin={handleFacebookLogin}
+      handleAppleLogin={handleAppleLogin}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <input
+            type="text"
+            placeholder="Full Name"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
           />
-          <span className="text-2xl font-extrabold text-[#2bb6c4] tracking-tight">Sublite</span>
         </div>
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Create Account</h2>
-        <p className="text-center text-gray-500 mb-6 text-sm">Sign up to get started</p>
-
-        <div className="flex mb-5 rounded-xl overflow-hidden">
-          <Link
-            to="/login"
-            className="flex-1 py-2 bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 text-center transition"
-          >
-            Sign In
-          </Link>
-          <button className="flex-1 py-2 bg-[#2bb6c4] text-white font-semibold text-center shadow-md">
-            Signup
-          </button>
+        <div>
+          <input
+            type="text"
+            placeholder="Username"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+          />
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Name"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="email"
-              placeholder="Email Address"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow transition-all duration-200"
-            disabled={loading}
-          >
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-
-        <div className="my-5 flex items-center gap-2">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-gray-400 text-sm">Or Continue With</span>
-          <div className="flex-1 h-px bg-gray-200" />
+        <div>
+          <input
+            type="email"
+            placeholder="Email Address"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
         </div>
-
-        <div className="flex gap-4 justify-center mb-4">
-          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-          </button>
-          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
-            <Apple size={20} className="text-gray-700" />
-          </button>
-          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow hover:scale-105 transition">
-            <Facebook size={20} className="text-blue-600" />
-          </button>
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
         </div>
-
-        <div className="text-center text-gray-400 text-xs">
-          Already have an account?{' '}
-          <Link to="/login" className="text-[#2bb6c4] hover:underline">Sign In</Link>
-        </div>
-      </div>
-
-      <style>
-        {`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.7s ease both;
-          }
-        `}
-      </style>
-    </div>
+        <button
+          type="submit"
+          className="w-full py-3 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading ? 'Registering...' : 'Register'}
+        </button>
+      </form>
+    </AuthPage>
   );
 }
 

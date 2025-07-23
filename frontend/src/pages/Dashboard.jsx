@@ -479,6 +479,7 @@ import {
   FaBars, FaBook, FaMoon, FaStar, FaSun, FaThLarge,
   FaWallet, FaSignOutAlt, FaBell, FaCog
 } from 'react-icons/fa';
+import { CreditCard, PlusCircle } from 'lucide-react';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
@@ -490,6 +491,7 @@ const sidebarItems = [
   { name: 'Dashboard', icon: <FaThLarge />, route: '/dashboard' },
   { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
   { name: 'Available Plans', icon: <FaThLarge />, route: '/dashboard/available-plans' },
+  { name: 'Add Service', icon: <PlusCircle />, route: '/dashboard/add-service' },
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
 ];
