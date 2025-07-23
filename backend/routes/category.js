@@ -1,7 +1,7 @@
 const express = require('express');
 const categoryController = require('../controllers/categoryController');
-const authMiddleware = require('../middleware/auth');
-const adminMiddleware = require('../middleware/admin');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const router = express.Router();
 
@@ -10,8 +10,8 @@ router.get('/', categoryController.getAllCategories);
 router.get('/:id', categoryController.getCategoryById);
 
 // PROTECTED (Admin only)
-router.post('/', authMiddleware, adminMiddleware, categoryController.createCategory);
-router.put('/:id', authMiddleware, adminMiddleware, categoryController.updateCategory);
-router.delete('/:id', authMiddleware, adminMiddleware, categoryController.deleteCategory);
+router.post('/', auth, admin, categoryController.createCategory);
+router.put('/:id', auth, admin, categoryController.updateCategory);
+router.delete('/:id', auth, admin, categoryController.deleteCategory);
 
 module.exports = router;

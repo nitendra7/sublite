@@ -1,13 +1,13 @@
 const express = require('express');
 const settingController = require('../controllers/settingController');
-const authMiddleware = require('../middleware/auth');
-const adminMiddleware = require('../middleware/admin');
+const auth= require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const router = express.Router();
 
 // PROTECTED (Admin only)
-router.get('/', authMiddleware, adminMiddleware, settingController.getAllSettings);
-router.get('/:id', authMiddleware, adminMiddleware, settingController.getSettingById);
-router.put('/:id', authMiddleware, adminMiddleware, settingController.updateSetting);
+router.get('/', auth, admin, settingController.getAllSettings);
+router.get('/:id', auth, admin, settingController.getSettingById);
+router.put('/:id', auth, admin, settingController.updateSetting);
 
 module.exports = router;
