@@ -3,10 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
-
-// Firebase SDK Imports
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { GoogleOAuthProvider } from '@react-oauth/google'; // Import GoogleOAuthProvider
 
 // Page components
 import HomePage from './pages/HomePage';
@@ -22,22 +19,11 @@ import NotificationsPage from './pages/NotificationsPage';
 import SubscriptionDetails from './pages/SubscriptionDetails';
 import AddServicePage from './pages/AddServicePage';
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDAta13wpT4auUMCXRYxb_FYK8lwz5IANI",
-  authDomain: "sublite-e474e.firebaseapp.com",
-  projectId: "sublite-e474e",
-  storageBucket: "sublite-e474e.firebasestorage.app",
-  messagingSenderId: "1065232705924",
-  appId: "1:1065232705924:web:4cb941286daccb0fb7d5d1",
-};
 
-// Initialize Firebase App and Auth Service
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app); // Export auth for use in other components
-
+// PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.
 const PrivateRoute = () => {
   const { user, loading } = useUser();
+  const token = localStorage.getItem('token');
 
   if (loading) {
     return (
@@ -47,45 +33,61 @@ const PrivateRoute = () => {
     );
   }
 
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  return user || token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-const ProtectedLayout = () => {
+// ProtectedLayout component: A layout component for protected routes.
+// It receives theme state from the top-level App component and passes it down.
+const ProtectedLayout = ({ darkMode, toggleDarkMode }) => {
   return <Outlet />;
 };
 
+
 function App() {
+  // Consume ThemeContext at the top level to provide theme state globally.
   const { darkMode, toggleDarkMode } = useTheme();
 
   return (
-    <Router>
-      <UserProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<SignupPage />} />
+    // Wrap the entire application with GoogleOAuthProvider.
+    // Replace "YOUR_GOOGLE_CLIENT_ID" with your actual Client ID from Google Cloud Console.
+    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+      <Router>
+        {/* UserProvider wraps the application to provide user authentication context. */}
+        <UserProvider>
+          {/* Routes define the different paths and their corresponding components. */}
+          <Routes>
+            {/* Public routes: Accessible without authentication. */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<SignupPage />} />
 
-          <Route element={<PrivateRoute />}>
-              <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
-                  <Route path="/dashboard" element={<Dashboard />}>
-                    <Route index element={<Availableplans />}/>
-                    <Route path="available-plans" element={<Availableplans />} />
-                    <Route path="subscriptions" element={<SubscriptionsPage />} />
-                    <Route path="wallet" element={<WalletPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="reviews" element={<ReviewPage />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="/dashboard/add-service" element={<AddServicePage />} />
-                  </Route>
+            {/* Protected routes group: Access is guarded by PrivateRoute. */}
+            {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
+            <Route element={<PrivateRoute />}>
+                <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+                    {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
+                    <Route path="/dashboard" element={<Dashboard />}>
+                      <Route index element={<Availableplans />}/>
+                      <Route path="available-plans" element={<Availableplans />} />
+                      <Route path="subscriptions" element={<SubscriptionsPage />} />
+                      <Route path="wallet" element={<WalletPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="reviews" element={<ReviewPage />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+                      <Route path="/dashboard/add-service" element={<AddServicePage />} /> 
+                    </Route>
 
-                  <Route path="/subscription-details" element={<SubscriptionDetails />} />
-              </Route>
-          </Route>
+                    {/* Standalone protected pages. */}
+                    <Route path="/subscription-details" element={<SubscriptionDetails />} />
+                </Route>
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </UserProvider>
-    </Router>
+            {/* Fallback route: Redirects to home page for any undefined paths. */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </UserProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

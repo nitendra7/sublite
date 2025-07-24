@@ -1,19 +1,10 @@
-// Login.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import AuthPage from './AuthPage'; 
+ import React, { useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useUser } from '../context/UserContext';
+ import AuthPage from './AuthPage'; // Ensure correct import
 
-// Firebase imports for Google Login
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
-import { auth } from '../App';
-
-// Helper to decode custom JWT (from your backend)
-const jwtDecode = (token) => {
- try {
+ const jwtDecode = (token) => {
+  try {
   const base64Url = token.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   const jsonPayload = decodeURIComponent(
@@ -25,157 +16,186 @@ const jwtDecode = (token) => {
   .join('')
   );
   return JSON.parse(jsonPayload);
- } catch (e) {
+  } catch (e) {
   console.error('Error decoding JWT:', e);
   return {};
- }
-};
+  }
+ };
 
-const API_BASE = 'https://sublite-wmu2.onrender.com';
+ const API_BASE = 'https://sublite-wmu2.onrender.com';
 
-function LoginPage() {
+ function LoginPage() {
   const navigate = useNavigate();
-  const { fetchUserProfile, setAuthError } = useUser(); // useUser context still useful for fetching user profile after login
+  const { setAuthError, fetchUserProfile } = useUser();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // --- Manual Email/Password Login Handler ---
-  const handleEmailPasswordLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setAuthError(null);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  setAuthError(null);
 
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
+  });
 
-      const data = await res.json();
+  const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
+  if (!res.ok) {
+  throw new Error(data.error || 'Login failed');
+  }
 
-      // Store custom JWTs from your backend
-      localStorage.setItem('customToken', data.accessToken); // Use a distinct name like 'customToken'
-      localStorage.setItem('refreshToken', data.refreshToken); // Store refresh token
-      localStorage.setItem('userId', data.user.id); // Store your backend's user ID
+  const token = data.accessToken;
+  const decoded = jwtDecode(token);
+  const userId = decoded.userId || decoded.id || decoded.sub;
 
-      // Optionally set user name for display
-      if (data.user.name) localStorage.setItem('userName', data.user.name);
+  if (!userId) {
+  console.error('Decoded token payload:', decoded);
+  throw new Error('Login failed: User ID missing from authentication token.');
+  }
 
-      // Now fetch the user's profile which UserContext will handle
-      await fetchUserProfile(data.user.id, data.accessToken, 'custom_jwt'); // Pass custom token type
+  localStorage.setItem('token', token);
+  localStorage.setItem('userId', userId);
+  if (decoded.name) localStorage.setItem('userName', decoded.name);
 
-      navigate('/dashboard');
-
-    } catch (err) {
-      setError(err.message || 'Failed to connect to server for login.');
-      setAuthError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  fetchUserProfile();
+  navigate('/dashboard');
+  } catch (err) {
+  setError(err.message);
+  if (setAuthError) {
+  setAuthError(err.message);
+  } else {
+  console.error('setAuthError not available to set:', err.message);
+  }
+  } finally {
+  setLoading(false);
+  }
   };
 
-  // --- Google Sign-in Handler (using Firebase) ---
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-    setAuthError(null);
+  /**
+  * Handles successful Google login.
+  * Receives the credential response from Google, sends it to the backend for verification,
+  * and then processes the backend's JWT.
+  * @param {object} credentialResponse The response object containing the Google JWT.
+  */
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+  setLoading(true);
+  setError('');
+  setAuthError(null);
 
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user; // Firebase User object
+  try {
+  // Send the Google credential (JWT) to your backend for verification
+  const res = await fetch(`${API_BASE}/api/auth/google-login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token: credentialResponse.credential }),
+  });
 
-      console.log('Logged in with Google (Firebase):', user);
+  const data = await res.json();
 
-      // Firebase automatically manages the user session and token.
-      // UserContext will detect this change via onAuthStateChanged.
-      // You don't need to manually store tokens from Firebase here.
+  if (!res.ok) {
+  throw new Error(data.error || 'Google login failed.');
+  }
 
-      // If you need to sync Google user's name/profile to your backend DB,
-      // you could make another API call here, passing user.uid and user.getIdToken()
-      // e.g., await fetch(`${API_BASE}/api/users/sync-profile`, { ... })
+  // Your backend returns its own JWT, which you save and use for your app's session
+  const token = data.accessToken;
+  const decoded = jwtDecode(token);
+  const userId = decoded.userId || decoded.id || decoded.sub;
 
-      navigate('/dashboard');
+  if (!userId) {
+  console.error('Decoded token payload:', decoded);
+  throw new Error('Google login failed: User ID missing from authentication token.');
+  }
 
-    } catch (err) {
-      console.error('Google login error (Firebase):', err.code, err.message);
-      let errorMessage = 'Google login failed.';
-      if (err.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Google login popup closed.';
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Another Google login popup is open.';
-      }
-      setError(errorMessage);
-      setAuthError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+  localStorage.setItem('token', token);
+  localStorage.setItem('userId', userId);
+  if (decoded.name) localStorage.setItem('userName', decoded.name);
+
+  fetchUserProfile();
+  navigate('/dashboard');
+  } catch (err) {
+  setError(err.message);
+  if (setAuthError) {
+  setAuthError(err.message);
+  } else {
+  console.error('setAuthError not available to set:', err.message);
+  }
+  } finally {
+  setLoading(false);
+  }
+  };
+
+  /**
+  * Handles errors during Google login.
+  */
+  const handleGoogleLoginError = () => {
+  setError('Google login failed. Please try again.');
+  setLoading(false);
   };
 
   // --- Placeholder Functions for other Social Logins ---
   const handleAppleLogin = () => {
-    console.log('Initiating Apple Login...');
-    setError('Apple login is not implemented yet.');
+  console.log('Initiating Apple Login...');
+  setError('Apple login is not implemented yet.');
   };
 
   const handleFacebookLogin = () => {
-    console.log('Initiating Facebook Login...');
-    setError('Facebook login is not implemented yet.');
+  console.log('Initiating Facebook Login...');
+  setError('Facebook login is not implemented yet.');
   };
 
   return (
-    <AuthPage
-      pageTitle="Welcome Back"
-      pageSubtitle="Please enter your details"
-      activeTab="signin"
-      error={error}
-      loading={loading}
-      onEmailPasswordSubmit={handleEmailPasswordLogin} // Pass the email/password handler
-      onGoogleClick={handleGoogleLogin} // Pass the Firebase Google handler
-      handleFacebookLogin={handleFacebookLogin}
-      handleAppleLogin={handleAppleLogin}
-    >
-      <form className="space-y-4"> {/* onSubmit is now handled by AuthPage */}
-        <div>
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoFocus
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full py-3 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={loading}
-        >
-          {loading ? 'Logging in...' : 'Continue'}
-        </button>
-      </form>
-    </AuthPage>
+  <AuthPage // Using AuthPage
+  pageTitle="Welcome Back"
+  pageSubtitle="Please enter your details"
+  activeTab="signin"
+  error={error}
+  loading={loading}
+  handleGoogleSuccess={handleGoogleLoginSuccess}
+  handleGoogleError={handleGoogleLoginError}
+  handleFacebookLogin={handleFacebookLogin}
+  handleAppleLogin={handleAppleLogin}
+  >
+  <form onSubmit={handleSubmit} className="space-y-4">
+  <div>
+  <input
+  type="email"
+  placeholder="Email Address"
+  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  required
+  autoFocus
+  />
+  </div>
+  <div>
+  <input
+  type="password"
+  placeholder="Password"
+  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  required
+  />
+  </div>
+  <button
+  type="submit"
+  className="w-full py-3 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+  disabled={loading}
+  >
+  {loading ? 'Logging in...' : 'Continue'}
+  </button>
+  </form>
+  </AuthPage>
   );
-}
+ }
 
-export default LoginPage;
+ export default LoginPage;
+ 

@@ -1,26 +1,32 @@
-// Signup.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthPage from './AuthPage'; 
+import AuthPage from './AuthPage'; // Correctly importing AuthPage
 
-// Import the 'auth' object we exported from App.jsx
-import { auth } from '../App';
-// Import Firebase Auth methods and Google Provider
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  updateProfile // Optional: to set display name on signup
-} from 'firebase/auth';
+const jwtDecode = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decoding JWT:', e);
+    return {};
+  }
+};
 
-
-// Removed: const jwtDecode = ...
-// Removed: const API_BASE = ...
+const API_BASE = 'https://sublite-wmu2.onrender.com';
 
 function Signup() {
   const navigate = useNavigate();
-  const [name, setName] = useState(''); // Firebase allows setting displayName
-  const [username, setUsername] = useState(''); // Firebase doesn't have a direct 'username' field, you might store this in Firestore/RTDB
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,101 +36,110 @@ function Signup() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log('Signed up with email/password:', user);
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, username, email, password })
+      });
 
-      // Optional: Set the user's display name after creation
-      if (name) {
-        await updateProfile(user, {
-          displayName: name
-        });
-        console.log('User display name set:', name);
+      if (!res.ok) {
+        let errorData;
+        try {
+          errorData = await res.json();
+        } catch (jsonError) {
+          throw new Error(res.statusText || 'Registration request failed');
+        }
+        throw new Error(errorData.error || 'Registration failed');
       }
-      // Note: 'username' is not directly supported by Firebase Auth.
-      // If you need to store 'username', you'd typically save it to Firestore or Realtime Database
-      // after the user signs up. For example:
-      // await setDoc(doc(db, "users", user.uid), { username: username, email: user.email, name: user.displayName });
 
-      // Firebase automatically manages the user session.
-      // No need to manually set tokens in localStorage here.
-      // The UserContext will observe Firebase's onAuthStateChanged.
-
-      navigate('/dashboard'); // Redirect to dashboard after successful registration and auto-login
+      navigate('/login'); // Redirect to login after successful registration
 
     } catch (err) {
-      console.error('Email/Password signup error:', err.code, err.message);
-      let errorMessage = 'Registration failed.';
-      if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already in use.';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak. Please use at least 6 characters.';
-      }
-      setError(errorMessage);
+      setError(err.message || 'Failed to connect to the server.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handles Google Sign-in/Signup using Firebase Auth
-  const handleGoogleAuth = async () => {
+  /**
+   * Handles successful Google signup/login.
+   * Receives the credential response from Google, sends it to the backend for verification,
+   * and then processes the backend's JWT.
+   * Note: This assumes your backend's `/api/auth/google-login` endpoint
+   * handles both creating a new user if they don't exist and logging them in.
+   * @param {object} credentialResponse The response object containing the Google JWT.
+   */
+  const handleGoogleSignupSuccess = async (credentialResponse) => {
     setLoading(true);
     setError('');
 
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user; // Firebase User object
-      console.log('Signed up/in with Google:', user);
+      // Send the Google credential (JWT) to your backend for verification
+      const res = await fetch(`${API_BASE}/api/auth/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
 
-      // Firebase handles if the user is new or existing.
-      // If new, it creates the account. If existing, it logs them in.
-      // You can check `result.additionalUserInfo.isNewUser` if you need to differentiate.
+      const data = await res.json();
 
-      // Firebase automatically manages the user session.
-      // No need to manually set tokens in localStorage here.
-      // The UserContext will observe Firebase's onAuthStateChanged.
-
-      navigate('/dashboard'); // Redirect to dashboard after successful signup/login
-
-    } catch (err) {
-      console.error('Google signup/login error:', err.code, err.message);
-      let errorMessage = 'Google signup/login failed.';
-      if (err.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Google popup closed by user.';
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Another Google popup is already open.';
-      } else if (err.code === 'auth/operation-not-allowed') {
-        errorMessage = 'Google login is not enabled in Firebase. Contact support.';
+      if (!res.ok) {
+        throw new Error(data.error || 'Google signup/login failed.');
       }
-      setError(errorMessage);
+
+      // Your backend returns its own JWT, which you save and use for your app's session
+      const token = data.accessToken;
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId || decoded.id || decoded.sub;
+
+      if (!userId) {
+        console.error('Decoded token payload:', decoded);
+        throw new Error('Google signup/login failed: User ID missing from authentication token.');
+      }
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', userId);
+      if (decoded.name) localStorage.setItem('userName', decoded.name);
+
+      // After successful signup/login via Google, navigate to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Handles errors during Google signup/login.
+   */
+  const handleGoogleSignupError = () => {
+    setError('Google signup/login failed. Please try again.');
+    setLoading(false);
+  };
 
-  // --- Placeholder Functions for other Social Logins ---
+  // --- Placeholder Functions for other Social Logins (kept for structure) ---
+
   const handleAppleLogin = () => {
     console.log('Initiating Apple Signup...');
-    setError('Apple signup is not implemented yet with Firebase.');
+    setError('Apple signup is not implemented yet.');
   };
 
   const handleFacebookLogin = () => {
     console.log('Initiating Facebook Signup...');
-    setError('Facebook signup is not implemented yet with Firebase.');
+    setError('Facebook signup is not implemented yet.');
   };
 
   return (
-    <AuthPage 
+    <AuthPage // Now using AuthPage to wrap the form
       pageTitle="Create Account"
       pageSubtitle="Sign up to get started"
       activeTab="signup"
       error={error}
       loading={loading}
-      onGoogleClick={handleGoogleAuth} // Pass the new Firebase Google handler
+      handleGoogleSuccess={handleGoogleSignupSuccess}
+      handleGoogleError={handleGoogleSignupError}
       handleFacebookLogin={handleFacebookLogin}
       handleAppleLogin={handleAppleLogin}
     >
