@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, Clock, Users, Shield, Tag, FileText, Camera, MapPin } from 'lucide-react';
+import { apiFetch, API_BASE } from '../utils/api';
 
 const AddServicePage = () => {
     const navigate = useNavigate();
@@ -10,6 +11,8 @@ const AddServicePage = () => {
         description: '',
         originalPrice: '',
         maxUsers: '',
+        subscriptionExpiry: '',
+        accessInstructionsTemplate: '',
         features: '',
         credentials: {
             username: '',
@@ -64,12 +67,8 @@ const AddServicePage = () => {
         }
 
         try {
-            const response = await fetch('https://sublite-wmu2.onrender.com/api/services', {
+            const response = await apiFetch(`${API_BASE}/api/services`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     ...formData,
                     features: formData.features.split(',').map(f => f.trim()), // Convert comma-separated string to array
