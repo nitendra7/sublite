@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Star, LayoutGrid, List } from 'lucide-react';
 import { useUser } from '../context/UserContext'; // To get the auth token
+import BookingModal from '../components/modals/BookingModal';
 
 const API_BASE = "https://sublite-wmu2.onrender.com";
 
@@ -15,6 +16,8 @@ const Availableplans = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [plans, setPlans] = useState([]); // State to hold plans from backend
   const [loading, setLoading] = useState(true);
+  const [selectedService, setSelectedService] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
  // Fetch plans from the backend when the component mounts
   useEffect(() => {
@@ -46,43 +49,21 @@ const Availableplans = () => {
     fetchPlans();
   }, []);
 
-  // Function to handle booking a service with wallet payment
-  const handleBookService = async (service) => {
-    if (!window.confirm(`Are you sure you want to book "${service.serviceName}" for ₹${service.rentalPrice}? Payment will be deducted from your wallet.`)) {
-      return;
-    }
-
+  // Function to open booking modal
+  const handleBookService = (service) => {
     if (!token) {
       alert('Please login to book a service.');
       return;
     }
+    
+    setSelectedService(service);
+    setIsBookingModalOpen(true);
+  };
 
-    try {
-      const res = await fetch(`${API_BASE}/api/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          serviceId: service._id,
-          paymentMethod: 'wallet'
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Booking failed.');
-      }
-
-      alert(data.message || 'Booking successful! Check "My Subscriptions" for details.');
-      // Refresh the plans to show updated available slots
-      window.location.reload();
-
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
+  // Function to close booking modal
+  const closeBookingModal = () => {
+    setIsBookingModalOpen(false);
+    setSelectedService(null);
   };
 
   const toggleView = () => {
@@ -163,10 +144,10 @@ const Availableplans = () => {
                   )}
                 </div>
                 
-                <div className={`flex items-center justify-between w-full ${isGridView ? 'flex-col gap-2' : 'flex-row'}`}>
+                  <div className={`flex items-center justify-between w-full ${isGridView ? 'flex-col gap-2' : 'flex-row'}`}>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{service.rentalPrice}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">for {service.rentalDuration} days</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">per month (user decides duration)</p>
                   </div>
                   <button
                     onClick={() => handleBookService(service)}
@@ -189,6 +170,13 @@ const Availableplans = () => {
           )}
         </div>
       )}
+      
+      {/* Booking Modal */}
+      <BookingModal 
+        isOpen={isBookingModalOpen}
+        onClose={closeBookingModal}
+        service={selectedService}
+      />
     </div>
   );
 };
