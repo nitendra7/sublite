@@ -9,20 +9,23 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const FIREBASE_SERVICE_ACCOUNT_KEY = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
 // Firebase Admin SDK Initialization (MOVED HERE)
+let firebaseInitialized = false;
 if (!admin.apps.length) { // Check if app is already initialized to prevent re-initialization errors in dev mode
     if (!FIREBASE_SERVICE_ACCOUNT_KEY) {
-        console.error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is NOT set. Firebase Admin SDK will not function.');
-        // Don't exit process, but Firebase verification will fail.
+        console.warn('⚠️  FIREBASE_SERVICE_ACCOUNT_KEY environment variable is NOT set. Social login will be disabled.');
+        // Don't exit process, normal login will still work
     } else {
         try {
             const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT_KEY);
             admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount)
             });
-            console.log('Firebase Admin SDK initialized in middleware.');
+            firebaseInitialized = true;
+            console.log('✅ Firebase Admin SDK initialized for social login.');
         } catch (parseError) {
-            console.error('Error parsing FIREBASE_SERVICE_ACCOUNT_KEY JSON in middleware:', parseError);
-            // Don't exit process, but Firebase verification will fail.
+            console.error('❌ Error parsing FIREBASE_SERVICE_ACCOUNT_KEY JSON:', parseError.message);
+            console.warn('⚠️  Social login will be disabled. Normal email/password login will still work.');
+            // Don't exit process, normal login will still work
         }
     }
 }
@@ -62,10 +65,15 @@ module.exports = async function (req, res, next) {
         tokenSource = 'custom_jwt';
 
     } catch (customJwtError) {
-        // If Custom JWT failed, attempt 2: Verify as Firebase ID Token
-        if (!admin.apps.length || !FIREBASE_SERVICE_ACCOUNT_KEY) {
-            console.warn('Firebase Admin SDK not initialized or key missing. Firebase ID Token verification skipped.');
-            return res.status(403).json({ message: 'Authentication failed: Server config error or missing Firebase key.' });
+        // If Custom JWT failed, attempt 2: Verify as Firebase ID Token (only if Firebase is initialized)
+        if (!firebaseInitialized || !admin.apps.length || !FIREBASE_SERVICE_ACCOUNT_KEY) {
+            // Firebase not available, only show JWT error
+            console.error('Authentication failed - Custom JWT error:', customJwtError.message);
+            let errorMessage = 'Invalid or expired authentication token.';
+            if (customJwtError.message && customJwtError.message.includes('expired')) {
+                errorMessage = 'Your session has expired. Please log in again.';
+            }
+            return res.status(403).json({ message: errorMessage });
         }
         try {
             decodedTokenPayload = await admin.auth().verifyIdToken(token);

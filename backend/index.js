@@ -52,6 +52,23 @@ app.get('/', (_req, res) => {
   res.send('Sublite API is running successfully!');
 });
 
+// System status endpoint
+app.get('/api/status', (_req, res) => {
+  const isFirebaseEnabled = process.env.FIREBASE_SERVICE_ACCOUNT_KEY && 
+                           process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim() !== '';
+  
+  res.json({
+    status: 'running',
+    services: {
+      database: 'connected',
+      authentication: 'enabled',
+      socialLogin: isFirebaseEnabled ? 'enabled' : 'disabled',
+      firebase: isFirebaseEnabled ? 'configured' : 'not_configured'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 const startServer = async () => {
   try {
     await connectDB();

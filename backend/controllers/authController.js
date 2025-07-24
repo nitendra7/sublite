@@ -57,7 +57,8 @@ exports.login = async (req, res) => {
     await RefreshToken.create({ token: newRefreshToken, userId: user._id, expiresAt: new Date(refreshTokenExpiry) });
 
     const accessTokenPayload = {
-      id: user._id,
+      userId: user._id,
+      id: user._id, // Keep both for backward compatibility
       username: user.username,
       isProvider: user.isProvider,
       isAdmin: user.isAdmin,
@@ -117,7 +118,8 @@ exports.refreshToken = async (req, res) => {
     });
 
     const newAccessTokenPayload = {
-      id: user._id,
+      userId: user._id,
+      id: user._id, // Keep both for backward compatibility
       username: user.username,
       isProvider: user.isProvider,
       isAdmin: user.isAdmin,
