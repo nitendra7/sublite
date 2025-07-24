@@ -19,11 +19,19 @@ const Availableplans = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
- // Fetch plans from the backend when the component mounts
+  // Fetch plans from the backend when the component mounts
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/services`);
+        // Include auth header if user is logged in to exclude own services
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const res = await fetch(`${API_BASE}/api/services`, {
+          headers
+        });
         const data = await res.json();
 
         // FIX: Check if the API response is an array before setting state
@@ -47,7 +55,7 @@ const Availableplans = () => {
     };
 
     fetchPlans();
-  }, []);
+  }, [token]);
 
   // Function to open booking modal
   const handleBookService = (service) => {

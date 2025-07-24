@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CreditCard, Wallet, Clock, DollarSign } from 'lucide-react';
+import { X, Calendar, CreditCard, Wallet, Clock, DollarSign, Plus } from 'lucide-react';
 import { apiFetch, API_BASE } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 const BookingModal = ({ isOpen, onClose, service }) => {
     const { user } = useUser();
+    const navigate = useNavigate();
     const [rentalDuration, setRentalDuration] = useState(7); // Default 7 days
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -173,9 +175,21 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                             </span>
                         </div>
                         {!hasSufficientBalance && (
-                            <p className="text-red-600 text-sm mt-2">
-                                Insufficient balance. Please top up your wallet first.
-                            </p>
+                            <div className="mt-3">
+                                <p className="text-red-600 text-sm mb-2">
+                                    Insufficient balance. Need ₹{totalCost - (user?.walletBalance || 0)} more.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        onClose();
+                                        navigate('/wallet');
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <Plus size={14} />
+                                    Add Money to Wallet
+                                </button>
+                            </div>
                         )}
                     </div>
 
