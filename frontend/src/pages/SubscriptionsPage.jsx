@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
+const API_BASE = "https://sublite-wmu2.onrender.com";
+
 const SubscriptionsPage = () => {
   const [providedServices, setProvidedServices] = useState([]);
   const [joinedSubscriptions, setJoinedSubscriptions] = useState([]);
@@ -12,29 +14,33 @@ const SubscriptionsPage = () => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       try {
-        // For now, using mock data. Replace with actual API calls later
-        const mockProvidedServices = [
-          {
-            _id: '1',
-            name: 'Netflix Premium',
-            price: 299,
-            duration: '30 days',
-            category: 'Entertainment'
+        // Fetch services provided by the user
+        const responseProvided = await fetch(`${API_BASE}/api/services/my-services`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
-        ];
-        
-        const mockJoinedSubscriptions = [
-          {
-            _id: '1',
-            serviceName: 'Amazon Prime',
-            price: 149,
-            duration: '15 days',
-            status: 'active'
-          }
-        ];
+        });
 
-        setProvidedServices(mockProvidedServices);
-        setJoinedSubscriptions(mockJoinedSubscriptions);
+        // Fetch subscriptions joined by the user (bookings made by the user)
+        const responseJoined = await fetch(`${API_BASE}/api/bookings/my-joined`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!responseProvided.ok || !responseJoined.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const dataProvided = await responseProvided.json();
+        const dataJoined = await responseJoined.json();
+
+        setProvidedServices(dataProvided);
+        setJoinedSubscriptions(dataJoined);
 
       } catch (err) {
         setError(err.message);

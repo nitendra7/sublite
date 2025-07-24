@@ -46,32 +46,39 @@ const Availableplans = () => {
     fetchPlans();
   }, []);
 
-  // =================================================================
-  // == NEW FUNCTION to handle buying a plan with wallet balance   ==
-  // =================================================================
-  const handleBuyPlan = async (serviceId) => {
-    if (!window.confirm("Are you sure you want to purchase this plan using your wallet balance?")) {
+  // Function to handle booking a service with wallet payment
+  const handleBookService = async (service) => {
+    if (!window.confirm(`Are you sure you want to book "${service.serviceName}" for ₹${service.rentalPrice}? Payment will be deducted from your wallet.`)) {
+      return;
+    }
+
+    if (!token) {
+      alert('Please login to book a service.');
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/bookings/pay-from-wallet`, {
+      const res = await fetch(`${API_BASE}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ serviceId: serviceId })
+        body: JSON.stringify({ 
+          serviceId: service._id,
+          paymentMethod: 'wallet'
+        })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'An error occurred.');
+        throw new Error(data.message || 'Booking failed.');
       }
 
-      alert('Purchase successful! You can view it in "My Subscriptions".');
-      navigate('/dashboard/subscriptions');
+      alert(data.message || 'Booking successful! Check "My Subscriptions" for details.');
+      // Refresh the plans to show updated available slots
+      window.location.reload();
 
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -82,10 +89,10 @@ const Availableplans = () => {
     setIsGridView(prevState => !prevState);
   };
 
-  const filteredPlans = plans.filter(plan =>
-    plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (plan.provider?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPlans = plans.filter(service =>
+    (service.serviceName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (service.providerId?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (service.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -116,26 +123,61 @@ const Availableplans = () => {
       {loading ? <p>Loading plans...</p> : (
         <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
           {filteredPlans.length > 0 ? (
-            filteredPlans.map(plan => (
-              <div key={plan._id}
-                   className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex 
-                               ${isGridView ? 'flex-col items-center text-center' : 'flex-col sm:flex-row items-center justify-between'} 
+            filteredPlans.map(service => (
+              <div key={service._id}
+                   className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex 
+                               ${isGridView ? 'flex-col items-center text-center' : 'flex-col'} 
                                hover:shadow-lg transition-shadow text-gray-900 dark:text-gray-100`}
               >
-                <div className={`flex-grow ${isGridView ? 'mb-2' : 'mb-3 sm:mb-0'} ${isGridView ? 'text-center' : ''}`}>
-                  <p className="font-bold text-lg">{plan.name}</p>
-                  <div className={`flex items-center text-sm gap-4 mt-1 ${isGridView ? 'justify-center' : ''}`}>
-                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><Users size={14} className="text-gray-500 dark:text-gray-400" /> {plan.slotsAvailable}/{plan.totalSlots} slots available</span>
-                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><Star size={14} className="text-gray-500 dark:text-gray-400" /> Shared by {plan.provider?.name || '...'}</span>
+                <div className={`flex-grow ${isGridView ? 'mb-4' : 'mb-4'} ${isGridView ? 'text-center' : ''}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-xl text-gray-800 dark:text-white">{service.serviceName}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      service.serviceStatus === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                    }`}>
+                      {service.serviceStatus}
+                    </span>
                   </div>
+                  
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">{service.description || 'No description available'}</p>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm mb-3">
+                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                      <Users size={14} className="text-gray-500 dark:text-gray-400" /> 
+                      {service.availableSlots}/{service.maxUsers} slots available
+                    </span>
+                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                      <Star size={14} className="text-gray-500 dark:text-gray-400" /> 
+                      By {service.providerId?.name || service.providerId?.username || 'Unknown'}
+                    </span>
+                  </div>
+                  
+                  {service.features && service.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {service.features.map((feature, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 rounded-full text-xs">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className={`flex items-center gap-4 ${isGridView ? 'flex-col' : ''}`}>
-                  <p className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{plan.price}<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/slot</span></p>
+                
+                <div className={`flex items-center justify-between w-full ${isGridView ? 'flex-col gap-2' : 'flex-row'}`}>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{service.rentalPrice}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">for {service.rentalDuration} days</p>
+                  </div>
                   <button
-                    onClick={() => handleBuyPlan(plan._id)}
-                    className="bg-[#2bb6c4] text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] dark:text-gray-100"
+                    onClick={() => handleBookService(service)}
+                    disabled={service.availableSlots <= 0}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-colors shadow ${
+                      service.availableSlots > 0 
+                        ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
+                        : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    }`}
                   >
-                    Buy Now
+                    {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
                   </button>
                 </div>
               </div>

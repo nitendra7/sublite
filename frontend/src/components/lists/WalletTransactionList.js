@@ -11,7 +11,7 @@ export default function WalletTransactionList() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiFetch(`${API_BASE}/api/wallet-transactions`)
+    apiFetch(`${API_BASE}/api/wallettransactions`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setTransactions(data);

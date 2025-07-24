@@ -24,7 +24,7 @@ export default function WalletPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/wallet-transactions`, {
+      const res = await fetch(`${API_BASE}/api/wallettransactions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) {
