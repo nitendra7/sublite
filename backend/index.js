@@ -54,16 +54,11 @@ app.get('/', (_req, res) => {
 
 // System status endpoint
 app.get('/api/status', (_req, res) => {
-  const isFirebaseEnabled = process.env.FIREBASE_SERVICE_ACCOUNT_KEY && 
-                           process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim() !== '';
-  
   res.json({
     status: 'running',
     services: {
       database: 'connected',
-      authentication: 'enabled',
-      socialLogin: isFirebaseEnabled ? 'enabled' : 'disabled',
-      firebase: isFirebaseEnabled ? 'configured' : 'not_configured'
+      authentication: 'enabled'
     },
     timestamp: new Date().toISOString()
   });

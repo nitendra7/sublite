@@ -7,24 +7,7 @@ const router = express.Router();
 
 // --- User-specific Routes ---
 
-// Check if Firebase is enabled
-const isFirebaseEnabled = () => {
-    return process.env.FIREBASE_SERVICE_ACCOUNT_KEY && 
-           process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim() !== '';
-};
-
-// This route is for onboarding/syncing user profile data after Firebase signup/login.
-// Only available if Firebase is configured
-if (isFirebaseEnabled()) {
-    router.post('/onboard-profile', auth, userController.onboardProfile);
-} else {
-    router.post('/onboard-profile', (req, res) => {
-        res.status(503).json({ 
-            message: 'Social login is currently disabled. Firebase configuration is missing.',
-            error: 'FIREBASE_NOT_CONFIGURED' 
-        });
-    });
-}
+// Note: Firebase onboard-profile route has been removed as we've simplified auth to JWT-only
 
 // Get the currently logged-in user's profile
 // Now 'auth' correctly refers to the middleware function
