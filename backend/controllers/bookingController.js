@@ -73,8 +73,13 @@ const createBooking = async (req, res) => {
     });
 
     let responseMessage = 'Booking confirmed! Waiting for provider to send access details.';
-    if (!isProviderActive(service.providerId)) {
-        responseMessage = 'Booking confirmed! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
+    try {
+        if (!isProviderActive(service.providerId)) {
+            responseMessage = 'Booking confirmed! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
+        }
+    } catch (availabilityError) {
+        console.warn('Error checking provider availability:', availabilityError.message);
+        // Continue with default message if availability check fails
     }
 
     res.status(201).json({ message: responseMessage, booking });
@@ -118,10 +123,11 @@ const sendMessageToBooking = async (req, res) => {
             return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
         }
 
+        const credentials = booking.serviceId.credentials || {};
         booking.sharedCredentials = {
-            username: booking.serviceId.credentials?.username || '',
-            password: booking.serviceId.credentials?.password || '',
-            profileName: booking.serviceId.credentials?.profileName || '',
+            username: credentials.username || '',
+            password: credentials.password || '',
+            profileName: credentials.profileName || '',
             accessInstructions: booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
         };
 

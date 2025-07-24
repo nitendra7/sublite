@@ -9,6 +9,19 @@ const {
     getMyJoinedBookings
 } = require('../controllers/bookingController');
 
+// Debug endpoint to test controller import
+router.get('/debug', (req, res) => {
+    res.json({
+        message: 'Booking controller is working',
+        timestamp: new Date().toISOString(),
+        environment: {
+            nodeEnv: process.env.NODE_ENV,
+            hasAccessTokenSecret: !!process.env.ACCESS_TOKEN_SECRET,
+            hasMongoUri: !!process.env.MONGODB_URI
+        }
+    });
+});
+
 // Create a new booking
 router.post('/', auth, createBooking);
 
