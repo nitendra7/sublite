@@ -8,6 +8,9 @@ const User = require('../models/user');
  */
 const createService = async (req, res) => {
   try {
+    console.log('Creating service for user:', req.user._id);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const provider = await User.findById(req.user._id); // Uses req.user._id
     
     // If user is not yet a provider, set default provider settings
@@ -34,7 +37,10 @@ const createService = async (req, res) => {
       ...req.body,
       providerId: req.user._id, // Uses req.user._id
     });
+    
+    console.log('Service object before save:', JSON.stringify(service.toObject(), null, 2));
     await service.save();
+    console.log('Service created successfully:', service._id);
 
     if (!provider.isProvider) {
         provider.isProvider = true;
