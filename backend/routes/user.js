@@ -1,16 +1,32 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-// const admin = require('../middleware/admin'); // Disabled admin for teacher testing
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin'); 
+
 const router = express.Router();
 
+// --- User-specific Routes ---
+
+// This route is for onboarding/syncing user profile data after Firebase signup/login.
+router.post('/onboard-profile', auth, userController.onboardProfile);
+
+// Get the currently logged-in user's profile
+// Now 'auth' correctly refers to the middleware function
+router.get('/me', auth, userController.getMe);
+
+// Update the currently logged-in user's profile
+router.put('/me', auth, userController.updateMe);
+
+// Deactivate the currently logged-in user's account
+router.delete('/me', auth, userController.deactivateMe);
+
+
+// --- Admin-only Routes ---
 // Get all users
-router.get('/', admin, userController.getAllUsers); // Disabled admin for teacher testing
-// Get user by ID
-router.get('/:id', admin, userController.getUserById); // Disabled admin for teacher testing
-// Create a new user
-router.post('/', admin, userController.createUser); // Disabled admin for teacher testing
-// Update a user by ID
-router.put('/:id', admin, userController.updateUser); // Disabled admin for teacher testing
-// Delete a user by ID
-router.delete('/:id', admin, userController.deleteUser); // Disabled admin for teacher testing
-module.exports = router; 
+// Now 'auth' and 'admin' correctly refer to the middleware functions
+router.get('/', auth, admin, userController.getAllUsers);
+
+// Get a single user by their ID
+router.get('/:id', auth, admin, userController.getUserById);
+
+module.exports = router;

@@ -1,16 +1,22 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking', required: true },
-  clientId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
-  providerId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+  userId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+  providerId: { type: mongoose.Schema.ObjectId, ref: 'User' }, // Only for service payments
+  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking', required: true }, // Only for service payments
+  paymentId: { type: String },
+  type: {
+    type: String,
+    enum: ['wallet-topup', 'service-payment', 'withdrawal', 'refund'],
+    required: true
+  },
 
   amount: { type: Number, required: true },
-  platformFee: Number,
-  providerAmount: Number,
+  platformFee: { type: Number, default: 0 },
+  providerAmount: { type: Number }, // Amount credited to provider after fee
 
-  paymentMethod: { type: String, enum: ['wallet', 'card', 'upi'], required: true },
-  transactionId: String,
+  paymentMethod: { type: String, enum: ['wallet', 'razorpay'] },
+  transactionId: String, // For external gateway transaction IDs
   gatewayResponse: Object,
 
   status: {
@@ -19,15 +25,13 @@ const paymentSchema = new mongoose.Schema({
     default: 'pending'
   },
 
-  createdAt: { type: Date, default: Date.now },
   processedAt: Date
-});
+}, { timestamps: true });
 
-paymentSchema.index({ bookingId: 1 });
-paymentSchema.index({ clientId: 1 });
+paymentSchema.index({ userId: 1 });
 paymentSchema.index({ providerId: 1 });
+paymentSchema.index({ type: 1 });
 paymentSchema.index({ status: 1 });
-paymentSchema.index({ createdAt: -1 });
 
 const Payment = mongoose.model("payment", paymentSchema);
 module.exports = Payment;

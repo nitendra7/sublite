@@ -1,63 +1,149 @@
+// controllers/authController.js
+
 const User = require('../models/user');
+const RefreshToken = require('../models/refreshtoken');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
-// Secret keys (in production, use env variables)
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'access_secret';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'refresh_secret';
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
-// In-memory store for refresh tokens (for demo; use DB in production)
-let refreshTokens = [];
+// These functions handle manual email/password registration, login, token refreshing, and logout.
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, userType } = req.body;
-    if (!name || !email || !password || !userType) {
-      return res.status(400).json({ error: 'All fields are required' });
+    const { name, username, email, password } = req.body;
+
+    if (!name || !username || !email || !password) {
+      return res.status(400).json({ message: 'Name, username, email, and password are required.' });
     }
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(409).json({ error: 'Email already registered' });
-    const hashed = await bcrypt.hash(password, 10);
-    // Prevent privilege escalation
-    const { isAdmin, ...safeBody } = req.body;
-    const user = new User({ ...safeBody, password: hashed });
-    await user.save();
-    res.status(201).json({ message: 'User registered successfully' });
+
+    const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
+    if (existingUser) {
+      return res.status(409).json({ message: 'A user with this email or username already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const newUser = new User({ name, username, email, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully. Please log in.' });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Server error during manual registration:', err);
+    res.status(500).json({ message: 'Server error during registration.', error: err.message });
   }
 };
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-    const accessToken = jwt.sign({ id: user._id, userType: user.userType, name: user.name }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-    refreshTokens.push(refreshToken);
-    res.json({ accessToken, refreshToken });
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Your account has been deactivated.' });
+    }
+
+    const newRefreshToken = uuidv4();
+    const refreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+
+    await RefreshToken.deleteOne({ userId: user._id });
+    await RefreshToken.create({ token: newRefreshToken, userId: user._id, expiresAt: new Date(refreshTokenExpiry) });
+
+    const accessTokenPayload = {
+      id: user._id,
+      username: user.username,
+      isProvider: user.isProvider,
+      isAdmin: user.isAdmin,
+      tokenType: 'custom_jwt'
+    };
+    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+
+    res.json({
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        isProvider: user.isProvider,
+        isAdmin: user.isAdmin,
+      }
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Server error during manual login:', err);
+    res.status(500).json({ message: 'Server error during login.', error: err.message });
   }
 };
 
-exports.refreshToken = (req, res) => {
+exports.refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
-  if (!refreshToken || !refreshTokens.includes(refreshToken)) {
-    return res.status(403).json({ error: 'Refresh token not found, login again' });
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token is required.' });
   }
-  jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid refresh token' });
-    const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-    res.json({ accessToken });
-  });
+
+  try {
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!storedToken) {
+      return res.status(403).json({ message: 'Invalid or expired refresh token. Please log in again.' });
+    }
+
+    if (storedToken.expiresAt && storedToken.expiresAt < new Date()) {
+        await RefreshToken.deleteOne({ token: refreshToken });
+        return res.status(403).json({ message: 'Refresh token expired. Please log in again.' });
+    }
+
+    const user = await User.findById(storedToken.userId);
+    if (!user) {
+        await RefreshToken.deleteOne({ token: refreshToken });
+        return res.status(403).json({ message: 'User not found for this refresh token. Please log in again.' });
+    }
+
+    await RefreshToken.deleteOne({ token: refreshToken });
+    const newRefreshToken = uuidv4();
+    const newRefreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    await RefreshToken.create({
+        token: newRefreshToken,
+        userId: user._id,
+        expiresAt: new Date(newRefreshTokenExpiry)
+    });
+
+    const newAccessTokenPayload = {
+      id: user._id,
+      username: user.username,
+      isProvider: user.isProvider,
+      isAdmin: user.isAdmin,
+      tokenType: 'custom_jwt'
+    };
+    const newAccessToken = jwt.sign(newAccessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+
+    res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    res.status(403).json({ message: 'Invalid refresh token. Please log in again.', error: err.message });
+  }
 };
 
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
   const { refreshToken } = req.body;
-  refreshTokens = refreshTokens.filter(token => token !== refreshToken);
-  res.json({ message: 'Logged out successfully' });
-}; 
+  if (refreshToken) {
+    try {
+      await RefreshToken.deleteOne({ token: refreshToken });
+      res.status(200).json({ message: 'Logged out successfully.' });
+    } catch (err) {
+      console.error('Error during logout:', err);
+      res.status(500).json({ message: 'Server error during logout.', error: err.message });
+    }
+  } else {
+    res.status(400).json({ message: 'Refresh token not provided for logout.' });
+  }
+};

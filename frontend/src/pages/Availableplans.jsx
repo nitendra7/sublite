@@ -1,142 +1,154 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Star, LayoutGrid, List } from 'lucide-react';
+import { useUser } from '../context/UserContext'; // To get the auth token
 
 const API_BASE = "https://sublite-wmu2.onrender.com";
 
-function formatCurrency(amount) {
-  return `₹${amount.toLocaleString()}`;
-}
+// This should fetch from your backend, not use mock data
+// const availablePlansList = [ ... ];
 
-export default function Plans() {
-  const [plans, setPlans] = useState([]);
+const Availableplans = () => {
+  const navigate = useNavigate();
+  const { token } = useUser(); // Get token for authenticated requests
+  const [isGridView, setIsGridView] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [plans, setPlans] = useState([]); // State to hold plans from backend
   const [loading, setLoading] = useState(true);
 
+ // Fetch plans from the backend when the component mounts
   useEffect(() => {
-    async function fetchPlans() {
-      setLoading(true);
+    const fetchPlans = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/services`);
         const data = await res.json();
-        setPlans(data);
-      } catch {
-        setPlans([]);
+
+        // FIX: Check if the API response is an array before setting state
+        if (Array.isArray(data)) {
+          setPlans(data);
+        } else {
+          // If the API sends an object like { services: [...] }, you could handle it here:
+          // else if (data && Array.isArray(data.services)) {
+          //   setPlans(data.services);
+          // }
+          console.error("API did not return an array of plans:", data);
+          setPlans([]); // Default to an empty array to prevent the app from crashing
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        setPlans([]); // Also default to an empty array on error
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
+
     fetchPlans();
   }, []);
 
+  // =================================================================
+  // == NEW FUNCTION to handle buying a plan with wallet balance   ==
+  // =================================================================
+  const handleBuyPlan = async (serviceId) => {
+    if (!window.confirm("Are you sure you want to purchase this plan using your wallet balance?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/bookings/pay-from-wallet`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ serviceId: serviceId })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'An error occurred.');
+      }
+
+      alert('Purchase successful! You can view it in "My Subscriptions".');
+      navigate('/dashboard/subscriptions');
+
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  const toggleView = () => {
+    setIsGridView(prevState => !prevState);
+  };
+
+  const filteredPlans = plans.filter(plan =>
+    plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (plan.provider?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    plan.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 py-10 px-4 relative overflow-hidden animate-fade-in">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-[#2bb6c4] mb-10 drop-shadow animate-slide-in-down">
-          Available Plans
-        </h1>
-        {loading ? (
-          <div className="flex justify-center items-center h-60">
-            <svg className="animate-spin h-10 w-10 text-[#2bb6c4]" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#2bb6c4" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="#2bb6c4" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="text-center text-gray-300 text-lg mt-20">No plans available right now.</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {plans.map((plan, idx) => (
-              <div
-                key={plan._id}
-                className={`
-                  bg-gradient-to-br from-slate-800 via-gray-900 to-blue-900
-                  rounded-3xl shadow-2xl p-7 flex flex-col gap-4
-                  text-white border border-[#2bb6c4]/30
-                  hover:scale-[1.03] hover:shadow-blue-900/40 transition-all duration-500
-                  animate-fade-in
-                  ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
-                `}
-                style={{ animationDelay: `${idx * 100 + 200}ms` }}
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">All Available Plans</h1>
+        <button
+          onClick={toggleView}
+          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+          title={isGridView ? "Switch to List View" : "Switch to Grid View"}
+        >
+          {isGridView ? <List size={24} /> : <LayoutGrid size={24} />}
+        </button>
+      </div>
+      
+      <div className="mb-8">
+        <input
+          type="text"
+          placeholder="Search plans by name, owner, or description..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-xl rounded-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-colors"
+        />
+      </div>
+      
+      <p className="text-gray-600 dark:text-gray-300 mb-8">Browse and join shared subscriptions from the community.</p>
+
+      {loading ? <p>Loading plans...</p> : (
+        <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+          {filteredPlans.length > 0 ? (
+            filteredPlans.map(plan => (
+              <div key={plan._id}
+                   className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex 
+                               ${isGridView ? 'flex-col items-center text-center' : 'flex-col sm:flex-row items-center justify-between'} 
+                               hover:shadow-lg transition-shadow text-gray-900 dark:text-gray-100`}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xl font-bold">{plan.serviceName}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#2bb6c4] text-white ml-auto">
-                    {plan.serviceType}
-                  </span>
-                </div>
-                <div className="text-gray-300 text-sm mb-2">{plan.description}</div>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {plan.features && plan.features.map((f, i) => (
-                    <span key={i} className="bg-[#2bb6c4]/20 text-[#2bb6c4] px-2 py-0.5 rounded text-xs">{f}</span>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-4 items-center mb-2">
-                  <div>
-                    <span className="block text-xs text-gray-400">Rental Price</span>
-                    <span className="text-lg font-bold">{formatCurrency(plan.rentalPrice)}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-400">Duration</span>
-                    <span className="font-semibold">{plan.rentalDuration} days</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-400">Slots</span>
-                    <span className="font-semibold">{plan.availableSlots - plan.currentUsers}/{plan.maxUsers}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-400">Status</span>
-                    <span className={`font-semibold ${plan.serviceStatus === "active" ? "text-green-400" : "text-red-400"}`}>
-                      {plan.serviceStatus}
-                    </span>
+                <div className={`flex-grow ${isGridView ? 'mb-2' : 'mb-3 sm:mb-0'} ${isGridView ? 'text-center' : ''}`}>
+                  <p className="font-bold text-lg">{plan.name}</p>
+                  <div className={`flex items-center text-sm gap-4 mt-1 ${isGridView ? 'justify-center' : ''}`}>
+                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><Users size={14} className="text-gray-500 dark:text-gray-400" /> {plan.slotsAvailable}/{plan.totalSlots} slots available</span>
+                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300"><Star size={14} className="text-gray-500 dark:text-gray-400" /> Shared by {plan.provider?.name || '...'}</span>
                   </div>
                 </div>
-                {plan.location && (
-                  <div className="text-xs text-gray-400 mb-2">
-                    {plan.location.city}, {plan.location.state}, {plan.location.country}
-                  </div>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <button className="flex-1 py-2 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow transition-all duration-200">
-                    Book Now
-                  </button>
-                  <button className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#2bb6c4] font-bold shadow transition-all duration-200">
-                    Details
+                <div className={`flex items-center gap-4 ${isGridView ? 'flex-col' : ''}`}>
+                  <p className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{plan.price}<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/slot</span></p>
+                  <button
+                    onClick={() => handleBuyPlan(plan._id)}
+                    className="bg-[#2bb6c4] text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] dark:text-gray-100"
+                  >
+                    Buy Now
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <style>
-        {`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.7s ease both;
-          }
-          @keyframes slide-in-left {
-            from { opacity: 0; transform: translateX(-40px);}
-            to { opacity: 1; transform: translateX(0);}
-          }
-          .animate-slide-in-left {
-            animation: slide-in-left 0.7s cubic-bezier(.4,0,.2,1) both;
-          }
-          @keyframes slide-in-right {
-            from { opacity: 0; transform: translateX(40px);}
-            to { opacity: 1; transform: translateX(0);}
-          }
-          .animate-slide-in-right {
-            animation: slide-in-right 0.7s cubic-bezier(.4,0,.2,1) both;
-          }
-          @keyframes slide-in-down {
-            from { opacity: 0; transform: translateY(-40px);}
-            to { opacity: 1; transform: translateY(0);}
-          }
-          .animate-slide-in-down {
-            animation: slide-in-down 0.7s cubic-bezier(.4,0,.2,1) both;
-          }
-        `}
-      </style>
+            ))
+          ) : (
+            <div className="text-center text-gray-600 dark:text-gray-400 col-span-full">
+              No matching plans found.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default Availableplans;

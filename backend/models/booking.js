@@ -4,26 +4,19 @@ const bookingSchema = new mongoose.Schema({
   clientId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
   providerId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
   serviceId: { type: mongoose.Schema.ObjectId, ref: 'Service', required: true },
+  paymentId: { type: mongoose.Schema.ObjectId, ref: 'Payment', required: false }, 
 
   bookingDetails: {
-    serviceName: String,
-    rentalPrice: Number,
-    rentalDuration: Number, // in days
-    startDate: Date,
-    endDate: Date
-  },
-
-  paymentDetails: {
-    amount: Number,
-    paymentMethod: { type: String, enum: ['wallet', 'card', 'upi'] },
-    transactionId: String,
-    paymentStatus: { type: String, enum: ['pending', 'completed', 'failed', 'refunded'], default: 'pending' },
-    paidAt: Date
+   serviceName: { type: String, required: true },
+    rentalPrice: { type: Number, required: true },
+    rentalDuration: { type: Number, required: true },
+    startDate: { type: Date, default: Date.now },
+    endDate: { type: Date, required: true }
   },
 
   bookingStatus: {
     type: String,
-    enum: ['pending', 'confirmed', 'active', 'completed', 'cancelled'],
+    enum: ['pending', 'confirmed', 'active', 'completed', 'cancelled', 'disputed'],
     default: 'pending'
   },
 
@@ -34,16 +27,13 @@ const bookingSchema = new mongoose.Schema({
     accessInstructions: String
   },
 
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: Date,
   completedAt: Date
-});
+}, { timestamps: true });
 
 bookingSchema.index({ clientId: 1 });
 bookingSchema.index({ providerId: 1 });
 bookingSchema.index({ serviceId: 1 });
 bookingSchema.index({ bookingStatus: 1 });
-bookingSchema.index({ createdAt: -1 });
 
 const Booking = mongoose.model("booking", bookingSchema);
 module.exports = Booking;

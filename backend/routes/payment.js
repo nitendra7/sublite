@@ -1,9 +1,15 @@
 const express = require('express');
 const paymentController = require('../controllers/paymentController');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
-router.get('/', paymentController.getAllPayments);
-router.get('/:id', paymentController.getPaymentById);
-router.post('/', paymentController.createPayment);
+// Route to create a Razorpay order
+router.post('/create-order', auth, paymentController.createRazorpayOrder);
 
-module.exports = router; 
+// Route to verify the payment
+router.post('/verify', auth, paymentController.verifyRazorpayPayment);
+
+// Route to get all payments for the logged-in user
+router.get('/', auth, paymentController.getAllPayments);
+
+module.exports = router;

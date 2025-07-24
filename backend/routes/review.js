@@ -1,11 +1,19 @@
 const express = require('express');
-const reviewController = require('../controllers/reviewController');
 const router = express.Router();
 
+// Import controllers
+const reviewController = require('../controllers/reviewController');
+
+// Import auth middleware correctly (assuming default export is a function)
+const auth = require('../middleware/auth');
+
+// PUBLIC routes
 router.get('/', reviewController.getAllReviews);
 router.get('/:id', reviewController.getReviewById);
-router.post('/', reviewController.createReview);
-router.put('/:id', reviewController.updateReview);
-router.delete('/:id', reviewController.deleteReview);
 
-module.exports = router; 
+// PROTECTED routes (requires authentication)
+router.post('/', auth, reviewController.createReview);
+router.put('/:id', auth, reviewController.updateReview);
+router.delete('/:id', auth, reviewController.deleteReview);
+
+module.exports = router;
