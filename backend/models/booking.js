@@ -27,7 +27,9 @@ const bookingSchema = new mongoose.Schema({
     accessInstructions: String
   },
 
-  completedAt: Date
+  completedAt: Date,
+  cancelledAt: Date,
+  cancellationReason: String
 }, { timestamps: true });
 
 bookingSchema.index({ clientId: 1 });

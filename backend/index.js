@@ -67,7 +67,7 @@ app.get('/api/status', (_req, res) => {
 const startServer = async () => {
   try {
     await connectDB();
-    await initializeScheduler();
+    initializeScheduler();
     app.listen(PORT, () => {
       console.log(`🚀 Server is listening on port ${PORT}`);
     });
