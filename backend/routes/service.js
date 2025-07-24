@@ -5,8 +5,9 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// --- Public Routes ---
-router.get('/', serviceController.getAllServices);
+// --- Public Routes with Optional Auth ---
+// Use optional auth to exclude user's own services when authenticated
+router.get('/', auth.optionalAuth, serviceController.getAllServices);
 
 // --- Protected Routes ---
 

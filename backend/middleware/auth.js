@@ -11,6 +11,52 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
  * Verifies JWT tokens and populates req.user with the MongoDB user document.
  * @returns {object} req.user - The authenticated user's document from MongoDB.
  */
+/**
+ * Optional authentication middleware - doesn't fail if no token provided
+ */
+const optionalAuth = async function (req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    // If no auth header, continue without setting req.user
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next();
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    if (!token) {
+        return next();
+    }
+
+    try {
+        if (!ACCESS_TOKEN_SECRET) {
+            console.error('ACCESS_TOKEN_SECRET is not set.');
+            return next();
+        }
+        
+        const decodedTokenPayload = jwt.verify(token, ACCESS_TOKEN_SECRET);
+        const userId = decodedTokenPayload.id || decodedTokenPayload.userId;
+        
+        if (!userId) {
+            return next();
+        }
+
+        const user = await User.findById(userId).select('-password');
+        
+        if (user && user.isActive) {
+            req.user = user;
+        }
+        
+        next();
+        
+    } catch (error) {
+        // On error, just continue without authentication
+        next();
+    }
+};
+
+/**
+ * Required authentication middleware - fails if no valid token
+ */
 module.exports = async function (req, res, next) {
     const authHeader = req.headers.authorization;
 
@@ -63,3 +109,6 @@ module.exports = async function (req, res, next) {
         return res.status(403).json({ message: errorMessage });
     }
 };
+
+// Export the optional auth middleware as well
+module.exports.optionalAuth = optionalAuth;

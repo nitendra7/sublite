@@ -65,7 +65,15 @@ const createService = async (req, res) => {
  */
 const getAllServices = async (req, res) => {
   try {
-    const services = await Service.find({ serviceStatus: 'active', availableSlots: { $gt: 0 } })
+    // Base query for active services with available slots
+    let query = { serviceStatus: 'active', availableSlots: { $gt: 0 } };
+    
+    // If user is authenticated, exclude their own services
+    if (req.user && req.user._id) {
+      query.providerId = { $ne: req.user._id };
+    }
+    
+    const services = await Service.find(query)
                                   .populate('providerId', 'username name rating providerSettings')
                                   .sort({ createdAt: -1 });
     res.json(services);
