@@ -74,9 +74,11 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Create compound and specialized indexes
+// Note: These indexes might already exist in the database from previous runs
+// If you get duplicate index warnings, the database already has these indexes
 userSchema.index({ email: 1 }, { unique: true }); // Unique email constraint
-userSchema.index({ username: 1 }, { unique: true, sparse: true }); // Unique username constraint
-userSchema.index({ firebaseUid: 1 }, { unique: true, sparse: true }); // Unique firebaseUid constraint
+// userSchema.index({ username: 1 }, { unique: true, sparse: true }); // Unique username constraint - commented to avoid duplicates
+// userSchema.index({ firebaseUid: 1 }, { unique: true, sparse: true }); // Unique firebaseUid constraint - commented to avoid duplicates
 userSchema.index({ isProvider: 1 }); // Provider lookup index
 
 // Password hashing hook
