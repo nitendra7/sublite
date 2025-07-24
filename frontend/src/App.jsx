@@ -3,7 +3,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
-import { GoogleOAuthProvider } from '@react-oauth/google'; // Import GoogleOAuthProvider
 
 // Page components
 import HomePage from './pages/HomePage';
@@ -49,46 +48,42 @@ function App() {
   const { darkMode, toggleDarkMode } = useTheme();
 
   return (
-    // Wrap the entire application with GoogleOAuthProvider.
-    // Using environment variable for Google Client ID
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <Router>
-        {/* UserProvider wraps the application to provide user authentication context. */}
-        <UserProvider>
-          {/* Routes define the different paths and their corresponding components. */}
-          <Routes>
-            {/* Public routes: Accessible without authentication. */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<SignupPage />} />
+    <Router>
+      {/* UserProvider wraps the application to provide user authentication context. */}
+      <UserProvider>
+        {/* Routes define the different paths and their corresponding components. */}
+        <Routes>
+          {/* Public routes: Accessible without authentication. */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<SignupPage />} />
 
-            {/* Protected routes group: Access is guarded by PrivateRoute. */}
-            {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
-            <Route element={<PrivateRoute />}>
-                <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
-                    {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
-                    <Route path="/dashboard" element={<Dashboard />}>
-                      <Route index element={<Availableplans />}/>
-                      <Route path="available-plans" element={<Availableplans />} />
-                      <Route path="subscriptions" element={<SubscriptionsPage />} />
-                      <Route path="wallet" element={<WalletPage />} />
-                      <Route path="profile" element={<ProfilePage />} />
-                      <Route path="reviews" element={<ReviewPage />} />
-                      <Route path="notifications" element={<NotificationsPage />} />
-                      <Route path="add-service" element={<AddServicePage />} />
-                    </Route>
+          {/* Protected routes group: Access is guarded by PrivateRoute. */}
+          {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
+          <Route element={<PrivateRoute />}>
+              <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+                  {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
+                  <Route path="/dashboard" element={<Dashboard />}>
+                    <Route index element={<Availableplans />}/>
+                    <Route path="available-plans" element={<Availableplans />} />
+                    <Route path="subscriptions" element={<SubscriptionsPage />} />
+                    <Route path="wallet" element={<WalletPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                    <Route path="reviews" element={<ReviewPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
+                    <Route path="add-service" element={<AddServicePage />} />
+                  </Route>
 
-                    {/* Standalone protected pages. */}
-                    <Route path="/subscription-details" element={<SubscriptionDetails />} />
-                </Route>
-            </Route>
+                  {/* Standalone protected pages. */}
+                  <Route path="/subscription-details" element={<SubscriptionDetails />} />
+              </Route>
+          </Route>
 
-            {/* Fallback route: Redirects to home page for any undefined paths. */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </UserProvider>
-      </Router>
-    </GoogleOAuthProvider>
+          {/* Fallback route: Redirects to home page for any undefined paths. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </UserProvider>
+    </Router>
   );
 }
 
