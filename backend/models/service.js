@@ -9,7 +9,13 @@ const serviceSchema = new mongoose.Schema({
     description: String,
 
     originalPrice: { type: Number, required: true },
-    rentalPrice: { type: Number },
+    rentalPrice: { 
+        type: Number,
+        default: function() {
+            // Calculate fair rental price: (originalPrice / maxUsers) with a small markup
+            return Math.ceil((this.originalPrice / this.maxUsers) * 1.1);
+        }
+    },
     rentalDuration: { type: Number, required: true },
 
     maxUsers: { type: Number, required: true },
@@ -41,6 +47,19 @@ const serviceSchema = new mongoose.Schema({
         country: String
     }
 }, { timestamps: true });
+
+// Pre-save middleware to calculate rental price and available slots
+serviceSchema.pre('save', function(next) {
+    // Calculate rental price if not set
+    if (!this.rentalPrice && this.originalPrice && this.maxUsers) {
+        this.rentalPrice = Math.ceil((this.originalPrice / this.maxUsers) * 1.1);
+    }
+    
+    // Update available slots
+    this.availableSlots = this.maxUsers - this.currentUsers;
+    
+    next();
+});
 
 serviceSchema.index({ providerId: 1 });
 serviceSchema.index({ categoryId: 1 });

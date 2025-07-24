@@ -6,7 +6,7 @@ const User = require('../models/user');
 // GET all transactions for the logged-in user
 exports.getAllWalletTransactions = async (req, res) => {
   try {
-    const transactions = await WalletTransaction.find({ userId: req.user._id }).sort({ createdAt: -1 }); // Uses req.user._id
+    const transactions = await WalletTransaction.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(transactions);
   } catch (err) {
     res.status(500).json({ error: err.message });
