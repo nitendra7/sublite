@@ -29,7 +29,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE = 'https://sublite-wmu2.onrender.com';
+  const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
 
   // Clears all authentication-related data from localStorage and context.
   const clearAuthData = useCallback(() => {

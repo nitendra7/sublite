@@ -1,7 +1,8 @@
  import React, { useState } from 'react';
  import { useNavigate } from 'react-router-dom';
  import { useUser } from '../context/UserContext';
- import AuthPage from './AuthPage'; // Ensure correct import
+ import AuthPage from './AuthPage';
+ import { exchangeGoogleTokenForFirebaseToken } from '../firebase/config';
 
  const jwtDecode = (token) => {
   try {
@@ -22,7 +23,7 @@
   }
  };
 
- const API_BASE = 'https://sublite-wmu2.onrender.com';
+ const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
 
  function LoginPage() {
   const navigate = useNavigate();
@@ -81,54 +82,58 @@
 
   /**
   * Handles successful Google login.
-  * Receives the credential response from Google, sends it to the backend for verification,
-  * and then processes the backend's JWT.
-  * @param {object} credentialResponse The response object containing the Google JWT.
+  * Exchanges Google OAuth token for Firebase ID token and onboards user.
+  * @param {object} tokenResponse The response object containing the Google access token.
   */
-  const handleGoogleLoginSuccess = async (credentialResponse) => {
+  const handleGoogleLoginSuccess = async (tokenResponse) => {
   setLoading(true);
   setError('');
   setAuthError(null);
 
   try {
-  // Send the Google credential (JWT) to your backend for verification
-  const res = await fetch(`${API_BASE}/api/auth/google-login`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ token: credentialResponse.credential }),
-  });
+    console.log('Google OAuth Success:', tokenResponse);
+    
+    // Exchange Google access token for Firebase ID token
+    const { idToken, user } = await exchangeGoogleTokenForFirebaseToken(tokenResponse.access_token);
+    
+    console.log('Firebase user:', user);
+    
+    // Store Firebase ID token for authentication
+    localStorage.setItem('token', idToken);
+    localStorage.setItem('userId', user.uid);
+    localStorage.setItem('userName', user.displayName || user.email);
+    
+    // Onboard user profile to MongoDB
+    const onboardRes = await fetch(`${API_BASE}/api/users/onboard-profile`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        firebaseUid: user.uid,
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+        username: user.email.split('@')[0] // Generate username from email
+      })
+    });
 
-  const data = await res.json();
+    if (!onboardRes.ok) {
+      const onboardData = await onboardRes.json();
+      throw new Error(onboardData.message || 'Failed to sync user profile');
+    }
 
-  if (!res.ok) {
-  throw new Error(data.error || 'Google login failed.');
-  }
-
-  // Your backend returns its own JWT, which you save and use for your app's session
-  const token = data.accessToken;
-  const decoded = jwtDecode(token);
-  const userId = decoded.userId || decoded.id || decoded.sub;
-
-  if (!userId) {
-  console.error('Decoded token payload:', decoded);
-  throw new Error('Google login failed: User ID missing from authentication token.');
-  }
-
-  localStorage.setItem('token', token);
-  localStorage.setItem('userId', userId);
-  if (decoded.name) localStorage.setItem('userName', decoded.name);
-
-  fetchUserProfile();
-  navigate('/dashboard');
+    // Fetch user profile and navigate to dashboard
+    fetchUserProfile();
+    navigate('/dashboard');
   } catch (err) {
-  setError(err.message);
-  if (setAuthError) {
-  setAuthError(err.message);
-  } else {
-  console.error('setAuthError not available to set:', err.message);
-  }
+    console.error('Google login error:', err);
+    setError(err.message || 'Google login failed. Please try again.');
+    if (setAuthError) {
+      setAuthError(err.message);
+    }
   } finally {
-  setLoading(false);
+    setLoading(false);
   }
   };
 

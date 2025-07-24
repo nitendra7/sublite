@@ -1,10 +1,5 @@
 // App.jsx
 import React from 'react';
-
-import { Navigate, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-=======
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
@@ -12,7 +7,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google'; // Import GoogleOAuth
 
 // Page components
 import HomePage from './pages/HomePage';
-
 import LoginPage from './pages/Login';
 import SignupPage from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -20,14 +14,6 @@ import Availableplans from './pages/Availableplans';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import WalletPage from './pages/WalletPage';
 import ProfilePage from './pages/ProfilePage';
-
-import AvailablePlans from './pages/Availableplans';
-import Subscriptions from './pages/SubscriptionsPage';
-import WalletPage from './pages/WalletPage';
-import ReviewPage from './pages/ReviewPage';
-import Notifications from './pages/NotificationsPage.jsx';
-
-
 import ReviewPage from './pages/ReviewPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SubscriptionDetails from './pages/SubscriptionDetails';
@@ -64,8 +50,8 @@ function App() {
 
   return (
     // Wrap the entire application with GoogleOAuthProvider.
-    // Replace "YOUR_GOOGLE_CLIENT_ID" with your actual Client ID from Google Cloud Console.
-    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+    // Using environment variable for Google Client ID
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <Router>
         {/* UserProvider wraps the application to provide user authentication context. */}
         <UserProvider>

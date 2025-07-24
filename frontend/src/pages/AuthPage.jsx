@@ -31,16 +31,11 @@ function AuthPage({
   handleAppleLogin,
 }) {
   // Use the useGoogleLogin hook to get a function to initiate the login flow
+  // Using 'implicit' flow to get Firebase ID tokens
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess, // Pass the success handler from parent (Login/Signup)
     onError: handleGoogleError,     // Pass the error handler from parent
-    flow: 'auth-code', // Recommended for robust server-side verification, or 'implicit' for client-side
-                       // Based on your previous backend explanation, 'implicit' (id_token) is what you were using directly.
-                       // If you want to continue sending the ID token directly from frontend, use 'implicit'.
-                       // If your backend handles authorization codes, use 'auth-code'.
-                       // For consistency with your previous LoginPage.js, let's assume 'implicit' (default for useGoogleLogin if not specified)
-                       // which means onSuccess receives credentialResponse directly.
-                       // For `credentialResponse.credential` you'll typically use `implicit` flow or omit `flow` which defaults to 'implicit'.
+    // Using default flow (implicit) to get ID tokens for Firebase authentication
   });
 
 
