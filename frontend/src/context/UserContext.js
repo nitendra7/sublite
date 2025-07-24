@@ -57,7 +57,7 @@ export const UserProvider = ({ children }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/${userIdToFetch}`, {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${tokenToFetch}` }
       });
 

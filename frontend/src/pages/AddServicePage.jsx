@@ -65,7 +65,7 @@ const AddServicePage = () => {
         }
 
         try {
-            const response = await fetch('/api/services', {
+            const response = await fetch('https://sublite-wmu2.onrender.com/api/services', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

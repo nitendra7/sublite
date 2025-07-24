@@ -494,6 +494,7 @@ const sidebarItems = [
   { name: 'Add Service', icon: <PlusCircle />, route: '/dashboard/add-service' },
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
+  { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
 ];
 
 function getInitials(name) {

@@ -75,7 +75,7 @@ function App() {
                       <Route path="profile" element={<ProfilePage />} />
                       <Route path="reviews" element={<ReviewPage />} />
                       <Route path="notifications" element={<NotificationsPage />} />
-                      <Route path="/dashboard/add-service" element={<AddServicePage />} /> 
+                      <Route path="add-service" element={<AddServicePage />} />
                     </Route>
 
                     {/* Standalone protected pages. */}
