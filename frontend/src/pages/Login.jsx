@@ -61,6 +61,7 @@ function LoginPage() {
       }
 
       localStorage.setItem('token', token);
+      localStorage.setItem('refreshToken', data.refreshToken); // Store refresh token
       localStorage.setItem('userId', userId);
       if (decoded.name) localStorage.setItem('userName', decoded.name);
 

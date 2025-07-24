@@ -9,7 +9,6 @@ const AddServicePage = () => {
         serviceType: 'Streaming', // Default value
         description: '',
         originalPrice: '',
-        rentalDuration: '30', // Default value
         maxUsers: '',
         features: '',
         credentials: {
@@ -122,16 +121,60 @@ const AddServicePage = () => {
                 {/* Pricing and Slots */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                     <h2 className="text-xl font-semibold mb-4 flex items-center"><DollarSign size={20} className="mr-2 text-[#2bb6c4]" />Pricing & Slots</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} placeholder="Original Monthly Price (₹)" className="input-style" required />
-                        <input type="number" name="maxUsers" value={formData.maxUsers} onChange={handleChange} placeholder="Max Users Allowed" className="input-style" required />
-                        <select name="rentalDuration" value={formData.rentalDuration} onChange={handleChange} className="input-style">
-                            <option value="30">30 Days</option>
-                            <option value="90">90 Days</option>
-                            <option value="365">365 Days</option>
-                        </select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Original Monthly Price *</label>
+                            <input 
+                                type="number" 
+                                name="originalPrice" 
+                                value={formData.originalPrice} 
+                                onChange={handleChange} 
+                                placeholder="₹ 999" 
+                                className="input-style" 
+                                required 
+                                min="1"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Max Users Allowed *</label>
+                            <input 
+                                type="number" 
+                                name="maxUsers" 
+                                value={formData.maxUsers} 
+                                onChange={handleChange} 
+                                placeholder="4" 
+                                className="input-style" 
+                                required 
+                                min="1"
+                                max="10"
+                            />
+                        </div>
                     </div>
-                     <p className="text-xs text-gray-400 mt-2">The fair rental price per slot will be calculated automatically.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Subscription Expiry Date</label>
+                            <input 
+                                type="date" 
+                                name="subscriptionExpiry" 
+                                value={formData.subscriptionExpiry} 
+                                onChange={handleChange} 
+                                className="input-style" 
+                                min={new Date().toISOString().split('T')[0]}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Access Instructions Template</label>
+                            <input 
+                                type="text" 
+                                name="accessInstructionsTemplate" 
+                                value={formData.accessInstructionsTemplate} 
+                                onChange={handleChange} 
+                                placeholder="How to access the service" 
+                                className="input-style" 
+                            />
+                        </div>
+                    </div>
+                     <p className="text-xs text-gray-400 mt-2">The base rental price per slot will be calculated automatically: (Original Price ÷ Max Users) × 1.1. Buyers will choose their rental duration when purchasing.</p>
                 </div>
                 
                  {/* Credentials */}
