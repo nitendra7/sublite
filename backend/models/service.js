@@ -33,6 +33,7 @@ const serviceSchema = new mongoose.Schema({
         password: String,
         profileName: String
     },
+    accessInstructionsTemplate: String,
     serviceStatus: {
         type: String,
         enum: ['active', 'inactive', 'suspended'],

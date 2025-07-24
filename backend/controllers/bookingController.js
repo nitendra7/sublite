@@ -80,8 +80,22 @@ const createBooking = async (req, res) => {
     res.status(201).json({ message: responseMessage, booking });
 
   } catch (err) {
+    console.error('Error in createBooking:', {
+      error: err.message,
+      stack: err.stack,
+      serviceId,
+      clientId,
+      rentalDuration
+    });
+    
+    // Rollback wallet balance if payment was made
     if(service && totalCost) {
-        await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
+        try {
+            await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
+            console.log('Wallet balance rolled back successfully');
+        } catch (rollbackErr) {
+            console.error('Failed to rollback wallet balance:', rollbackErr.message);
+        }
     }
     res.status(500).json({ message: 'Server error during booking creation.', error: err.message });
   }
@@ -105,9 +119,9 @@ const sendMessageToBooking = async (req, res) => {
         }
 
         booking.sharedCredentials = {
-            username: booking.serviceId.credentials.username,
-            password: booking.serviceId.credentials.password,
-            profileName: booking.serviceId.credentials.profileName,
+            username: booking.serviceId.credentials?.username || '',
+            password: booking.serviceId.credentials?.password || '',
+            profileName: booking.serviceId.credentials?.profileName || '',
             accessInstructions: booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
         };
 
@@ -127,6 +141,12 @@ const sendMessageToBooking = async (req, res) => {
         res.status(200).json(booking);
 
     } catch (err) {
+        console.error('Error in sendMessageToBooking:', {
+            error: err.message,
+            stack: err.stack,
+            bookingId,
+            providerId
+        });
         res.status(500).json({ message: 'Server error while sending message.', error: err.message });
     }
 };
