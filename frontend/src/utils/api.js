@@ -9,7 +9,7 @@ const refreshAccessToken = async () => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+        const response = await fetch(`${API_BASE}/api/auth/refresh`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
