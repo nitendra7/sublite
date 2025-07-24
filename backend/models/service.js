@@ -16,7 +16,7 @@ const serviceSchema = new mongoose.Schema({
             return Math.ceil((this.originalPrice / this.maxUsers) * 1.1);
         }
     },
-    rentalDuration: { type: Number, required: true },
+    // rentalDuration will be set by buyers when they purchase, not by providers
 
     maxUsers: { type: Number, required: true },
     currentUsers: { type: Number, default: 0 },

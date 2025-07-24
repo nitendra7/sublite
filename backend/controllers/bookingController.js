@@ -9,33 +9,40 @@ const { scheduleBookingCancellation, clearCancellationTimer } = require('../jobs
 // All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
 const createBooking = async (req, res) => {
-  const { serviceId, paymentMethod = 'wallet' } = req.body;
+  const { serviceId, rentalDuration, paymentMethod = 'wallet' } = req.body;
   const clientId = req.user._id; // Uses req.user._id
   let service;
+  let totalCost = 0;
 
   try {
     service = await Service.findById(serviceId).populate('providerId');
     const client = await User.findById(clientId);
 
     if (!service) return res.status(404).json({ message: 'Service not found.' });
+    if (!rentalDuration || rentalDuration < 1) return res.status(400).json({ message: 'Valid rental duration is required.' });
     if (service.providerId._id.equals(clientId)) return res.status(400).json({ message: 'You cannot book your own service.' });
     if (service.availableSlots <= 0) return res.status(400).json({ message: 'No available slots for this service.' });
-    if (client.walletBalance < service.rentalPrice) return res.status(400).json({ message: 'Insufficient wallet balance.' });
+    
+    // Calculate total cost based on rental duration (daily rate)
+    const dailyRate = service.rentalPrice / 30; // Assuming rentalPrice is monthly, convert to daily
+    totalCost = Math.ceil(dailyRate * rentalDuration);
+    
+    if (client.walletBalance < totalCost) return res.status(400).json({ message: 'Insufficient wallet balance.' });
 
-    client.walletBalance -= service.rentalPrice;
+    client.walletBalance -= totalCost;
     await client.save();
 
     const payment = await Payment.create({
         userId: clientId,
         providerId: service.providerId._id,
-        amount: service.rentalPrice,
+        amount: totalCost,
         paymentMethod,
         status: 'success',
         type: 'service-payment'
     });
 
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + service.rentalDuration);
+    endDate.setDate(endDate.getDate() + rentalDuration);
 
     const booking = await Booking.create({
       clientId,
@@ -44,7 +51,8 @@ const createBooking = async (req, res) => {
       paymentId: payment._id,
       bookingDetails: {
         serviceName: service.serviceName,
-        rentalPrice: service.rentalPrice,
+        rentalPrice: totalCost,
+        rentalDuration: rentalDuration,
         startDate: new Date(),
         endDate,
       },
@@ -72,8 +80,8 @@ const createBooking = async (req, res) => {
     res.status(201).json({ message: responseMessage, booking });
 
   } catch (err) {
-    if(service && service.rentalPrice) {
-        await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: service.rentalPrice } });
+    if(service && totalCost) {
+        await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
     }
     res.status(500).json({ message: 'Server error during booking creation.', error: err.message });
   }

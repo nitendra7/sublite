@@ -9,14 +9,25 @@ const User = require('../models/user');
 const createService = async (req, res) => {
   try {
     const provider = await User.findById(req.user._id); // Uses req.user._id
-    if (!provider.providerSettingsCompleted) {
-        return res.status(403).json({ message: 'Please complete your provider settings (Active Hours and Timezone) before creating a service.' });
+    
+    // If user is not yet a provider, set default provider settings
+    if (!provider.isProvider || !provider.providerSettingsCompleted) {
+        // Set default provider settings for first-time providers
+        provider.providerSettings = {
+            activeHours: {
+                start: '09:00',
+                end: '18:00'
+            },
+            timezone: 'UTC'
+        };
+        provider.providerSettingsCompleted = true;
+        await provider.save();
     }
 
-    const { serviceName, rentalPrice, rentalDuration, accessInstructionsTemplate } = req.body;
+    const { serviceName, originalPrice, maxUsers } = req.body;
 
-    if (!serviceName || !rentalPrice || !rentalDuration || !accessInstructionsTemplate) {
-      return res.status(400).json({ message: 'All required fields must be provided.' });
+    if (!serviceName || !originalPrice || !maxUsers) {
+      return res.status(400).json({ message: 'Service Name, Original Price, and Max Users are required.' });
     }
 
     const service = new Service({

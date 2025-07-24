@@ -125,7 +125,7 @@ exports.refreshToken = async (req, res) => {
       isAdmin: user.isAdmin,
       tokenType: 'custom_jwt'
     };
-    const newAccessToken = jwt.sign(newAccessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    const newAccessToken = jwt.sign(newAccessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
 
     res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
 
