@@ -145,7 +145,8 @@ const sendMessageToBooking = async (req, res) => {
         await Notification.create({
             userId: booking.clientId,
             title: 'Access Details Received!',
-            message: `The provider has sent access details for your booking: ${booking.bookingDetails.serviceName}.`,
+            message: `The provider has sent access details for your booking: ${booking.bookingDetails.serviceName}.
+Username: ${booking.sharedCredentials.username}\nPassword: ${booking.sharedCredentials.password}\nProfile: ${booking.sharedCredentials.profileName}\nInstructions: ${booking.sharedCredentials.accessInstructions}`,
             type: 'booking',
             relatedId: booking._id
         });
