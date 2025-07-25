@@ -272,26 +272,51 @@ export default function NotificationsPage() {
                         <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-[#2bb6c4] text-white animate-pulse dark:bg-[#1ea1b0] dark:text-gray-100">New</span>
                       )}
                     </div>
+                    {/* Always show Send Credentials button for eligible bookings */}
+                    {n.title === 'New Booking!' && n.relatedId && (
+                      <button
+                        className={`mt-2 px-4 py-2 rounded font-semibold transition 
+                          ${credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                            const created = new Date(credBookingCreatedAt);
+                            const now = new Date();
+                            const diffMinutes = (now - created) / (1000 * 60);
+                            return diffMinutes <= 15;
+                          })()
+                            ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                        onClick={() => {
+                          if (credBookingStatus === 'confirmed' && credBookingCreatedAt) {
+                            const created = new Date(credBookingCreatedAt);
+                            const now = new Date();
+                            const diffMinutes = (now - created) / (1000 * 60);
+                            if (diffMinutes <= 15) {
+                              openCredModal(n.relatedId);
+                            }
+                          }
+                        }}
+                        disabled={!(credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                          const created = new Date(credBookingCreatedAt);
+                          const now = new Date();
+                          const diffMinutes = (now - created) / (1000 * 60);
+                          return diffMinutes <= 15;
+                        })())}
+                        title={!(credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                          const created = new Date(credBookingCreatedAt);
+                          const now = new Date();
+                          const diffMinutes = (now - created) / (1000 * 60);
+                          return diffMinutes <= 15;
+                        })()) ? 'Booking not eligible (must be confirmed and within 15 minutes)' : ''}
+                      >
+                        Send Credentials
+                      </button>
+                    )}
                     {expandedId === n._id && (
                       <>
                         <div className="text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">{n.message}</div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                           {new Date(n.createdAt).toLocaleString()}
                         </div>
-                        {/* Show Send Credentials button for provider's new booking notifications if allowed */}
-                        {canSendCredentials(n) && credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
-                          const created = new Date(credBookingCreatedAt);
-                          const now = new Date();
-                          const diffMinutes = (now - created) / (1000 * 60);
-                          return diffMinutes <= 15;
-                        })() && (
-                          <button
-                            className="mt-3 px-4 py-2 rounded bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition"
-                            onClick={() => openCredModal(n.relatedId)}
-                          >
-                            Send Credentials
-                          </button>
-                        )}
                       </>
                     )}
                   </div>

@@ -171,8 +171,8 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <div className="flex items-center gap-3 mb-6 justify-center">
           <img
             src="/logo.jpg"
@@ -183,8 +183,8 @@ function LoginPage() {
           <span className="text-2xl font-extrabold text-[#2bb6c4] tracking-tight">Sublite</span>
         </div>
         
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Welcome Back</h2>
-        <p className="text-center text-gray-500 mb-6 text-sm">Please enter your details</p>
+        <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-1">Welcome Back</h2>
+        <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-sm">Please enter your details</p>
 
         <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200">
           <Link

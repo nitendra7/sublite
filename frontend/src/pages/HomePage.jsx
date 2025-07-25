@@ -86,13 +86,13 @@ export default function HomePage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex flex-col">
         <Header />
 
         {/* Hero Section */}
         <section className="container mx-auto px-4 pt-24 pb-16 text-center flex-grow flex items-center justify-center">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight animate-fade-in-up">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white mb-6 leading-tight animate-fade-in-up">
               Rent Premium Subscriptions
               <span className="bg-gradient-to-r from-[#2bb6c4] to-blue-600 bg-clip-text text-transparent block text-3xl md:text-5xl lg:text-6xl mt-2">
                 Pay Only for Days You Use
