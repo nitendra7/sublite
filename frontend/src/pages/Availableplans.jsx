@@ -4,7 +4,7 @@ import { Users, Star, LayoutGrid, List } from 'lucide-react';
 import { useUser } from '../context/UserContext'; // To get the auth token
 import BookingModal from '../components/modals/BookingModal';
 
-const API_BASE = "https://sublite-wmu2.onrender.com";
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 // This should fetch from your backend, not use mock data
 // const availablePlansList = [ ... ];

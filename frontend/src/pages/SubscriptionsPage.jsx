@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
-const API_BASE = "https://sublite-wmu2.onrender.com";
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const SubscriptionsPage = () => {
   const [providedServices, setProvidedServices] = useState([]);

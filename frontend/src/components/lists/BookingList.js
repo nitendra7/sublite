@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 function formatDate(dateStr) {
   if (!dateStr) return '';

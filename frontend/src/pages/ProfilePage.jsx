@@ -5,7 +5,7 @@ import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle } from 'lucide-re
 // Import the reusable Input component
 import { Input } from '../components/ui/input'; // Adjust the path if input.jsx is in a different directory
 
-const API_BASE = 'https://sublite-wmu2.onrender.com';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 export default function ProfilePage() {
   const { user, loading, error, updateUserContext } = useUser();

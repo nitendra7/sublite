@@ -22,7 +22,7 @@ const jwtDecode = (token) => {
   }
 };
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 function LoginPage() {
   const navigate = useNavigate();

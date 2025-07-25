@@ -3,7 +3,7 @@ import { Bell, CheckCircle, Info, Gift, Loader } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE = "https://sublite-wmu2.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 // Define icons with consistent colors
 const typeIcon = {

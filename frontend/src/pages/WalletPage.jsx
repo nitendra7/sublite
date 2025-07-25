@@ -3,7 +3,7 @@ import { BadgeIndianRupee, Clock } from "lucide-react";
 import { useUser } from '../context/UserContext';
 
 // Your backend API base URL
-const API_BASE = "https://sublite-wmu2.onrender.com";
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 export default function WalletPage() {
   const { user, token, fetchUserProfile, loading: userContextLoading, error: userContextError } = useUser();
