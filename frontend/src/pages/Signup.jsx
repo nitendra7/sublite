@@ -96,7 +96,7 @@ function SignupPage() {
               id="name"
               placeholder="Full Name"
               autoComplete="name"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -110,7 +110,7 @@ function SignupPage() {
               id="username"
               placeholder="Username"
               autoComplete="username"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -123,7 +123,7 @@ function SignupPage() {
               id="email"
               placeholder="Email Address"
               autoComplete="email"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -133,7 +133,7 @@ function SignupPage() {
             <input
               type="password"
               placeholder="Password"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

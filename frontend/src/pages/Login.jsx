@@ -206,7 +206,7 @@ function LoginPage() {
             <input
               type="text"
               placeholder="Email or Username"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               required
@@ -218,7 +218,7 @@ function LoginPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

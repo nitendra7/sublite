@@ -86,7 +86,7 @@ export default function HomePage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex flex-col">
+      <div className="min-h-screen pt-20 bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex flex-col">
         <Header />
 
         {/* Hero Section */}
@@ -161,19 +161,19 @@ export default function HomePage() {
         </section>
 
         {/* How It Works */}
-        <section id="how-it-works" className="bg-white py-20">
+        <section id="how-it-works" className="bg-white dark:bg-gray-900 py-20">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">How Sublite Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white text-center mb-16">How Sublite Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {steps.map((step, index) => (
-                <Card key={step.number} className="text-center relative group hover:shadow-xl transition-all duration-300 animate-slide-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
+                <Card key={step.number} className="text-center relative group hover:shadow-xl transition-all duration-300 animate-slide-in-up bg-gray-100 dark:bg-gray-800 border dark:border-gray-700" style={{ animationDelay: `${index * 0.1}s` }}>
                   <CardHeader>
                     <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{step.icon}</div>
                     <div className="text-3xl font-bold text-[#2bb6c4] mb-2">{step.number}</div>
-                    <CardTitle className="text-xl text-gray-900">{step.title}</CardTitle>
+                    <CardTitle className="text-xl text-gray-900 dark:text-white">{step.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-gray-600">{step.description}</CardDescription>
+                    <CardDescription className="text-gray-600 dark:text-gray-300">{index === 3 ? 'Get instant access to your subscription details and credentials.' : step.description}</CardDescription>
                   </CardContent>
                 </Card>
               ))}
