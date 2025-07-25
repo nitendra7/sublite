@@ -1,13 +1,12 @@
 // controllers/authController.js
 
-const User = require('../models/user');
+const { User, PendingUser } = require('../models/user');
 const RefreshToken = require('../models/refreshtoken');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const { PendingUser } = require('../models/user');
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;

@@ -121,6 +121,4 @@ const pendingUserSchema = new mongoose.Schema({
 
 const PendingUser = mongoose.model('PendingUser', pendingUserSchema);
 
-module.exports.PendingUser = PendingUser;
-
-module.exports = User;
+module.exports = { User, PendingUser };
