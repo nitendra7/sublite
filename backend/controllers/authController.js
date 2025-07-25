@@ -283,3 +283,19 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Error resetting password.', error: err.message });
   }
 };
+
+exports.verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: 'No user found with this email.' });
+    if (!user.isVerified) return res.status(400).json({ message: 'Account not verified. Please complete signup verification first.' });
+    if (!user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
+    if (user.resetOtp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
+    if (user.resetOtpExpires < Date.now()) return res.status(400).json({ message: 'OTP expired.' });
+    res.json({ message: 'OTP verified. You can now reset your password.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error verifying OTP.', error: err.message });
+  }
+};
