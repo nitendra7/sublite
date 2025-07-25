@@ -31,7 +31,7 @@ function getInitials(name) {
 }
 
 function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768); // Hide sidebar by default on mobile
   const [active, setActive] = useState(0);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -110,6 +110,15 @@ function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200" style={{ fontFamily }}>
+      {/* Hamburger button for mobile */}
+      <button
+        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-white dark:bg-gray-800 shadow md:hidden"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open sidebar"
+        style={{ display: sidebarOpen ? 'none' : 'block' }}
+      >
+        <FaBars className="text-2xl text-[#2bb6c4] dark:text-[#5ed1dc]" />
+      </button>
       <Sidebar
         sidebarOpen={sidebarOpen}
         active={active}
