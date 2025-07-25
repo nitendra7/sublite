@@ -5,6 +5,8 @@ const RefreshToken = require('../models/refreshtoken');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -155,5 +157,71 @@ exports.logout = async (req, res) => {
     }
   } else {
     res.status(400).json({ message: 'Refresh token not provided for logout.' });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required.' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: 'No user found with this email.' });
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOtp = otp;
+    user.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // Send OTP email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Sublite Password Reset OTP',
+      text: `Your OTP for password reset is: ${otp}`
+    });
+
+    res.json({ message: 'OTP sent to your email.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error sending OTP.', error: err.message });
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
+    if (user.resetOtp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
+    if (user.resetOtpExpires < Date.now()) return res.status(400).json({ message: 'OTP expired.' });
+    res.json({ message: 'OTP verified.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error verifying OTP.', error: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) return res.status(400).json({ message: 'Email, OTP, and new password are required.' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
+    if (user.resetOtp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
+    if (user.resetOtpExpires < Date.now()) return res.status(400).json({ message: 'OTP expired.' });
+    user.password = await bcrypt.hash(newPassword, 12);
+    user.resetOtp = null;
+    user.resetOtpExpires = null;
+    await user.save();
+    res.json({ message: 'Password reset successful.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error resetting password.', error: err.message });
   }
 };

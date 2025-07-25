@@ -71,6 +71,15 @@ const userSchema = new mongoose.Schema({
         type: Date,
     },
 
+    resetOtp: {
+      type: String,
+      default: null
+    },
+    resetOtpExpires: {
+      type: Date,
+      default: null
+    },
+
 }, { timestamps: true });
 
 // Create compound and specialized indexes
