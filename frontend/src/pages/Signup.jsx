@@ -10,12 +10,14 @@ function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -24,17 +26,29 @@ function SignupPage() {
         body: JSON.stringify({ name, username, email, password })
       });
 
-      if (!res.ok) {
-        let errorData;
-        try {
-          errorData = await res.json();
-        } catch (jsonError) {
-          throw new Error(res.statusText || 'Registration request failed');
-        }
-        throw new Error(errorData.error || 'Registration failed');
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Unexpected server response. Please try again later.');
+        setLoading(false);
+        return;
       }
 
-      navigate('/login'); // Redirect to login after successful registration
+      if (!res.ok) {
+        if (res.status === 409) {
+          setError('Account already exists. Please log in.');
+        } else {
+          setError(data.message || 'Registration failed');
+        }
+        setLoading(false);
+        return;
+      }
+
+      setSuccess('Account created successfully! Please log in.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
 
     } catch (err) {
       setError(err.message || 'Failed to connect to the server.');
@@ -78,7 +92,10 @@ function SignupPage() {
           <div>
             <input
               type="text"
+              name="name"
+              id="name"
               placeholder="Full Name"
+              autoComplete="name"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -89,7 +106,10 @@ function SignupPage() {
           <div>
             <input
               type="text"
+              name="username"
+              id="username"
               placeholder="Username"
+              autoComplete="username"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -99,7 +119,10 @@ function SignupPage() {
           <div>
             <input
               type="email"
+              name="email"
+              id="email"
               placeholder="Email Address"
+              autoComplete="email"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-all duration-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -125,11 +148,8 @@ function SignupPage() {
           </button>
         </form>
 
-        {error && (
-          <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg mt-4">
-            {error}
-          </div>
-        )}
+        {success && <div className="text-green-600 text-center mt-4">{success}</div>}
+        {error && <div className="text-red-500 text-center mt-4">{error}</div>}
 
         <div className="text-center text-gray-400 text-xs mt-4">
           Already have an account?{' '}

@@ -126,7 +126,7 @@ export default function ProfilePage() {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    if (!userId || !token) {
+    if (!token) {
       setLocalError("Authentication required to save changes. Please log in.");
       return;
     }
@@ -134,61 +134,29 @@ export default function ProfilePage() {
     setLocalError(null);
     setSaveSuccess(false);
 
-    const dataToUpdate = new FormData();
-
-    Object.keys(profile).forEach(key => {
-      if (key === 'password' || key === 'profilePicture' || typeof profile[key] === 'object') return;
-      if (initialProfile && profile[key] !== initialProfile[key]) {
-        dataToUpdate.append(key, profile[key]);
-      }
-    });
-
-    if (profile.userType === 'provider') {
-      if (profile.businessLocation) {
-        Object.entries(profile.businessLocation).forEach(([key, value]) => {
-          if (initialProfile?.businessLocation?.[key] !== value) {
-            dataToUpdate.append(`businessLocation.${key}`, value);
-          }
-        });
-      }
-      if (initialProfile?.coordinates?.latitude !== profile.coordinates?.latitude) dataToUpdate.append('coordinates.latitude', profile.coordinates.latitude);
-      if (initialProfile?.coordinates?.longitude !== profile.coordinates?.longitude) dataToUpdate.append('coordinates.longitude', profile.coordinates.longitude);
-
-      if (initialProfile?.businessName !== profile.businessName) dataToUpdate.append('businessName', profile.businessName);
-      if (initialProfile?.businessDescription !== profile.businessDescription) dataToUpdate.append('businessDescription', profile.businessDescription);
-      if (initialProfile?.businessCategory !== profile.businessCategory) dataToUpdate.append('businessCategory', profile.businessCategory);
-
-    } else if (profile.userType === 'client') {
-      if (profile.preferredLocation) {
-        Object.entries(profile.preferredLocation).forEach(([key, value]) => {
-          if (initialProfile?.preferredLocation?.[key] !== value) {
-            dataToUpdate.append(`preferredLocation.${key}`, value);
-          }
-        });
-      }
+    // Prepare only the fields the backend expects
+    const dataToUpdate = {};
+    if (profile.name !== initialProfile?.name) dataToUpdate.name = profile.name;
+    if (profile.phone !== initialProfile?.phone) dataToUpdate.phone = profile.phone;
+    if (profile.password && profile.password.trim() !== "") dataToUpdate.password = profile.password;
+    if (profile.userType === 'provider' && profile.providerSettings) {
+      dataToUpdate.providerSettings = profile.providerSettings;
     }
 
-    if (profile.password && profile.password.trim() !== "") {
-      dataToUpdate.append("password", profile.password);
-    }
-
-    if (profile.profilePicture && typeof profile.profilePicture !== 'string') {
-      dataToUpdate.append("profilePicture", profile.profilePicture);
-    } else if (profile.profilePicture === null && initialProfile?.profilePicture) {
-      dataToUpdate.append("profilePicture", "");
-    }
-
-    if (Array.from(dataToUpdate.entries()).length === 0) {
+    if (Object.keys(dataToUpdate).length === 0) {
       setIsEditing(false);
       setSaveSuccess(true);
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/${userId}`, {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: dataToUpdate,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (!res.ok) {
@@ -202,8 +170,6 @@ export default function ProfilePage() {
       setIsEditing(false);
     } catch (err) {
       setLocalError(`Failed to save profile: ${err.message}`);
-    } finally {
-      // setIsSaving(false);
     }
   };
 
@@ -240,265 +206,56 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 relative overflow-hidden animate-fade-in
-                    bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100
-                    dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-200">
-      <div className="max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 animate-slide-in-down">
-        <h2 className="text-4xl font-extrabold mb-10 text-center text-[#2bb6c4] dark:text-[#5ed1dc] tracking-tight drop-shadow-lg animate-fade-in">
-          User Profile
-        </h2>
-
-        {localError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6 dark:bg-red-900 dark:text-red-200 dark:border-red-700" role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline ml-2">{localError}</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onClick={() => setLocalError(null)}>
-              <svg className="fill-current h-6 w-6 text-red-500 dark:text-red-400" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
-            </span>
-          </div>
-        )}
-        {saveSuccess && (
-          <div className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 p-3 rounded-md mb-4 dark:border-green-700">
-            Profile updated successfully!
-          </div>
-        )}
-
-        {/* Profile Picture / Initials */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="relative group animate-fade-in">
-            <img
-              src={imagePreview || `https://placehold.co/150x150/e0e0e0/6c757d?text=${getInitialsAvatar(profile.name)}`}
-              alt="Profile"
-              className="w-36 h-36 rounded-full object-cover shadow-lg border-4 border-white dark:border-gray-700 transition-transform duration-500 group-hover:scale-105"
-            />
-            {/* Overlay for changing profile picture in edit mode */}
-            {isEditing && (
-              <>
-                <label htmlFor="profilePictureInput" className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white cursor-pointer rounded-full">
-                  <Camera size={32} />
-                </label>
-                <input // This remains a standard input because it's type="file" and handles file selection
-                  type="file"
-                  id="profilePictureInput"
-                  name="profilePicture"
-                  accept="image/*"
-                  onChange={handleChange}
-                  className="hidden" // Hide the default file input
-                />
-              </>
-            )}
-            {!isEditing && (
-              <div className="absolute bottom-2 right-2 bg-[#2bb6c4] text-white px-3 py-1 rounded-full text-xs opacity-80 shadow transition-all duration-300 animate-bounce dark:bg-[#1ea1b0]">
-                {user?.username || "User"}
-              </div>
-            )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 px-4 py-10">
+      <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <h1 className="text-4xl font-bold text-center mb-8 text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow">User Profile</h1>
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-lg overflow-hidden border-4 border-[#2bb6c4] dark:border-[#5ed1dc]">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5v2.25m0 0c-3.75 0-6.75-3-6.75-6.75S8.25 5.25 12 5.25s6.75 3 6.75 6.75-3 6.75-6.75 6.75z" /></svg></span>
+              )}
+              <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition cursor-pointer">
+                <input type="file" accept="image/*" className="hidden" name="profilePicture" onChange={handleChange} />
+                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition">Change</span>
+              </label>
+            </div>
           </div>
         </div>
-
-        {/* Profile Details Form */}
-        <form onSubmit={handleSave}>
-          {/* General User Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <form onSubmit={handleSave} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Full Name</label>
-              <Input
-                type="text"
-                id="name"
-                name="name"
-                value={profile.name}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                // The className from input.jsx will be applied, you can add more here if needed
-                // className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
-              />
+              <label className="block mb-1 font-medium">Full Name</label>
+              <input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
             </div>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Username</label>
-              <Input
-                type="text"
-                id="username"
-                name="username"
-                value={profile.username}
-                onChange={handleChange}
-                readOnly={!isEditing}
-              />
+              <label className="block mb-1 font-medium">Username</label>
+              <input type="text" name="username" value={profile.username} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Email ID</label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                value={profile.email}
-                readOnly // Email is usually read-only
-                className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300" // Added specific class for read-only background
-              />
+              <label className="block mb-1 font-medium">Email ID</label>
+              <input type="email" name="email" value={profile.email} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed" disabled />
             </div>
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Phone Number</label>
-              <Input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={profile.phone}
-                onChange={handleChange}
-                readOnly={!isEditing}
-              />
+              <label className="block mb-1 font-medium">Phone Number</label>
+              <input type="text" name="phone" value={profile.phone} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">New Password</label>
-              <Input
-                type="password"
-                id="password"
-                name="password"
-                value={profile.password}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                placeholder={isEditing ? "Enter new password" : "********"}
-              />
+              <label className="block mb-1 font-medium">New Password</label>
+              <input type="password" name="password" value={profile.password} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" placeholder="Enter new password" />
             </div>
-            {/* User Status */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Account Status</label>
-              <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                {user?.isVerified ? (
-                  <CheckCircle size={18} className="text-green-500 dark:text-green-400" />
-                ) : (
-                  <XCircle size={18} className="text-red-500 dark:text-red-400" />
-                )}
-                <span>{user?.isVerified ? 'Verified' : 'Not Verified'}</span>
-              </div>
-            </div>
-            {/* Wallet Balance */}
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Wallet Balance</label>
-              <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                <span className="text-[#2bb6c4] dark:text-[#5ed1dc] text-lg font-bold">₹{user?.walletBalance?.toFixed(2) || '0.00'}</span>
-              </div>
+              <label className="block mb-1 font-medium">Wallet Balance</label>
+              <div className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] font-bold cursor-not-allowed">₹{profile.walletBalance?.toFixed(2) || '0.00'}</div>
             </div>
           </div>
-
-          {/* Provider-Specific Details */}
-          {user?.userType === 'provider' && (
-            <div className="mb-6 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-              <h2 className="text-xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-4 flex items-center gap-2">
-                <Briefcase size={20} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Business Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label htmlFor="businessName" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Business Name</label>
-                  <Input
-                    type="text"
-                    id="businessName"
-                    name="businessName"
-                    value={profile.businessName}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="businessCategory" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category</label>
-                  <Input
-                    type="text"
-                    id="businessCategory"
-                    name="businessCategory"
-                    value={profile.businessCategory}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                  />
-                </div>
-              </div>
-              <div className="mb-4">
-                <label htmlFor="businessDescription" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Business Description</label>
-                <textarea // This remains a textarea
-                  id="businessDescription"
-                  name="businessDescription"
-                  value={profile.businessDescription}
-                  onChange={handleChange}
-                  readOnly={!isEditing}
-                  rows="3"
-                  className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-700"
-                ></textarea>
-              </div>
-              {/* Business Location */}
-              <div className="mb-4">
-                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
-                  <MapPin size={16} className="text-gray-600 dark:text-gray-400" /> Location
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="businessLocation.address" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Address</label>
-                    <Input type="text" id="businessLocation.address" name="businessLocation.address" value={profile.businessLocation.address} onChange={handleChange} readOnly={!isEditing} />
-                  </div>
-                  <div>
-                    <label htmlFor="businessLocation.city" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">City</label>
-                    <Input type="text" id="businessLocation.city" name="businessLocation.city" value={profile.businessLocation.city} onChange={handleChange} readOnly={!isEditing} />
-                  </div>
-                  <div>
-                    <label htmlFor="businessLocation.state" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">State</label>
-                    <Input type="text" id="businessLocation.state" name="businessLocation.state" value={profile.businessLocation.state} onChange={handleChange} readOnly={!isEditing} />
-                  </div>
-                  <div>
-                    <label htmlFor="businessLocation.pincode" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Pincode</label>
-                    <Input type="text" id="businessLocation.pincode" name="businessLocation.pincode" value={profile.businessLocation.pincode} onChange={handleChange} readOnly={!isEditing} />
-                  </div>
-                </div>
-              </div>
-              {/* Provider Rating */}
-              <div className="mb-4">
-                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
-                  <Star size={16} className="text-gray-600 dark:text-gray-400" /> Provider Rating: <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-bold">{user?.rating?.toFixed(1) || 'N/A'}</span> ({user?.totalRatings || 0} reviews)
-                </h3>
-              </div>
-            </div>
-          )}
-
-          {/* Client-Specific Details */}
-          {user?.userType === 'client' && (
-            <div className="mb-6 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-              <h2 className="text-xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-4 flex items-center gap-2">
-                <MapPin size={20} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Preferred Location
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="preferredLocation.city" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">City</label>
-                  <Input type="text" id="preferredLocation.city" name="preferredLocation.city" value={profile.preferredLocation.city} onChange={handleChange} readOnly={!isEditing} />
-                </div>
-                <div>
-                  <label htmlFor="preferredLocation.state" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">State</label>
-                  <Input type="text" id="preferredLocation.state" name="preferredLocation.state" value={profile.preferredLocation.state} onChange={handleChange} readOnly={!isEditing} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Edit/Save/Cancel Buttons */}
-          <div className="mt-8 flex justify-center gap-4">
-            {isEditing ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleEditToggle} // Cancel button
-                  className="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] transition-colors shadow"
-                >
-                  Save Changes
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={handleEditToggle} // Edit Profile button
-                className="px-6 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] transition-colors shadow"
-              >
-                Edit Profile
-              </button>
-            )}
+          {localError && <div className="text-red-500 text-center">{localError}</div>}
+          {saveSuccess && <div className="text-green-600 text-center">Profile updated successfully!</div>}
+          <div className="flex justify-end gap-4 mt-6">
+            <button type="button" onClick={handleEditToggle} className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancel</button>
+            <button type="submit" className="px-6 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold shadow-md hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition">Save Changes</button>
           </div>
         </form>
       </div>
