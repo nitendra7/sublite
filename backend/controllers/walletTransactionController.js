@@ -1,5 +1,5 @@
 const WalletTransaction = require('../models/walletTransaction');
-const User = require('../models/user');
+const { User } = require('../models/user');
 
 // All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 

@@ -1,5 +1,5 @@
 const Booking = require('../models/booking');
-const User = require('../models/user');
+const { User } = require('../models/user');
 const Service = require('../models/service');
 const Payment = require('../models/payment');
 const Notification = require('../models/notification');

@@ -1,5 +1,5 @@
 const Service = require('../models/service');
-const User = require('../models/user');
+const { User } = require('../models/user');
 
 // All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 

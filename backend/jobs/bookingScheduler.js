@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const Booking = require('../models/booking');
 const Notification = require('../models/notification');
-const User = require('../models/user');
+const { User } = require('../models/user');
 const Service = require('../models/service');
 
 // Store timeout references for booking cancellations

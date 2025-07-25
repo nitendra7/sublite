@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const { User } = require('../models/user');
 const Payment = require('../models/payment');
 const WalletTransaction = require('../models/walletTransaction');
 const Razorpay = require('razorpay');
