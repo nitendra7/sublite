@@ -83,9 +83,14 @@ exports.login = async (req, res) => {
         { username: emailOrUsername.toLowerCase() }
       ]
     });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+    if (!user) {
+      console.log('Login failed: User not found for', emailOrUsername);
+      return res.status(401).json({ message: 'Invalid credentials. If you recently reset your password, please check your email and try again.' });
+    }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      console.log('Login failed: Password mismatch for', user.email || user.username, 'Input password:', password, 'Hash:', user.password);
+      return res.status(401).json({ message: 'Invalid credentials. If you recently reset your password, please check your email and try again.' });
     }
 
     if (!user.isVerified) {
