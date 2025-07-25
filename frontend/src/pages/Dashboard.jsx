@@ -31,7 +31,7 @@ function getInitials(name) {
 }
 
 function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768); // Sidebar open by default on desktop
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar closed by default on mobile
   const [active, setActive] = useState(0);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -109,14 +109,16 @@ function Dashboard() {
   const isBaseDashboard = location.pathname === '/dashboard';
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200" style={{ fontFamily }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200" style={{ fontFamily }}>
+      {/* Sidebar: fixed on desktop, overlay on mobile */}
       <Sidebar
-        sidebarOpen={sidebarOpen}
+        sidebarOpen={sidebarOpen || window.innerWidth >= 768}
         active={active}
         onSidebarClick={handleSidebarClick}
-        handleSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+        handleSidebarToggle={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Main content area (with left margin on desktop for sidebar) */}
+      <div className="md:ml-[200px] flex flex-col min-h-screen">
         <header
           className="relative z-20 flex items-center justify-between px-4 py-3 shadow-sm flex-wrap gap-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[72px]"
         >
@@ -126,7 +128,6 @@ function Dashboard() {
               className="md:hidden mr-2 p-2 rounded-md bg-white dark:bg-gray-800 shadow"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar"
-              style={{ display: sidebarOpen ? 'none' : 'block' }}
             >
               <FaBars className="text-2xl text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </button>
