@@ -38,6 +38,10 @@ export default function AuthPage({ isLogin = true }) {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resetSuccess, setResetSuccess] = useState("");
+  const [otpTimer, setOtpTimer] = useState(30);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendError, setResendError] = useState('');
+  const [resendSuccess, setResendSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -102,6 +106,25 @@ export default function AuthPage({ isLogin = true }) {
       setLoading(false);
     }
   };
+
+  // OTP timer effect
+  React.useEffect(() => {
+    if (!showOtpModal) return;
+    if (otpTimer === 0) return;
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showOtpModal, otpTimer]);
+
+  // When OTP modal is shown, reset timer
+  React.useEffect(() => {
+    if (showOtpModal) {
+      setOtpTimer(30);
+      setResendError('');
+      setResendSuccess('');
+    }
+  }, [showOtpModal]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
@@ -387,6 +410,42 @@ export default function AuthPage({ isLogin = true }) {
               </div>
               {otpError && <div className="text-red-500 mb-2">{otpError}</div>}
               {otpSuccess && <div className="text-green-500 mb-2">{otpSuccess}</div>}
+              {resendError && <div className="text-red-500 mb-2">{resendError}</div>}
+              {resendSuccess && <div className="text-green-500 mb-2">{resendSuccess}</div>}
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  type="button"
+                  className={`text-[#2bb6c4] font-semibold ${otpTimer > 0 || resendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={otpTimer > 0 || resendLoading}
+                  onClick={async () => {
+                    setResendLoading(true);
+                    setResendError('');
+                    setResendSuccess('');
+                    try {
+                      const res = await fetch(`${API_BASE}/api/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: formData.name, username: formData.username, email: formData.email, password: formData.password })
+                      });
+                      let data;
+                      try { data = await res.json(); } catch { setResendError('Unexpected server response.'); setResendLoading(false); return; }
+                      if (!res.ok) {
+                        setResendError(data.message || 'Failed to resend OTP');
+                        setResendLoading(false);
+                        return;
+                      }
+                      setResendSuccess('OTP resent! Check your email.');
+                      setOtpTimer(30);
+                    } catch (err) {
+                      setResendError(err.message || 'Failed to connect to the server.');
+                    } finally {
+                      setResendLoading(false);
+                    }
+                  }}
+                >
+                  Resend OTP {otpTimer > 0 && `(${otpTimer}s)`}
+                </button>
+              </div>
               <div className="flex justify-between items-center">
                 <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowOtpModal(false)} disabled={otpLoading}>Cancel</button>
                 <button type="submit" className="bg-[#2bb6c4] text-white px-4 py-2 rounded" disabled={otpLoading}>
