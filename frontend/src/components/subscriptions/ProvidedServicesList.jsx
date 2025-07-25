@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, Users, Tag } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button } from '../../components/ui/button';
 
 const ProvidedServicesList = ({ services, onServiceDeleted }) => {
     const navigate = useNavigate();

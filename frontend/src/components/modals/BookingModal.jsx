@@ -3,7 +3,7 @@ import { X, Calendar, CreditCard, Wallet, Clock, DollarSign, Plus } from 'lucide
 import { apiFetch, API_BASE } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/button';
+import { Button } from '../../components/ui/button';
 
 const BookingModal = ({ isOpen, onClose, service }) => {
     const { user } = useUser();
