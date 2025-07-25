@@ -3,6 +3,7 @@ const User = require('../models/user');
 const Service = require('../models/service');
 const Payment = require('../models/payment');
 const Notification = require('../models/notification');
+const WalletTransaction = require('../models/walletTransaction'); // Added WalletTransaction import
 const { isProviderActive } = require('../utils/availability');
 const { scheduleBookingCancellation, clearCancellationTimer } = require('../jobs/bookingScheduler');
 
@@ -31,6 +32,15 @@ const createBooking = async (req, res) => {
 
     client.walletBalance -= totalCost;
     await client.save();
+
+    await WalletTransaction.create({
+      userId: clientId,
+      amount: totalCost,
+      type: 'debit',
+      description: `Booking for service: ${service.serviceName}`,
+      relatedId: service._id,
+      relatedType: 'booking'
+    });
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + rentalDuration);
