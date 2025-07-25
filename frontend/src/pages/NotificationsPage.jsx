@@ -36,6 +36,37 @@ export default function NotificationsPage() {
   const [credLoading, setCredLoading] = useState(false);
   const [credError, setCredError] = useState('');
   const [credSuccess, setCredSuccess] = useState('');
+  const [credBookingStatus, setCredBookingStatus] = useState('');
+  const [credBookingCreatedAt, setCredBookingCreatedAt] = useState(null);
+
+  const [expandedId, setExpandedId] = useState(null);
+
+  // Mark notification as read in backend and update local state
+  const markRead = async (notifId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_BASE}/notifications/${notifId}/read`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications((prev) => prev.map(n => n._id === notifId ? { ...n, isRead: true } : n));
+    } catch (err) {
+      // Ignore error for now
+    }
+  };
+
+  // For credential notifications, mark booking as active/confirmed
+  const confirmBooking = async (bookingId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_BASE}/bookings/${bookingId}/confirm`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      // Ignore error for now
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -53,31 +84,39 @@ export default function NotificationsPage() {
     }
   };
 
-  const markRead = async (id) => {
-    try {
-      // Update local state immediately for better UX
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-      );
-      
-      // TODO: Replace with actual API call when ready
-      // const token = localStorage.getItem("token");
-      // const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-      // });
-      // if (!res.ok) throw new Error('Failed to mark as read');
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
-    }
-  };
-
-  const openCredModal = (bookingId) => {
+  // Fetch booking and service details for autofill and status check
+  const openCredModal = async (bookingId) => {
     setCredBookingId(bookingId);
-    setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
     setCredError('');
     setCredSuccess('');
-    setShowCredModal(true);
+    setCredLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      // Fetch booking details
+      const bookingRes = await fetch(`${API_BASE}/bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const booking = await bookingRes.json();
+      setCredBookingStatus(booking.bookingStatus);
+      setCredBookingCreatedAt(booking.createdAt);
+      // Fetch service details for autofill
+      const serviceRes = await fetch(`${API_BASE}/services/${booking.serviceId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const service = await serviceRes.json();
+      setCredValues({
+        username: service.credentials?.username || '',
+        password: service.credentials?.password || '',
+        profileName: service.credentials?.profileName || '',
+        accessInstructions: service.accessInstructionsTemplate || ''
+      });
+      setShowCredModal(true);
+    } catch (err) {
+      setCredError('Failed to fetch booking/service details');
+      setShowCredModal(true);
+    } finally {
+      setCredLoading(false);
+    }
   };
 
   const handleCredChange = (e) => {
@@ -157,6 +196,33 @@ export default function NotificationsPage() {
     );
   }
 
+  // Helper to check if Send Credentials should be shown (for notification list)
+  const canSendCredentials = (notif) => {
+    if (notif.title !== 'New Booking!' || !notif.relatedId) return false;
+    // Only show if not cancelled and within 15 minutes (use booking status/createdAt if available)
+    // If modal is open for this booking, use modal state; otherwise, don't show button
+    if (expandedId === notif._id && credBookingStatus && credBookingCreatedAt) {
+      if (credBookingStatus !== 'confirmed') return false;
+      const created = new Date(credBookingCreatedAt);
+      const now = new Date();
+      const diffMinutes = (now - created) / (1000 * 60);
+      if (diffMinutes > 15) return false;
+      return true;
+    }
+    // Otherwise, show button and check on modal open
+    return true;
+  };
+
+  // Helper to check if Send Credentials is allowed (in modal)
+  const canSendNow = () => {
+    if (credBookingStatus !== 'confirmed') return false;
+    if (!credBookingCreatedAt) return false;
+    const created = new Date(credBookingCreatedAt);
+    const now = new Date();
+    const diffMinutes = (now - created) / (1000 * 60);
+    return diffMinutes <= 15;
+  };
+
   return (
     <div className="min-h-screen py-10 px-4 relative overflow-hidden animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
       <div className="max-w-2xl mx-auto">
@@ -193,28 +259,40 @@ export default function NotificationsPage() {
                     ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
                   `}
                   style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                  onClick={() => !n.isRead && markRead(n._id)}
                 >
                   <div className="pt-1">{typeIcon[n.type] || <Info className="text-gray-400 dark:text-gray-500" />}</div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={async () => {
+                      setExpandedId(expandedId === n._id ? null : n._id);
+                      if (!n.isRead) await markRead(n._id);
+                      if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
+                    }}>
                       <span className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</span>
                       {!n.isRead && (
                         <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-[#2bb6c4] text-white animate-pulse dark:bg-[#1ea1b0] dark:text-gray-100">New</span>
                       )}
                     </div>
-                    <div className="text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">{n.message}</div>
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                      {new Date(n.createdAt).toLocaleString()}
-                    </div>
-                    {/* Show Send Credentials button for provider's new booking notifications */}
-                    {n.title === 'New Booking!' && n.relatedId && (
-                      <button
-                        className="mt-3 px-4 py-2 rounded bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition"
-                        onClick={() => openCredModal(n.relatedId)}
-                      >
-                        Send Credentials
-                      </button>
+                    {expandedId === n._id && (
+                      <>
+                        <div className="text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">{n.message}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </div>
+                        {/* Show Send Credentials button for provider's new booking notifications if allowed */}
+                        {canSendCredentials(n) && credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                          const created = new Date(credBookingCreatedAt);
+                          const now = new Date();
+                          const diffMinutes = (now - created) / (1000 * 60);
+                          return diffMinutes <= 15;
+                        })() && (
+                          <button
+                            className="mt-3 px-4 py-2 rounded bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition"
+                            onClick={() => openCredModal(n.relatedId)}
+                          >
+                            Send Credentials
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </li>
@@ -228,30 +306,39 @@ export default function NotificationsPage() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
             <h2 className="text-lg font-semibold mb-2">Send Credentials</h2>
-            <form onSubmit={handleSendCredentials}>
-              <div className="mb-3">
-                <label className="block mb-1">Username</label>
-                <input type="text" name="username" className="w-full border rounded px-3 py-2" value={credValues.username} onChange={handleCredChange} required />
-              </div>
-              <div className="mb-3">
-                <label className="block mb-1">Password</label>
-                <input type="text" name="password" className="w-full border rounded px-3 py-2" value={credValues.password} onChange={handleCredChange} required />
-              </div>
-              <div className="mb-3">
-                <label className="block mb-1">Profile Name</label>
-                <input type="text" name="profileName" className="w-full border rounded px-3 py-2" value={credValues.profileName} onChange={handleCredChange} />
-              </div>
-              <div className="mb-3">
-                <label className="block mb-1">Access Instructions</label>
-                <textarea name="accessInstructions" className="w-full border rounded px-3 py-2" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
-              </div>
-              {credError && <div className="text-red-500 mb-2">{credError}</div>}
-              {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
-              <div className="flex justify-between items-center mt-4">
-                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
-              </div>
-            </form>
+            {canSendNow() ? (
+              <form onSubmit={handleSendCredentials}>
+                <div className="mb-3">
+                  <label className="block mb-1">Username</label>
+                  <input type="text" name="username" className="w-full border rounded px-3 py-2" value={credValues.username} onChange={handleCredChange} required />
+                </div>
+                <div className="mb-3">
+                  <label className="block mb-1">Password</label>
+                  <input type="text" name="password" className="w-full border rounded px-3 py-2" value={credValues.password} onChange={handleCredChange} required />
+                </div>
+                <div className="mb-3">
+                  <label className="block mb-1">Profile Name</label>
+                  <input type="text" name="profileName" className="w-full border rounded px-3 py-2" value={credValues.profileName} onChange={handleCredChange} />
+                </div>
+                <div className="mb-3">
+                  <label className="block mb-1">Access Instructions</label>
+                  <textarea name="accessInstructions" className="w-full border rounded px-3 py-2" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
+                </div>
+                {credError && <div className="text-red-500 mb-2">{credError}</div>}
+                {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
+                <div className="flex justify-between items-center mt-4">
+                  <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="text-red-500 text-center mb-4">This booking is no longer eligible for sending credentials (cancelled or more than 15 minutes old).</div>
+                <div className="flex justify-center mt-4">
+                  <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowCredModal(false)}>Close</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 // src/context/UserContext.jsx
 import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { setSessionExpiredHandler } from '../utils/api';
 
 // Create the Context with default values.
 const UserContext = createContext({
@@ -28,6 +29,7 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://sublite-wmu2.onrender.com';
 
@@ -94,6 +96,15 @@ export const UserProvider = ({ children }) => {
     }
   }, [fetchUserProfile]);
 
+  // Session expired handler
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      clearAuthData();
+      setSessionExpired(true);
+    });
+    // eslint-disable-next-line
+  }, []);
+
   // Updates the user object within the context directly.
   const updateUserContext = useCallback((updatedUserData) => {
     setUser(prevUser => {
@@ -129,8 +140,25 @@ export const UserProvider = ({ children }) => {
   }, [user, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData]);
 
   return (
-    <UserContext.Provider value={contextValue}>
+    <UserContext.Provider value={{ user, setUser, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData, sessionExpired, setSessionExpired }}>
       {children}
+      {sessionExpired && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm text-center">
+            <h2 className="text-lg font-semibold mb-2 text-red-600">Session Expired</h2>
+            <p className="mb-4">Your session has expired. Please log in again.</p>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={() => {
+                setSessionExpired(false);
+                window.location.href = '/login';
+              }}
+            >
+              Log In
+            </button>
+          </div>
+        </div>
+      )}
     </UserContext.Provider>
   );
 };

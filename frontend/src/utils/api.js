@@ -41,6 +41,11 @@ const refreshAccessToken = async () => {
     }
 };
 
+let onSessionExpired = null;
+export function setSessionExpiredHandler(handler) {
+  onSessionExpired = handler;
+}
+
 // Enhanced fetch function with automatic token refresh
 export const apiFetch = async (url, options = {}) => {
     let token = localStorage.getItem('token');
@@ -62,6 +67,12 @@ export const apiFetch = async (url, options = {}) => {
 
     try {
         let response = await fetch(url, requestOptions);
+
+        // If request fails with 401/403 (token expired), trigger session expired handler
+        if ((response.status === 401 || response.status === 403)) {
+            if (onSessionExpired) onSessionExpired();
+            throw new Error('Session expired. Please log in again.');
+        }
 
         // If request fails with 401/403 (token expired), try to refresh token
         if ((response.status === 401 || response.status === 403) && token) {
