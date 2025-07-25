@@ -1,13 +1,12 @@
 // controllers/authController.js
 
-const User = require('../models/user');
+const { User, PendingUser } = require('../models/user');
 const RefreshToken = require('../models/refreshtoken');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const { PendingUser } = require('../models/user');
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -86,6 +85,10 @@ exports.login = async (req, res) => {
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Account not verified. Please verify your email before logging in.' });
     }
 
     if (!user.isActive) {
@@ -198,6 +201,7 @@ exports.forgotPassword = async (req, res) => {
     if (!email) return res.status(400).json({ message: 'Email is required.' });
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ message: 'No user found with this email.' });
+    if (!user.isVerified) return res.status(400).json({ message: 'Account not verified. Please complete signup verification first.' });
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -265,7 +269,9 @@ exports.resetPassword = async (req, res) => {
     const { email, otp, newPassword } = req.body;
     if (!email || !otp || !newPassword) return res.status(400).json({ message: 'Email, OTP, and new password are required.' });
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user || !user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
+    if (!user) return res.status(404).json({ message: 'No user found with this email.' });
+    if (!user.isVerified) return res.status(400).json({ message: 'Account not verified. Please complete signup verification first.' });
+    if (!user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
     if (user.resetOtp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
     if (user.resetOtpExpires < Date.now()) return res.status(400).json({ message: 'OTP expired.' });
     user.password = await bcrypt.hash(newPassword, 12);
