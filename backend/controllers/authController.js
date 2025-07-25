@@ -72,7 +72,8 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
+    const emailOrUsername = req.body.emailOrUsername || req.body.email || req.body.username;
+    const { password } = req.body;
     if (!emailOrUsername || !password) {
       return res.status(400).json({ message: 'Email/Username and password are required.' });
     }
@@ -197,10 +198,15 @@ exports.logout = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required.' });
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) return res.status(404).json({ message: 'No user found with this email.' });
+    const emailOrUsername = req.body.email || req.body.username;
+    if (!emailOrUsername) return res.status(400).json({ message: 'Email or username is required.' });
+    const user = await User.findOne({
+      $or: [
+        { email: emailOrUsername.toLowerCase() },
+        { username: emailOrUsername.toLowerCase() }
+      ]
+    });
+    if (!user) return res.status(404).json({ message: 'No user found with this email or username.' });
     if (!user.isVerified) return res.status(400).json({ message: 'Account not verified. Please complete signup verification first.' });
 
     // Generate OTP
