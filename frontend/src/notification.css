@@ -51,13 +51,18 @@
 }
 
 .card-description {
-  font-size: 0.875rem;
+  /* Remove hardcoded color, use Tailwind classes in JSX or add dark override here */
   color: #4b5563;
 }
-
 .card-date {
-  font-size: 0.75rem;
+  /* Remove hardcoded color, use Tailwind classes in JSX or add dark override here */
   color: #6b7280;
-  margin-top: 0.25rem;
-  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  .card-description {
+    color: #d1d5db; /* Tailwind gray-300 */
+  }
+  .card-date {
+    color: #9ca3af; /* Tailwind gray-400 */
+  }
 }

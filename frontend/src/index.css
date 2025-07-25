@@ -15,3 +15,19 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Autofill fix for dark mode */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #374151 inset !important; /* Tailwind gray-700 */
+  -webkit-text-fill-color: #f3f4f6 !important; /* Tailwind gray-100 */
+  caret-color: #f3f4f6 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input {
+  background-color: #374151 !important; /* Tailwind gray-700 */
+  color: #f3f4f6 !important; /* Tailwind gray-100 */
+}

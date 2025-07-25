@@ -8,8 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Default button styling with dark mode variants.
-        default: "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:text-gray-100 dark:hover:bg-blue-800",
+        // Default button styling with teal color and dark mode variants.
+        default: "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#2bb6c4] dark:text-gray-100 dark:hover:bg-[#1ea1b0]",
         // Destructive button styling with dark mode variants.
         destructive:
           "bg-red-500 text-white hover:bg-red-600 dark:bg-red-700 dark:text-gray-100 dark:hover:bg-red-800",
@@ -22,7 +22,7 @@ const buttonVariants = cva(
         // Ghost button styling with dark mode variants.
         ghost: "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100",
         // Link button styling with dark mode variants.
-        link: "text-blue-500 underline-offset-4 hover:underline dark:text-blue-400 dark:hover:text-blue-300",
+        link: "text-[#2bb6c4] underline-offset-4 hover:underline dark:text-[#2bb6c4] dark:hover:text-[#1ea1b0]",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -40,9 +40,18 @@ const buttonVariants = cva(
 
 const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
+  // If className contains a custom bg-*, do not apply the variant's background color
+  const hasCustomBg = className && /bg-\w|bg-\[.*\]/.test(className);
+  const mergedClassName = hasCustomBg
+    ? cn(
+        // Remove bg-* from variant
+        buttonVariants({ variant: undefined, size, className: undefined }),
+        className
+      )
+    : cn(buttonVariants({ variant, size, className }));
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={mergedClassName}
       ref={ref}
       {...props}
     />

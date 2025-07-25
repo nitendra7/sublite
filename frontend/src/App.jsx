@@ -6,8 +6,7 @@ import { useTheme } from './context/ThemeContext';
 
 // Page components
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/Login';
-import SignupPage from './pages/Signup';
+import AuthPage from './pages/AuthPages';
 import Dashboard from './pages/Dashboard';
 import Availableplans from './pages/Availableplans';
 import SubscriptionsPage from './pages/SubscriptionsPage';
@@ -55,8 +54,8 @@ function App() {
         <Routes>
           {/* Public routes: Accessible without authentication. */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<SignupPage />} />
+          <Route path="/login" element={<AuthPage isLogin={true} />} />
+          <Route path="/register" element={<AuthPage isLogin={false} />} />
 
           {/* Protected routes group: Access is guarded by PrivateRoute. */}
           {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
