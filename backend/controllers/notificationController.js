@@ -5,9 +5,7 @@ const Notification = require('../models/notification');
 
 exports.getAllNotifications = async (req, res) => {
   try {
-    // If you want to get notifications *for the logged-in user*, you'd filter by req.user._id:
-    // const notifications = await Notification.find({ userId: req.user._id });
-    const notifications = await Notification.find();
+    const notifications = await Notification.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
     res.status(500).json({ error: err.message });
