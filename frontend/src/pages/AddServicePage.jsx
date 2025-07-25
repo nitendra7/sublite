@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, Clock, Users, Shield, Tag, FileText, Camera, MapPin } from 'lucide-react';
 import { apiFetch, API_BASE } from '../utils/api';
+import { Button } from '../components/ui/button';
 
 const AddServicePage = () => {
     const navigate = useNavigate();
@@ -211,9 +212,9 @@ const AddServicePage = () => {
                 <div className="flex justify-end items-center">
                     {error && <p className="text-red-500 mr-4">{error}</p>}
                     {success && <p className="text-green-500 mr-4">{success}</p>}
-                    <button type="submit" disabled={isLoading} className="bg-[#2bb6c4] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow disabled:bg-gray-400">
+                    <Button type="submit" disabled={isLoading} className="bg-[#2bb6c4] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow disabled:bg-gray-400">
                         {isLoading ? 'Submitting...' : 'Add Service'}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>

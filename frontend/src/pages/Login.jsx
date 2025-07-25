@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { Eye, EyeOff } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 const jwtDecode = (token) => {
   try {
@@ -236,21 +237,22 @@ function LoginPage() {
             </div>
           </div>
           <div className="flex justify-end mb-4 mt-1">
-            <button
+            <Button
               type="button"
+              variant="link"
               className="text-sm font-semibold focus:outline-none transition-colors duration-150 text-[#2bb6c4] hover:text-[#1ea1b0] dark:text-[#5ed1dc] dark:hover:text-[#2bb6c4] underline"
               onClick={() => setShowForgotModal(true)}
             >
               Forgot Password?
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
             type="submit"
             className="w-full py-3 rounded-xl bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={loading}
           >
             {loading ? 'Logging in...' : 'Continue'}
-          </button>
+          </Button>
         </form>
 
         {error && <div className="text-red-500 text-center mt-4">{error}</div>}
@@ -260,18 +262,18 @@ function LoginPage() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg text-center">
               <h2 className="text-lg font-semibold mb-2">No account found</h2>
               <p className="mb-4">Would you like to sign up?</p>
-              <button
+              <Button
                 className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
                 onClick={() => navigate('/register')}
               >
                 Sign Up
-              </button>
-              <button
+              </Button>
+              <Button
                 className="bg-gray-300 text-gray-800 px-4 py-2 rounded"
                 onClick={() => setShowSignupDialog(false)}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -308,10 +310,10 @@ function LoginPage() {
               {forgotError && <div className="text-red-500 mb-2">{forgotError}</div>}
               {forgotSuccess && <div className="text-green-500 mb-2">{forgotSuccess}</div>}
               <div className="flex justify-between items-center">
-                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowForgotModal(false)} disabled={forgotLoading}>Cancel</button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={forgotLoading}>
+                <Button type="button" variant="outline" className="text-gray-500 hover:underline" onClick={() => setShowForgotModal(false)} disabled={forgotLoading}>Cancel</Button>
+                <Button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={forgotLoading}>
                   {forgotStep === 1 ? 'Send OTP' : forgotStep === 2 ? 'Verify OTP' : 'Reset Password'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
