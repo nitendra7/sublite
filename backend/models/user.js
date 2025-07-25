@@ -109,4 +109,18 @@ userSchema.pre('save', async function (next) {
 
 const User = mongoose.model("User", userSchema);
 
+// PendingUser model for signup OTP verification
+const pendingUserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  username: { type: String, required: true, trim: true, lowercase: true },
+  email: { type: String, required: true, trim: true, lowercase: true },
+  password: { type: String, required: true },
+  signupOtp: { type: String, required: true },
+  signupOtpExpires: { type: Date, required: true },
+}, { timestamps: true });
+
+const PendingUser = mongoose.model('PendingUser', pendingUserSchema);
+
+module.exports.PendingUser = PendingUser;
+
 module.exports = User;

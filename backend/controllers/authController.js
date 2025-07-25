@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { PendingUser } = require('../models/user');
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -30,14 +31,19 @@ exports.register = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({ message: 'A user with this email or username already exists.' });
     }
+    const existingPending = await PendingUser.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
+    if (existingPending) {
+      await PendingUser.deleteOne({ _id: existingPending._id }); // Remove old pending signup for this email/username
+    }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // Save user with isVerified: false and OTP
-    const newUser = new User({ name, username, email, password, isVerified: false, signupOtp: otp, signupOtpExpires: otpExpires });
-    await newUser.save();
+    // Hash password before storing in PendingUser
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const pendingUser = new PendingUser({ name, username, email, password: hashedPassword, signupOtp: otp, signupOtpExpires: otpExpires });
+    await pendingUser.save();
 
     // Send OTP email
     const transporter = nodemailer.createTransport({
@@ -226,26 +232,27 @@ exports.verifyOtp = async (req, res) => {
     if (!email || !otp) {
       return res.status(400).json({ message: 'Email and OTP are required.' });
     }
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+    const pendingUser = await PendingUser.findOne({ email: email.toLowerCase() });
+    if (!pendingUser) {
+      return res.status(404).json({ message: 'No pending registration found for this email.' });
     }
-    if (user.isVerified) {
-      return res.status(400).json({ message: 'User already verified.' });
-    }
-    if (!user.signupOtp || !user.signupOtpExpires) {
-      return res.status(400).json({ message: 'No OTP found. Please register again.' });
-    }
-    if (user.signupOtp !== otp) {
+    if (pendingUser.signupOtp !== otp) {
       return res.status(400).json({ message: 'Invalid OTP.' });
     }
-    if (user.signupOtpExpires < new Date()) {
+    if (pendingUser.signupOtpExpires < new Date()) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
       return res.status(400).json({ message: 'OTP expired. Please register again.' });
     }
-    user.isVerified = true;
-    user.signupOtp = null;
-    user.signupOtpExpires = null;
-    await user.save();
+    // Create real user
+    const newUser = new User({
+      name: pendingUser.name,
+      username: pendingUser.username,
+      email: pendingUser.email,
+      password: pendingUser.password,
+      isVerified: true
+    });
+    await newUser.save();
+    await PendingUser.deleteOne({ _id: pendingUser._id });
     res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
     console.error('Error verifying OTP:', err);
