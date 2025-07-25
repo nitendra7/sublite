@@ -4,7 +4,6 @@ import { useTheme } from '../context/ThemeContext';
 import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle } from 'lucide-react';
 // Import the reusable Input component
 import { Input } from '../components/ui/input'; // Adjust the path if input.jsx is in a different directory
-import { Button } from '../components/ui/button';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -229,23 +228,23 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block mb-1 font-medium">Full Name</label>
-              <Input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full" required />
+              <input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
             </div>
             <div>
               <label className="block mb-1 font-medium">Username</label>
-              <Input type="text" name="username" value={profile.username} onChange={handleChange} className="w-full" required />
+              <input type="text" name="username" value={profile.username} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
             </div>
             <div>
               <label className="block mb-1 font-medium">Email ID</label>
-              <Input type="email" name="email" value={profile.email} className="w-full" disabled />
+              <input type="email" name="email" value={profile.email} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed" disabled />
             </div>
             <div>
               <label className="block mb-1 font-medium">Phone Number</label>
-              <Input type="text" name="phone" value={profile.phone} onChange={handleChange} className="w-full" />
+              <input type="text" name="phone" value={profile.phone} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" />
             </div>
             <div>
               <label className="block mb-1 font-medium">New Password</label>
-              <Input type="password" name="password" value={profile.password} onChange={handleChange} className="w-full" placeholder="Enter new password" />
+              <input type="password" name="password" value={profile.password} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" placeholder="Enter new password" />
             </div>
             <div>
               <label className="block mb-1 font-medium">Wallet Balance</label>
@@ -255,8 +254,8 @@ export default function ProfilePage() {
           {localError && <div className="text-red-500 text-center">{localError}</div>}
           {saveSuccess && <div className="text-green-600 text-center">Profile updated successfully!</div>}
           <div className="flex justify-end gap-4 mt-6">
-            <Button type="button" onClick={handleEditToggle} variant="outline" className="w-full md:w-auto">Cancel</Button>
-            <Button type="submit" className="w-full md:w-auto">Save Changes</Button>
+            <button type="button" onClick={handleEditToggle} className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancel</button>
+            <button type="submit" className="px-6 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold shadow-md hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition">Save Changes</button>
           </div>
         </form>
       </div>

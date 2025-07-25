@@ -3,7 +3,6 @@ import { X, Calendar, CreditCard, Wallet, Clock, DollarSign, Plus } from 'lucide
 import { apiFetch, API_BASE } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/button';
 
 const BookingModal = ({ isOpen, onClose, service }) => {
     const { user } = useUser();
@@ -69,13 +68,12 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Book Service</h2>
-                    <Button 
+                    <button 
                         onClick={onClose}
-                        variant="ghost"
-                        size="icon"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     >
                         <X size={20} className="text-gray-500" />
-                    </Button>
+                    </button>
                 </div>
 
                 {/* Content */}
@@ -105,15 +103,18 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                         {/* Quick Selection Buttons */}
                         <div className="grid grid-cols-4 gap-2 mb-4">
                             {[1, 3, 7, 14].map(days => (
-                                <Button
+                                <button
                                     key={days}
                                     onClick={() => setRentalDuration(days)}
-                                    variant={rentalDuration === days ? "default" : "outline"}
-                                    className="p-3 rounded-lg text-center border transition-colors"
+                                    className={`p-3 rounded-lg text-center border transition-colors ${
+                                        rentalDuration === days
+                                            ? 'bg-[#2bb6c4] text-white border-[#2bb6c4]'
+                                            : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                    }`}
                                 >
                                     <div className="font-semibold">{days}</div>
                                     <div className="text-xs">{days === 1 ? 'day' : 'days'}</div>
-                                </Button>
+                                </button>
                             ))}
                         </div>
 
@@ -178,7 +179,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                                 <p className="text-red-600 text-sm mb-2">
                                     Insufficient balance. Need ₹{totalCost - (user?.walletBalance || 0)} more.
                                 </p>
-                                <Button
+                                <button
                                     onClick={() => {
                                         onClose();
                                         navigate('/wallet');
@@ -187,7 +188,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                                 >
                                     <Plus size={14} />
                                     Add Money to Wallet
-                                </Button>
+                                </button>
                             </div>
                         )}
                     </div>
@@ -216,17 +217,16 @@ const BookingModal = ({ isOpen, onClose, service }) => {
 
                 {/* Footer */}
                 <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-                    <Button
+                    <button
                         onClick={onClose}
-                        variant="outline"
-                        className="flex-1"
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                         Cancel
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                         onClick={handleBooking}
                         disabled={isLoading || !hasSufficientBalance || service.availableSlots <= 0}
-                        className="flex-1 bg-[#2bb6c4] text-white rounded-lg hover:bg-[#1ea1b0] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                        className="flex-1 px-4 py-2 bg-[#2bb6c4] text-white rounded-lg hover:bg-[#1ea1b0] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                     >
                         {isLoading ? (
                             <>
@@ -239,7 +239,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                                 Book for ₹{totalCost}
                             </>
                         )}
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>

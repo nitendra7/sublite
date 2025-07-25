@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { Button } from '../components/ui/button';
 
 export default function SubscriptionDetails() {
   const { state } = useLocation();
@@ -69,15 +68,15 @@ export default function SubscriptionDetails() {
 
         <div className="mt-8">
           {!bookingConfirmed ? (
-            <Button onClick={handleBooking} className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold py-3 rounded-lg shadow-lg transition">
+            <button onClick={handleBooking} className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white font-bold py-3 rounded-lg shadow-lg transition">
               Book Plan
-            </Button>
+            </button>
           ) : !showOtpInput ? (
             <div>
               <p className="text-center text-green-600 font-semibold mb-4">Plan booked! Proceed to payment.</p>
-              <Button onClick={handlePayment} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg transition">
+              <button onClick={handlePayment} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg transition">
                 Pay with Wallet
-              </Button>
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -85,19 +84,19 @@ export default function SubscriptionDetails() {
                 <label className="block text-gray-700 font-medium mb-1">Enter OTP sent to your device:</label>
                 <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 outline-none transition" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" />
               </div>
-              <Button onClick={handleConfirm} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg transition">
+              <button onClick={handleConfirm} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg transition">
                 Confirm Subscription
-              </Button>
+              </button>
             </div>
           )}
         </div>
 
-        <Button
+        <button
           onClick={() => navigate(-1)}
           className="mt-6 w-full text-sm text-gray-500 hover:underline"
         >
           ← Back to Plans
-        </Button>
+        </button>
       </div>
     </div>
   );

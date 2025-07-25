@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Bell, CheckCircle, Info, Gift, Loader } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Button } from '../components/ui/button';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -275,16 +274,17 @@ export default function NotificationsPage() {
                     </div>
                     {/* Always show Send Credentials button for eligible bookings */}
                     {n.title === 'New Booking!' && n.relatedId && (
-                      <Button
-                        variant={credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
-                          const created = new Date(credBookingCreatedAt);
-                          const now = new Date();
-                          const diffMinutes = (now - created) / (1000 * 60);
-                          return diffMinutes <= 15;
-                        })()
-                          ? 'default'
-                          : 'outline'
-                        }
+                      <button
+                        className={`mt-2 px-4 py-2 rounded font-semibold transition 
+                          ${credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                            const created = new Date(credBookingCreatedAt);
+                            const now = new Date();
+                            const diffMinutes = (now - created) / (1000 * 60);
+                            return diffMinutes <= 15;
+                          })()
+                            ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
                         onClick={() => {
                           if (credBookingStatus === 'confirmed' && credBookingCreatedAt) {
                             const created = new Date(credBookingCreatedAt);
@@ -309,7 +309,7 @@ export default function NotificationsPage() {
                         })()) ? 'Booking not eligible (must be confirmed and within 15 minutes)' : ''}
                       >
                         Send Credentials
-                      </Button>
+                      </button>
                     )}
                     {expandedId === n._id && (
                       <>
@@ -352,15 +352,15 @@ export default function NotificationsPage() {
                 {credError && <div className="text-red-500 mb-2">{credError}</div>}
                 {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
                 <div className="flex justify-between items-center mt-4">
-                  <Button variant="outline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</Button>
-                  <Button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</Button>
+                  <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
                 </div>
               </form>
             ) : (
               <>
                 <div className="text-red-500 text-center mb-4">This booking is no longer eligible for sending credentials (cancelled or more than 15 minutes old).</div>
                 <div className="flex justify-center mt-4">
-                  <Button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowCredModal(false)}>Close</Button>
+                  <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowCredModal(false)}>Close</button>
                 </div>
               </>
             )}

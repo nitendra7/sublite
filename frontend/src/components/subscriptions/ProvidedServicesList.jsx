@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, Users, Tag } from 'lucide-react';
-import { Button } from '../../components/ui/button';
 
 const ProvidedServicesList = ({ services, onServiceDeleted }) => {
     const navigate = useNavigate();
@@ -49,12 +48,12 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 self-end sm:self-center">
-                                <Button onClick={() => handleEdit(service._id)} variant="ghost" size="icon" className="text-blue-500 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                <button onClick={() => handleEdit(service._id)} className="p-2 text-blue-500 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                                     <Edit size={18} />
-                                </Button>
-                                <Button onClick={() => handleDelete(service._id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                </button>
+                                <button onClick={() => handleDelete(service._id)} className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                                     <Trash2 size={18} />
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     ))}
