@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const { User } = require('../models/user');
 const RefreshToken = require('../models/refreshtoken');
 const bcrypt = require('bcryptjs');
 
@@ -107,12 +107,58 @@ exports.getUserById = async (req, res) => {
 };
 
 /**
+ * @desc    Delete a user by ID (Admin only)
+ */
+exports.deleteUserById = async (req, res) => {
+  try {
+    // Prevent admin from deleting themselves
+    if (req.user._id.toString() === req.params.id) {
+      return res.status(400).json({ message: "Admins cannot delete themselves." });
+    }
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    res.status(200).json({ message: 'User deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
+};
+
+/**
  * @desc    Get all users (Admin only)
  */
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
     res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
+};
+
+/**
+ * @desc    Update a user's admin status (Admin only)
+ */
+exports.updateUserRole = async (req, res) => {
+  try {
+    // Prevent admin from demoting themselves
+    if (req.user._id.toString() === req.params.id) {
+      return res.status(400).json({ message: "Admins cannot change their own admin status." });
+    }
+    const { isAdmin } = req.body;
+    if (typeof isAdmin !== 'boolean') {
+      return res.status(400).json({ message: 'isAdmin must be a boolean.' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    user.isAdmin = isAdmin;
+    await user.save();
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    res.status(200).json(userResponse);
   } catch (err) {
     res.status(500).json({ message: 'Server error.', error: err.message });
   }

@@ -16,7 +16,8 @@ import ReviewPage from './pages/ReviewPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SubscriptionDetails from './pages/SubscriptionDetails';
 import AddServicePage from './pages/AddServicePage';
-
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/AdminDashboard';
 
 
 // PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.
@@ -39,6 +40,20 @@ const PrivateRoute = () => {
 // It receives theme state from the top-level App component and passes it down.
 const ProtectedLayout = ({ darkMode, toggleDarkMode }) => {
   return <Outlet />;
+};
+
+// AdminRoute component: Guards admin routes, redirecting non-admins to home or login.
+const AdminRoute = () => {
+  const { user, loading } = useUser();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg text-gray-600">
+        Authenticating...
+      </div>
+    );
+  }
+  // Adjust this check if your user object uses a different property for admin
+  return user && user.isAdmin ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 
@@ -76,6 +91,16 @@ function App() {
                   {/* Standalone protected pages. */}
                   <Route path="/subscription-details" element={<SubscriptionDetails />} />
               </Route>
+          </Route>
+
+          {/* Admin routes: Only accessible to admin users. */}
+          <Route element={<PrivateRoute />}>
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                {/* Future: Add subroutes for users, services, bookings, payments */}
+              </Route>
+            </Route>
           </Route>
 
           {/* Fallback route: Redirects to home page for any undefined paths. */}

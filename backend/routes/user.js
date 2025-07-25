@@ -28,4 +28,10 @@ router.get('/', auth, admin, userController.getAllUsers);
 // Get a single user by their ID
 router.get('/:id', auth, admin, userController.getUserById);
 
+// Delete a user by their ID (Admin only)
+router.delete('/:id', auth, admin, userController.deleteUserById);
+
+// Update a user's admin status (Admin only)
+router.patch('/:id/role', auth, admin, userController.updateUserRole);
+
 module.exports = router;

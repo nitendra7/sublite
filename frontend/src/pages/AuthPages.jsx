@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
 
+// Assuming API_BASE is correctly set in your environment variables
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 export default function AuthPage({ isLogin = true }) {
@@ -18,36 +19,51 @@ export default function AuthPage({ isLogin = true }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Modals and their states
   const [showAccountNotFoundModal, setShowAccountNotFoundModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotError, setForgotError] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState("");
-  const { darkMode, toggleDarkMode } = useTheme();
-  // Add state for OTP modal
-  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false); // For signup OTP verification
+  const [forgotStep, setForgotStep] = useState(1); // 1=email, 2=otp, 3=reset
+
+  // OTP for Signup Verification
   const [otp, setOtp] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [otpSuccess, setOtpSuccess] = useState('');
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetOtp, setResetOtp] = useState("");
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState("");
-  const [resetSuccess, setResetSuccess] = useState("");
   const [otpTimer, setOtpTimer] = useState(30);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendError, setResendError] = useState('');
   const [resendSuccess, setResendSuccess] = useState('');
 
+  // Forgot Password states
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotOtpLoading, setForgotOtpLoading] = useState(false);
+  const [forgotOtpError, setForgotOtpError] = useState("");
+  const [forgotOtpSuccess, setForgotOtpSuccess] = useState("");
+  const [forgotOtpTimer, setForgotOtpTimer] = useState(30);
+  const [forgotResendLoading, setForgotResendLoading] = useState(false);
+  const [forgotResendError, setForgotResendError] = useState("");
+  const [forgotResendSuccess, setForgotResendSuccess] = useState("");
+
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotResetLoading, setForgotResetLoading] = useState(false);
+  const [forgotResetError, setForgotResetError] = useState("");
+  const [forgotResetSuccess, setForgotResetSuccess] = useState("");
+
+  // Handler for form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Main form submission (Login/Signup)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,17 +80,31 @@ export default function AuthPage({ isLogin = true }) {
         });
         let data;
         try { data = await res.json(); } catch { setError('Unexpected server response.'); setLoading(false); return; }
+
         if (!res.ok) {
-          if (res.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('userName');
+          if (data.message && data.message.toLowerCase().includes('user not found')) {
             setShowAccountNotFoundModal(true);
+          } else if (data.message && data.message.toLowerCase().includes('invalid credentials')) {
+            setError('Invalid password. Please try again.');
           } else {
             setError(data.message || 'Login failed');
           }
           setLoading(false);
           return;
         }
+
+        // Store token and user info upon successful login
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('userName', data.user?.name || '');
+        localStorage.setItem('userId', data.user?.id || data.user?._id || '');
+        console.log('Login successful. Stored:', {
+          token: localStorage.getItem('token'),
+          userId: localStorage.getItem('userId'),
+          userName: localStorage.getItem('userName')
+        });
         setSuccess('Login successful!');
         setTimeout(() => { navigate('/dashboard'); }, 1000);
       } else {
@@ -92,13 +122,18 @@ export default function AuthPage({ isLogin = true }) {
         });
         let data;
         try { data = await res.json(); } catch { setError('Unexpected server response.'); setLoading(false); return; }
+
         if (!res.ok) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('userName');
           setError(data.message || 'Registration failed');
           setLoading(false);
           return;
         }
+        // If registration is successful, show OTP modal
         setShowOtpModal(true);
-        setSuccess('');
+        setSuccess(''); // Clear main success message for OTP flow
       }
     } catch (err) {
       setError(err.message || 'Failed to connect to the server.');
@@ -107,8 +142,192 @@ export default function AuthPage({ isLogin = true }) {
     }
   };
 
-  // OTP timer effect
-  React.useEffect(() => {
+  // OTP Verification for Signup
+  const handleOtpVerification = async (e) => {
+    e.preventDefault();
+    setOtpLoading(true);
+    setOtpError('');
+    setOtpSuccess('');
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, otp })
+      });
+      let data;
+      try { data = await res.json(); } catch { setOtpError('Unexpected server response.'); setOtpLoading(false); return; }
+
+      if (!res.ok) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        setOtpError(data.message || 'OTP verification failed');
+        setOtpLoading(false);
+        return;
+      }
+
+      // IMPORTANT: If backend returns token after OTP verification, store it and navigate
+      if (data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('userName', data.user?.name || '');
+        localStorage.setItem('userId', data.user?.id || data.user?._id || '');
+        setOtpSuccess('Email verified! Logging you in...');
+        setTimeout(() => { setShowOtpModal(false); navigate('/dashboard'); }, 1500);
+      } else {
+        // If backend doesn't return token, user needs to log in manually
+        setOtpSuccess('Email verified! You can now log in.');
+        setTimeout(() => { setShowOtpModal(false); navigate('/login'); }, 1500);
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to connect to the server.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend OTP for Signup
+  const handleResendOtp = async () => {
+    setResendLoading(true);
+    setResendError('');
+    setResendSuccess('');
+    try {
+      // Re-trigger the registration endpoint to send a new OTP
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, username: formData.username, email: formData.email, password: formData.password })
+      });
+      let data;
+      try { data = await res.json(); } catch { setResendError('Unexpected server response.'); setResendLoading(false); return; }
+
+      if (!res.ok) {
+        setResendError(data.message || 'Failed to resend OTP');
+        setResendLoading(false);
+        return;
+      }
+      setResendSuccess('OTP resent! Check your email.');
+      setOtpTimer(30); // Reset timer
+    } catch (err) {
+      setResendError(err.message || 'Failed to connect to the server.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // Forgot Password - Step 1: Send OTP
+  const handleForgotSendOtp = async (e) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotSuccess("");
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
+      });
+      let data;
+      try { data = await res.json(); } catch { setForgotError('Unexpected server response.'); setForgotLoading(false); return; }
+      if (!res.ok) throw new Error(data.message || 'Failed to send OTP.');
+      setForgotSuccess('OTP sent! Check your email.');
+      setForgotStep(2);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password - Step 2: Verify OTP
+  const handleForgotVerifyOtp = async (e) => {
+    e.preventDefault();
+    setForgotOtpLoading(true);
+    setForgotOtpError("");
+    setForgotOtpSuccess("");
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify-reset-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp })
+      });
+      let data;
+      try { data = await res.json(); } catch { setForgotOtpError('Unexpected server response.'); setForgotOtpLoading(false); return; }
+      if (!res.ok) throw new Error(data.message || 'OTP verification failed.');
+      setForgotOtpSuccess('OTP verified!');
+      setTimeout(() => setForgotStep(3), 500);
+    } catch (err) {
+      setForgotOtpError(err.message);
+    } finally {
+      setForgotOtpLoading(false);
+    }
+  };
+
+  // Forgot Password - Step 2: Resend OTP
+  const handleForgotResendOtp = async () => {
+    setForgotResendLoading(true);
+    setForgotResendError("");
+    setForgotResendSuccess("");
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
+      });
+      let data;
+      try { data = await res.json(); } catch { setForgotResendError('Unexpected server response.'); setForgotResendLoading(false); return; }
+      if (!res.ok) {
+        setForgotResendError(data.message || 'Failed to resend OTP');
+        setForgotResendLoading(false);
+        return;
+      }
+      setForgotResendSuccess('OTP resent! Check your email.');
+      setForgotOtpTimer(30);
+    } catch (err) {
+      setForgotResendError(err.message || 'Failed to connect to the server.');
+    } finally {
+      setForgotResendLoading(false);
+    }
+  };
+
+  // Forgot Password - Step 3: Reset Password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setForgotResetLoading(true);
+    setForgotResetError("");
+    setForgotResetSuccess("");
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotResetError('Passwords do not match.');
+      setForgotResetLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp, newPassword: forgotNewPassword })
+      });
+      let data;
+      try { data = await res.json(); } catch { setForgotResetError('Unexpected server response.'); setForgotResetLoading(false); return; }
+      if (!res.ok) throw new Error(data.message || 'Failed to reset password.');
+      setForgotResetSuccess('Password reset successful! You can now log in.');
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setForgotStep(1); // Reset forgot password flow
+        // Clear all forgot password states
+        setForgotEmail(""); setForgotOtp(""); setForgotNewPassword(""); setForgotConfirmPassword("");
+        setForgotError(""); setForgotSuccess(""); setForgotOtpError(""); setForgotOtpSuccess(""); setForgotResendError(""); setForgotResendSuccess("");
+        setForgotResetError(""); setForgotResetSuccess("");
+        navigate('/login');
+      }, 1500);
+    } catch (err) {
+      setForgotResetError(err.message);
+    } finally {
+      setForgotResetLoading(false);
+    }
+  };
+
+  // OTP timer effect for Signup
+  useEffect(() => {
     if (!showOtpModal) return;
     if (otpTimer === 0) return;
     const interval = setInterval(() => {
@@ -117,17 +336,54 @@ export default function AuthPage({ isLogin = true }) {
     return () => clearInterval(interval);
   }, [showOtpModal, otpTimer]);
 
-  // When OTP modal is shown, reset timer
-  React.useEffect(() => {
+  // Reset signup OTP timer and errors when OTP modal is shown
+  useEffect(() => {
     if (showOtpModal) {
       setOtpTimer(30);
       setResendError('');
       setResendSuccess('');
+      setOtpError('');
+      setOtpSuccess('');
+      setOtp(''); // Clear OTP input on modal open
     }
   }, [showOtpModal]);
 
+  // OTP timer effect for Forgot Password
+  useEffect(() => {
+    if (!showForgotModal || forgotStep !== 2) return;
+    if (forgotOtpTimer === 0) return;
+    const interval = setInterval(() => {
+      setForgotOtpTimer((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showForgotModal, forgotStep, forgotOtpTimer]);
+
+  // Reset forgot password states on step/modal change
+  useEffect(() => {
+    if (showForgotModal) {
+      if (forgotStep === 1) {
+        setForgotEmail("");
+        setForgotError("");
+        setForgotSuccess("");
+      } else if (forgotStep === 2) {
+        setForgotOtpTimer(30);
+        setForgotResendError("");
+        setForgotResendSuccess("");
+        setForgotOtpError("");
+        setForgotOtpSuccess("");
+        setForgotOtp(""); // Clear OTP input on step change
+      } else if (forgotStep === 3) {
+        setForgotNewPassword("");
+        setForgotConfirmPassword("");
+        setForgotResetError("");
+        setForgotResetSuccess("");
+      }
+    }
+  }, [showForgotModal, forgotStep]);
+
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4 font-inter">
       <div className="w-full max-w-md sm:max-w-md md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6">
           <img
@@ -140,6 +396,7 @@ export default function AuthPage({ isLogin = true }) {
         </div>
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-sm">{isLogin ? 'Please enter your details' : 'Sign up to get started'}</p>
+
         <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
           <Button
             asChild
@@ -154,28 +411,31 @@ export default function AuthPage({ isLogin = true }) {
             <Link to="/register">Signup</Link>
           </Button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Full Name</label>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Full Name</label>
                 <Input
+                  id="fullName"
                   type="text"
                   name="name"
                   placeholder="Full Name"
-                  className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200"
+                  className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
                   value={formData.name}
                   onChange={handleChange}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Username</label>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Username</label>
                 <Input
+                  id="username"
                   type="text"
                   name="username"
                   placeholder="Username"
-                  className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200"
+                  className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
                   value={formData.username}
                   onChange={handleChange}
                   required
@@ -184,12 +444,13 @@ export default function AuthPage({ isLogin = true }) {
             </>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{isLogin ? 'Email or Username' : 'Email Address'}</label>
+            <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{isLogin ? 'Email or Username' : 'Email Address'}</label>
             <Input
+              id="emailOrUsername"
               type={isLogin ? 'text' : 'email'}
               name="email"
               placeholder={isLogin ? 'Email or Username' : 'Email Address'}
-              className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200"
+              className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
               value={formData.email}
               onChange={handleChange}
               required
@@ -197,30 +458,26 @@ export default function AuthPage({ isLogin = true }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password</label>
-            <div style={{ position: 'relative' }}>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password</label>
+            <div className="relative">
               <Input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 placeholder="Password"
-                className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 pr-10"
+                className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 pr-10 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                style={{ paddingRight: '40px' }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-0 top-0 h-full bg-transparent border-none cursor-pointer px-4 py-3 flex items-center"
+                className="absolute right-0 top-0 h-full bg-transparent border-none cursor-pointer px-4 py-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.02c2.64 4.663 7.03 7.477 10.066 7.477 1.523 0 3.06-.457 4.534-1.254M21.07 15.977A10.45 10.45 0 0022.066 12.02c-2.64-4.663-7.03-7.477-10.066-7.477-1.523 0-3.06.457-4.534 1.254M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9.75L18 12m0 0l-2.25 2.25M18 12H6" /></svg>
-                )}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -249,24 +506,27 @@ export default function AuthPage({ isLogin = true }) {
           )}
         </div>
       </div>
+
+      {/* Account Not Found Modal */}
       {showAccountNotFoundModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">No Account Found</h2>
-            <p className="mb-4">Would you like to sign up instead?</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">No Account Found</h2>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">Would you like to sign up instead?</p>
             <div className="flex justify-center gap-4">
               <Button
                 onClick={() => {
                   setShowAccountNotFoundModal(false);
                   navigate('/register');
                 }}
-                className="bg-[#2bb6c4] text-white"
+                className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2"
               >
                 Sign Up
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowAccountNotFoundModal(false)}
+                className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl px-4 py-2"
               >
                 Cancel
               </Button>
@@ -274,183 +534,120 @@ export default function AuthPage({ isLogin = true }) {
           </div>
         </div>
       )}
+
+      {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">Forgot Password</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setForgotLoading(true);
-              setForgotError("");
-              setForgotSuccess("");
-              try {
-                const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: forgotEmail })
-                });
-                let data;
-                try { data = await res.json(); } catch { setForgotError('Unexpected server response.'); setForgotLoading(false); return; }
-                if (!res.ok) throw new Error(data.message || 'Failed to send reset email.');
-                setForgotSuccess('OTP sent! Check your email.');
-                setResetEmail(forgotEmail);
-                setShowResetModal(true);
-              } catch (err) {
-                setForgotError(err.message);
-              } finally {
-                setForgotLoading(false);
-              }
-            }}>
-              <div className="mb-4">
-                <label className="block mb-1">Email</label>
-                <Input type="email" className="w-full border rounded px-3 py-2" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required />
-              </div>
-              {forgotError && <div className="text-red-500 mb-2">{forgotError}</div>}
-              {forgotSuccess && <div className="text-green-500 mb-2">{forgotSuccess}</div>}
-              <div className="flex justify-between items-center">
-                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowForgotModal(false)} disabled={forgotLoading}>Cancel</button>
-                <button type="submit" className="bg-[#2bb6c4] text-white px-4 py-2 rounded" disabled={forgotLoading}>
-                  {forgotLoading ? 'Sending...' : 'Send OTP'}
-                </button>
-              </div>
-            </form>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-sm">
+            {forgotStep === 1 && (
+              <>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Forgot Password</h2>
+                <form onSubmit={handleForgotSendOtp}>
+                  <div className="mb-4">
+                    <label htmlFor="forgotEmail" className="block mb-1 text-gray-600 dark:text-gray-300">Email</label>
+                    <Input id="forgotEmail" type="email" className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required />
+                  </div>
+                  {forgotError && <div className="text-red-500 mb-2 text-sm">{forgotError}</div>}
+                  {forgotSuccess && <div className="text-green-500 mb-2 text-sm">{forgotSuccess}</div>}
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="outline" className="text-gray-500 hover:underline border-none" onClick={() => { setShowForgotModal(false); setForgotStep(1); }} disabled={forgotLoading}>Cancel</Button>
+                    <Button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl" disabled={forgotLoading}>
+                      {forgotLoading ? 'Sending...' : 'Send OTP'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {forgotStep === 2 && (
+              <>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Verify OTP</h2>
+                <form onSubmit={handleForgotVerifyOtp}>
+                  <div className="mb-4">
+                    <label htmlFor="forgotOtp" className="block mb-1 text-gray-600 dark:text-gray-300">OTP</label>
+                    <Input id="forgotOtp" type="text" className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={forgotOtp} onChange={e => setForgotOtp(e.target.value)} required maxLength={6} />
+                  </div>
+                  {forgotOtpError && <div className="text-red-500 mb-2 text-sm">{forgotOtpError}</div>}
+                  {forgotOtpSuccess && <div className="text-green-500 mb-2 text-sm">{forgotOtpSuccess}</div>}
+                  {forgotResendError && <div className="text-red-500 mb-2 text-sm">{forgotResendError}</div>}
+                  {forgotResendSuccess && <div className="text-green-500 mb-2 text-sm">{forgotResendSuccess}</div>}
+                  <div className="flex justify-between items-center mb-4">
+                    <button
+                      type="button"
+                      className={`text-[#2bb6c4] font-semibold text-sm ${forgotOtpTimer > 0 || forgotResendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={forgotOtpTimer > 0 || forgotResendLoading}
+                      onClick={handleForgotResendOtp}
+                    >
+                      Resend OTP {forgotOtpTimer > 0 && `(${forgotOtpTimer}s)`}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="outline" className="text-gray-500 hover:underline border-none" onClick={() => { setShowForgotModal(false); setForgotStep(1); }} disabled={forgotOtpLoading}>Cancel</Button>
+                    <Button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl" disabled={forgotOtpLoading}>
+                      {forgotOtpLoading ? 'Verifying...' : 'Verify OTP'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {forgotStep === 3 && (
+              <>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Reset Password</h2>
+                <form onSubmit={handleResetPassword}>
+                  <div className="mb-4">
+                    <label htmlFor="newPassword" className="block mb-1 text-gray-600 dark:text-gray-300">New Password</label>
+                    <Input id="newPassword" type="password" className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={forgotNewPassword} onChange={e => setForgotNewPassword(e.target.value)} required />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="confirmPassword" className="block mb-1 text-gray-600 dark:text-gray-300">Confirm Password</label>
+                    <Input id="confirmPassword" type="password" className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={forgotConfirmPassword} onChange={e => setForgotConfirmPassword(e.target.value)} required />
+                  </div>
+                  {forgotResetError && <div className="text-red-500 mb-2 text-sm">{forgotResetError}</div>}
+                  {forgotResetSuccess && <div className="text-green-500 mb-2 text-sm">{forgotResetSuccess}</div>}
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="outline" className="text-gray-500 hover:underline border-none" onClick={() => { setShowForgotModal(false); setForgotStep(1); }} disabled={forgotResetLoading}>Cancel</Button>
+                    <Button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl" disabled={forgotResetLoading}>
+                      {forgotResetLoading ? 'Resetting...' : 'Reset Password'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
-      {showResetModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">Reset Password</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setResetLoading(true);
-              setResetError("");
-              setResetSuccess("");
-              try {
-                const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: resetEmail, otp: resetOtp, newPassword: resetPassword })
-                });
-                let data;
-                try { data = await res.json(); } catch { setResetError('Unexpected server response.'); setResetLoading(false); return; }
-                if (!res.ok) throw new Error(data.message || 'Failed to reset password.');
-                setResetSuccess('Password reset successful! You can now log in.');
-                setTimeout(() => {
-                  setShowResetModal(false);
-                  setShowForgotModal(false);
-                  setResetEmail(""); setResetOtp(""); setResetPassword("");
-                  setForgotEmail(""); setForgotSuccess(""); setForgotError("");
-                  navigate('/login');
-                }, 1500);
-              } catch (err) {
-                setResetError(err.message);
-              } finally {
-                setResetLoading(false);
-              }
-            }}>
-              <div className="mb-4">
-                <label className="block mb-1">Email</label>
-                <Input type="email" className="w-full border rounded px-3 py-2" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1">OTP</label>
-                <Input type="text" className="w-full border rounded px-3 py-2" value={resetOtp} onChange={e => setResetOtp(e.target.value)} required maxLength={6} />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1">New Password</label>
-                <Input type="password" className="w-full border rounded px-3 py-2" value={resetPassword} onChange={e => setResetPassword(e.target.value)} required />
-              </div>
-              {resetError && <div className="text-red-500 mb-2">{resetError}</div>}
-              {resetSuccess && <div className="text-green-500 mb-2">{resetSuccess}</div>}
-              <div className="flex justify-between items-center">
-                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowResetModal(false)} disabled={resetLoading}>Cancel</button>
-                <button type="submit" className="bg-[#2bb6c4] text-white px-4 py-2 rounded" disabled={resetLoading}>
-                  {resetLoading ? 'Resetting...' : 'Reset Password'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+      {/* Signup OTP Verification Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">Verify Email</h2>
-            <p className="mb-4">Enter the OTP sent to your email address.</p>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setOtpLoading(true);
-              setOtpError('');
-              setOtpSuccess('');
-              try {
-                const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: formData.email, otp })
-                });
-                let data;
-                try { data = await res.json(); } catch { setOtpError('Unexpected server response.'); setOtpLoading(false); return; }
-                if (!res.ok) {
-                  setOtpError(data.message || 'OTP verification failed');
-                  setOtpLoading(false);
-                  return;
-                }
-                setOtpSuccess('Email verified! You can now log in.');
-                setTimeout(() => { setShowOtpModal(false); navigate('/login'); }, 1500);
-              } catch (err) {
-                setOtpError(err.message || 'Failed to connect to the server.');
-              } finally {
-                setOtpLoading(false);
-              }
-            }}>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Verify Email</h2>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">Enter the OTP sent to your email address: <span className="font-semibold">{formData.email}</span></p>
+            <form onSubmit={handleOtpVerification}>
               <div className="mb-4">
-                <label className="block mb-1">OTP</label>
-                <Input type="text" className="w-full border rounded px-3 py-2" value={otp} onChange={e => setOtp(e.target.value)} required maxLength={6} />
+                <label htmlFor="signupOtp" className="block mb-1 text-gray-600 dark:text-gray-300">OTP</label>
+                <Input id="signupOtp" type="text" className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={otp} onChange={e => setOtp(e.target.value)} required maxLength={6} />
               </div>
-              {otpError && <div className="text-red-500 mb-2">{otpError}</div>}
-              {otpSuccess && <div className="text-green-500 mb-2">{otpSuccess}</div>}
-              {resendError && <div className="text-red-500 mb-2">{resendError}</div>}
-              {resendSuccess && <div className="text-green-500 mb-2">{resendSuccess}</div>}
+              {otpError && <div className="text-red-500 mb-2 text-sm">{otpError}</div>}
+              {otpSuccess && <div className="text-green-500 mb-2 text-sm">{otpSuccess}</div>}
+              {resendError && <div className="text-red-500 mb-2 text-sm">{resendError}</div>}
+              {resendSuccess && <div className="text-green-500 mb-2 text-sm">{resendSuccess}</div>}
               <div className="flex justify-between items-center mb-4">
                 <button
                   type="button"
-                  className={`text-[#2bb6c4] font-semibold ${otpTimer > 0 || resendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`text-[#2bb6c4] font-semibold text-sm ${otpTimer > 0 || resendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={otpTimer > 0 || resendLoading}
-                  onClick={async () => {
-                    setResendLoading(true);
-                    setResendError('');
-                    setResendSuccess('');
-                    try {
-                      const res = await fetch(`${API_BASE}/api/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: formData.name, username: formData.username, email: formData.email, password: formData.password })
-                      });
-                      let data;
-                      try { data = await res.json(); } catch { setResendError('Unexpected server response.'); setResendLoading(false); return; }
-                      if (!res.ok) {
-                        setResendError(data.message || 'Failed to resend OTP');
-                        setResendLoading(false);
-                        return;
-                      }
-                      setResendSuccess('OTP resent! Check your email.');
-                      setOtpTimer(30);
-                    } catch (err) {
-                      setResendError(err.message || 'Failed to connect to the server.');
-                    } finally {
-                      setResendLoading(false);
-                    }
-                  }}
+                  onClick={handleResendOtp}
                 >
                   Resend OTP {otpTimer > 0 && `(${otpTimer}s)`}
                 </button>
               </div>
               <div className="flex justify-between items-center">
-                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowOtpModal(false)} disabled={otpLoading}>Cancel</button>
-                <button type="submit" className="bg-[#2bb6c4] text-white px-4 py-2 rounded" disabled={otpLoading}>
+                <Button type="button" variant="outline" className="text-gray-500 hover:underline border-none" onClick={() => setShowOtpModal(false)} disabled={otpLoading}>Cancel</Button>
+                <Button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl" disabled={otpLoading}>
                   {otpLoading ? 'Verifying...' : 'Verify'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
