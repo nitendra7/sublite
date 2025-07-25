@@ -67,5 +67,5 @@ serviceSchema.index({ categoryId: 1 });
 serviceSchema.index({ serviceStatus: 1 });
 serviceSchema.index({ availableSlots: 1 });
 
-const Service = mongoose.model("service", serviceSchema);
+const Service = mongoose.model("Service", serviceSchema);
 module.exports = Service;

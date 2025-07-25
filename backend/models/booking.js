@@ -37,5 +37,5 @@ bookingSchema.index({ providerId: 1 });
 bookingSchema.index({ serviceId: 1 });
 bookingSchema.index({ bookingStatus: 1 });
 
-const Booking = mongoose.model("booking", bookingSchema);
+const Booking = mongoose.model("Booking", bookingSchema);
 module.exports = Booking;
