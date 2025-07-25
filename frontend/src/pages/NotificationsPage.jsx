@@ -29,6 +29,14 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Modal state for sending credentials
+  const [showCredModal, setShowCredModal] = useState(false);
+  const [credBookingId, setCredBookingId] = useState(null);
+  const [credValues, setCredValues] = useState({ username: '', password: '', profileName: '', accessInstructions: '' });
+  const [credLoading, setCredLoading] = useState(false);
+  const [credError, setCredError] = useState('');
+  const [credSuccess, setCredSuccess] = useState('');
+
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -61,6 +69,51 @@ export default function NotificationsPage() {
       // if (!res.ok) throw new Error('Failed to mark as read');
     } catch (err) {
       console.error('Error marking notification as read:', err);
+    }
+  };
+
+  const openCredModal = (bookingId) => {
+    setCredBookingId(bookingId);
+    setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
+    setCredError('');
+    setCredSuccess('');
+    setShowCredModal(true);
+  };
+
+  const handleCredChange = (e) => {
+    const { name, value } = e.target;
+    setCredValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSendCredentials = async (e) => {
+    e.preventDefault();
+    setCredLoading(true);
+    setCredError('');
+    setCredSuccess('');
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/bookings/${credBookingId}/send-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(credValues)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send credentials');
+      setCredSuccess('Credentials sent successfully!');
+      setTimeout(() => {
+        setShowCredModal(false);
+        setCredBookingId(null);
+        setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
+        setCredError('');
+        setCredSuccess('');
+        // Optionally, refresh notifications
+        setLoading(true);
+        fetchNotifications().then(setNotifications).catch(()=>{}).finally(()=>setLoading(false));
+      }, 1500);
+    } catch (err) {
+      setCredError(err.message);
+    } finally {
+      setCredLoading(false);
     }
   };
 
@@ -147,13 +200,22 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</span>
                       {!n.isRead && (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-[#2bb6c4] text-white animate-pulse dark:bg-[#1ea1b0]">New</span>
+                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-[#2bb6c4] text-white animate-pulse dark:bg-[#1ea1b0] dark:text-gray-100">New</span>
                       )}
                     </div>
-                    <div className="text-gray-600 dark:text-gray-300 mt-1">{n.message}</div>
+                    <div className="text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">{n.message}</div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       {new Date(n.createdAt).toLocaleString()}
                     </div>
+                    {/* Show Send Credentials button for provider's new booking notifications */}
+                    {n.title === 'New Booking!' && n.relatedId && (
+                      <button
+                        className="mt-3 px-4 py-2 rounded bg-[#2bb6c4] text-white font-semibold hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition"
+                        onClick={() => openCredModal(n.relatedId)}
+                      >
+                        Send Credentials
+                      </button>
+                    )}
                   </div>
                 </li>
               ))}
@@ -161,6 +223,38 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+      {/* Modal for sending credentials */}
+      {showCredModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2">Send Credentials</h2>
+            <form onSubmit={handleSendCredentials}>
+              <div className="mb-3">
+                <label className="block mb-1">Username</label>
+                <input type="text" name="username" className="w-full border rounded px-3 py-2" value={credValues.username} onChange={handleCredChange} required />
+              </div>
+              <div className="mb-3">
+                <label className="block mb-1">Password</label>
+                <input type="text" name="password" className="w-full border rounded px-3 py-2" value={credValues.password} onChange={handleCredChange} required />
+              </div>
+              <div className="mb-3">
+                <label className="block mb-1">Profile Name</label>
+                <input type="text" name="profileName" className="w-full border rounded px-3 py-2" value={credValues.profileName} onChange={handleCredChange} />
+              </div>
+              <div className="mb-3">
+                <label className="block mb-1">Access Instructions</label>
+                <textarea name="accessInstructions" className="w-full border rounded px-3 py-2" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
+              </div>
+              {credError && <div className="text-red-500 mb-2">{credError}</div>}
+              {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
+              <div className="flex justify-between items-center mt-4">
+                <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
       {/* Animations */}
       <style>{`
