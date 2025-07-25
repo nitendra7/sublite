@@ -32,23 +32,14 @@ const createBooking = async (req, res) => {
     client.walletBalance -= totalCost;
     await client.save();
 
-    const payment = await Payment.create({
-        userId: clientId,
-        providerId: service.providerId._id,
-        amount: totalCost,
-        paymentMethod,
-        status: 'success',
-        type: 'service-payment'
-    });
-
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + rentalDuration);
 
+    // 1. Create the booking (without paymentId)
     const booking = await Booking.create({
       clientId,
       providerId: service.providerId._id,
       serviceId,
-      paymentId: payment._id,
       bookingDetails: {
         serviceName: service.serviceName,
         rentalPrice: totalCost,
@@ -58,6 +49,21 @@ const createBooking = async (req, res) => {
       },
       bookingStatus: 'confirmed',
     });
+
+    // 2. Create the payment with bookingId
+    const payment = await Payment.create({
+        userId: clientId,
+        providerId: service.providerId._id,
+        bookingId: booking._id,
+        amount: totalCost,
+        paymentMethod,
+        status: 'success',
+        type: 'service-payment'
+    });
+
+    // 3. Update the booking with paymentId
+    booking.paymentId = payment._id;
+    await booking.save();
 
     service.availableSlots -= 1;
     await service.save();
