@@ -21,16 +21,43 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Name, username, email, and password are required.' });
     }
 
+    // Simple email validation
+    if (!email.includes('@') || !email.includes('.')) {
+      return res.status(400).json({ message: 'Invalid email format.' });
+    }
+
     const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
     if (existingUser) {
       return res.status(409).json({ message: 'A user with this email or username already exists.' });
     }
 
-    // Save password as plain text; pre-save hook will hash it
-    const newUser = new User({ name, username, email, password });
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Save user with isVerified: false and OTP
+    const newUser = new User({ name, username, email, password, isVerified: false, signupOtp: otp, signupOtpExpires: otpExpires });
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully. Please log in.' });
+    // Send OTP email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or your email provider
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your Signup OTP',
+      text: `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
 
   } catch (err) {
     console.error('Server error during manual registration:', err);
@@ -196,14 +223,33 @@ exports.forgotPassword = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' });
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required.' });
+    }
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user || !user.resetOtp || !user.resetOtpExpires) return res.status(400).json({ message: 'OTP not requested.' });
-    if (user.resetOtp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
-    if (user.resetOtpExpires < Date.now()) return res.status(400).json({ message: 'OTP expired.' });
-    res.json({ message: 'OTP verified.' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'User already verified.' });
+    }
+    if (!user.signupOtp || !user.signupOtpExpires) {
+      return res.status(400).json({ message: 'No OTP found. Please register again.' });
+    }
+    if (user.signupOtp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP.' });
+    }
+    if (user.signupOtpExpires < new Date()) {
+      return res.status(400).json({ message: 'OTP expired. Please register again.' });
+    }
+    user.isVerified = true;
+    user.signupOtp = null;
+    user.signupOtpExpires = null;
+    await user.save();
+    res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
-    res.status(500).json({ message: 'Error verifying OTP.', error: err.message });
+    console.error('Error verifying OTP:', err);
+    res.status(500).json({ message: 'Server error during OTP verification.', error: err.message });
   }
 };
 
