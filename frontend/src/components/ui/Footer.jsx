@@ -10,7 +10,7 @@ const Footer = () => {
           &copy; {currentYear} Sublite. All rights reserved.
         </p>
         <div className="mt-4 text-center text-gray-300 dark:text-gray-400">
-          Contact us: <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-semibold">Sublite123@gmail.com</span>
+          Contact us: <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-semibold">sublite.app@gmail.com</span>
         </div>
       </div>
     </footer>

@@ -14,8 +14,8 @@ import WalletPage from './pages/WalletPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import NotificationsPage from './pages/NotificationsPage';
-import SubscriptionDetails from './pages/SubscriptionDetails';
 import AddServicePage from './pages/AddServicePage';
+import EditServicePage from './pages/EditServicePage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -86,10 +86,10 @@ function App() {
                     <Route path="reviews" element={<ReviewPage />} />
                     <Route path="notifications" element={<NotificationsPage />} />
                     <Route path="add-service" element={<AddServicePage />} />
+                    <Route path="edit-service/:serviceId" element={<EditServicePage />} />
                   </Route>
 
                   {/* Standalone protected pages. */}
-                  <Route path="/subscription-details" element={<SubscriptionDetails />} />
               </Route>
           </Route>
 

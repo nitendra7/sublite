@@ -46,10 +46,6 @@ export default function WalletPage() {
   }, [fetchTransactions, userContextLoading]);
 
   const handleTopUp = async () => {
-    // =================================================================
-    // == DEBUGGING LINE ADDED HERE                                  ==
-    // =================================================================
-    console.log("Attempting to use Razorpay Key ID:", process.env.REACT_APP_RAZORPAY_KEY_ID);
 
     const amount = parseFloat(topUpAmount);
     if (isNaN(amount) || amount <= 0) {
@@ -105,7 +101,9 @@ export default function WalletPage() {
 
             if (verificationRes.ok) {
               alert(verificationData.message);
+              // Refresh user data to get updated wallet balance
               await fetchUserProfile();
+              // Refresh transaction history
               await fetchTransactions();
               setTopUpAmount("");
             } else {

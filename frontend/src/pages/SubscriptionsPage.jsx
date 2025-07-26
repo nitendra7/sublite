@@ -73,7 +73,7 @@ const SubscriptionsPage = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div className="p-6 md:p-10 min-h-full animate-fade-in">
       <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">My Subscriptions</h1>
       
       <div className="space-y-12">

@@ -3,22 +3,22 @@ import { Bell, CheckCircle, Info, Gift, Loader } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 // Define icons with consistent colors
 const typeIcon = {
-  booking: <CheckCircle className="text-blue-500 dark:text-blue-400" />,
-  payment: <Info className="text-green-500 dark:text-green-400" />,
-  reminder: <Bell className="text-yellow-500 dark:text-yellow-400" />,
-  promotion: <Gift className="text-pink-500 dark:text-pink-400" />,
+  booking: <CheckCircle className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  payment: <Info className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  reminder: <Bell className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  promotion: <Gift className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
 };
 
-// Define background gradients for notification types
+// Define background for notification types - consistent with theme
 const typeBg = {
-  booking: "from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40",
-  payment: "from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/40",
-  reminder: "from-yellow-50 to-yellow-100 dark:from-yellow-900/40 dark:to-yellow-800/40",
-  promotion: "from-pink-50 to-pink-100 dark:from-pink-900/40 dark:to-pink-800/40",
+  booking: "bg-white dark:bg-gray-800",
+  payment: "bg-white dark:bg-gray-800",
+  reminder: "bg-white dark:bg-gray-800",
+  promotion: "bg-white dark:bg-gray-800",
 };
 
 export default function NotificationsPage() {
@@ -45,13 +45,31 @@ export default function NotificationsPage() {
   const markRead = async (notifId) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${API_BASE}/notifications/${notifId}/read`, {
+      console.log('Marking notification as read:', notifId);
+      console.log('API_BASE:', API_BASE);
+      
+      const response = await fetch(`${API_BASE}/api/notifications/${notifId}/read`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setNotifications((prev) => prev.map(n => n._id === notifId ? { ...n, isRead: true } : n));
+      
+      console.log('Mark as read response status:', response.status);
+      
+      if (response.ok) {
+        const updatedNotification = await response.json();
+        console.log('Updated notification:', updatedNotification);
+        return true; // Success
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to mark notification as read:', response.status, errorData);
+        return false; // Failed
+      }
     } catch (err) {
-      // Ignore error for now
+      console.error('Error marking notification as read:', err);
+      return false; // Failed
     }
   };
 
@@ -59,7 +77,7 @@ export default function NotificationsPage() {
   const confirmBooking = async (bookingId) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${API_BASE}/bookings/${bookingId}/confirm`, {
+      await fetch(`${API_BASE}/api/bookings/${bookingId}/confirm`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -71,7 +89,7 @@ export default function NotificationsPage() {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/notifications`, {
+      const res = await fetch(`${API_BASE}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 401 || res.status === 403) {
@@ -93,14 +111,14 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem("token");
       // Fetch booking details
-      const bookingRes = await fetch(`${API_BASE}/bookings/${bookingId}`, {
+      const bookingRes = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const booking = await bookingRes.json();
       setCredBookingStatus(booking.bookingStatus);
       setCredBookingCreatedAt(booking.createdAt);
       // Fetch service details for autofill
-      const serviceRes = await fetch(`${API_BASE}/services/${booking.serviceId}`, {
+      const serviceRes = await fetch(`${API_BASE}/api/services/${booking.serviceId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const service = await serviceRes.json();
@@ -145,9 +163,7 @@ export default function NotificationsPage() {
         setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
         setCredError('');
         setCredSuccess('');
-        // Optionally, refresh notifications
-        setLoading(true);
-        fetchNotifications().then(setNotifications).catch(()=>{}).finally(()=>setLoading(false));
+        // Don't refresh notifications to preserve read status
       }, 1500);
     } catch (err) {
       setCredError(err.message);
@@ -224,14 +240,14 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen py-10 px-4 relative overflow-hidden animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div className="min-h-screen py-10 px-4 relative overflow-hidden animate-fade-in">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8 animate-slide-in-down">
           <Bell className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-          <h1 className="text-3xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow">Notifications</h1>
+          <h1 className="text-3xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">Notifications</h1>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 min-h-[300px] animate-fade-in">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[300px] animate-fade-in">
           {loading ? (
             <div className="flex justify-center items-center h-40">
               <Loader className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc] animate-spin" />
@@ -252,39 +268,51 @@ export default function NotificationsPage() {
                 <li
                   key={n._id}
                   className={`
-                    flex items-start gap-4 rounded-xl px-5 py-4 shadow transition-all duration-500 cursor-pointer
-                    bg-gradient-to-r ${typeBg[n.type] || "from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700"}
-                    hover:scale-[1.02] hover:shadow-lg
+                    flex items-start gap-4 rounded-xl px-5 py-4 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 cursor-pointer
+                    ${typeBg[n.type] || "bg-white dark:bg-gray-800"}
+                    hover:shadow-xl hover:scale-[1.01]
                     ${n.isRead ? "opacity-70" : "opacity-100"}
                     ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
                   `}
                   style={{ animationDelay: `${idx * 100 + 200}ms` }}
+                  onClick={async () => {
+                    // Mark as read immediately when clicked, regardless of expansion
+                    if (!n.isRead) {
+                      // Update local state immediately for instant UI feedback
+                      setNotifications((prev) => prev.map(notification => 
+                        notification._id === n._id ? { ...notification, isRead: true } : notification
+                      ));
+                      // Then update backend
+                      const success = await markRead(n._id);
+                      // If backend update failed, revert the state
+                      if (!success) {
+                        setNotifications((prev) => prev.map(notification => 
+                          notification._id === n._id ? { ...notification, isRead: false } : notification
+                        ));
+                      }
+                    }
+                    setExpandedId(expandedId === n._id ? null : n._id);
+                    if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
+                  }}
                 >
                   <div className="pt-1">{typeIcon[n.type] || <Info className="text-gray-400 dark:text-gray-500" />}</div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={async () => {
-                      setExpandedId(expandedId === n._id ? null : n._id);
-                      if (!n.isRead) await markRead(n._id);
-                      if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
-                    }}>
-                      <span className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</span>
-                      {!n.isRead && (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-[#2bb6c4] text-white animate-pulse dark:bg-[#1ea1b0] dark:text-gray-100">New</span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <span className={`font-semibold ${n.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-100'}`}>{n.title}</span>
                     </div>
                     {/* Always show Send Credentials button for eligible bookings */}
                     {n.title === 'New Booking!' && n.relatedId && (
-                      <button
-                        className={`mt-2 px-4 py-2 rounded font-semibold transition 
-                          ${credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
-                            const created = new Date(credBookingCreatedAt);
-                            const now = new Date();
-                            const diffMinutes = (now - created) / (1000 * 60);
-                            return diffMinutes <= 15;
-                          })()
-                            ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
+                                              <button
+                          className={`mt-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 
+                            ${credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                              const created = new Date(credBookingCreatedAt);
+                              const now = new Date();
+                              const diffMinutes = (now - created) / (1000 * 60);
+                              return diffMinutes <= 15;
+                            })()
+                              ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4]'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
+                          }`}
                         onClick={() => {
                           if (credBookingStatus === 'confirmed' && credBookingCreatedAt) {
                             const created = new Date(credBookingCreatedAt);
@@ -329,38 +357,38 @@ export default function NotificationsPage() {
       {/* Modal for sending credentials */}
       {showCredModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 w-full max-w-sm">
             <h2 className="text-lg font-semibold mb-2">Send Credentials</h2>
             {canSendNow() ? (
               <form onSubmit={handleSendCredentials}>
                 <div className="mb-3">
-                  <label className="block mb-1">Username</label>
-                  <input type="text" name="username" className="w-full border rounded px-3 py-2" value={credValues.username} onChange={handleCredChange} required />
+                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Username</label>
+                  <input type="text" name="username" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.username} onChange={handleCredChange} required />
                 </div>
                 <div className="mb-3">
-                  <label className="block mb-1">Password</label>
-                  <input type="text" name="password" className="w-full border rounded px-3 py-2" value={credValues.password} onChange={handleCredChange} required />
+                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Password</label>
+                  <input type="text" name="password" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.password} onChange={handleCredChange} required />
                 </div>
                 <div className="mb-3">
-                  <label className="block mb-1">Profile Name</label>
-                  <input type="text" name="profileName" className="w-full border rounded px-3 py-2" value={credValues.profileName} onChange={handleCredChange} />
+                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Profile Name</label>
+                  <input type="text" name="profileName" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.profileName} onChange={handleCredChange} />
                 </div>
                 <div className="mb-3">
-                  <label className="block mb-1">Access Instructions</label>
-                  <textarea name="accessInstructions" className="w-full border rounded px-3 py-2" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
+                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Access Instructions</label>
+                  <textarea name="accessInstructions" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
                 </div>
                 {credError && <div className="text-red-500 mb-2">{credError}</div>}
                 {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
                 <div className="flex justify-between items-center mt-4">
-                  <button type="button" className="text-gray-500 hover:underline" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
+                  <button type="button" className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
+                  <button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4] text-white px-4 py-2 rounded-lg transition-all duration-200" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
                 </div>
               </form>
             ) : (
               <>
                 <div className="text-red-500 text-center mb-4">This booking is no longer eligible for sending credentials (cancelled or more than 15 minutes old).</div>
                 <div className="flex justify-center mt-4">
-                  <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowCredModal(false)}>Close</button>
+                  <button type="button" className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition-all duration-200" onClick={() => setShowCredModal(false)}>Close</button>
                 </div>
               </>
             )}

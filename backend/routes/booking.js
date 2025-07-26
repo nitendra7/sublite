@@ -6,7 +6,8 @@ const {
     sendMessageToBooking,
     getAllBookingsForUser,
     getBookingById,
-    getMyJoinedBookings
+    getMyJoinedBookings,
+    confirmBooking
 } = require('../controllers/bookingController');
 
 // Debug endpoint to test controller import
@@ -37,5 +38,8 @@ router.get('/:id', auth, getBookingById);
 
 // Provider sends access details for a specific booking
 router.post('/:bookingId/send-message', auth, sendMessageToBooking);
+
+// Confirm a booking (mark as confirmed)
+router.patch('/:id/confirm', auth, confirmBooking);
 
 module.exports = router;

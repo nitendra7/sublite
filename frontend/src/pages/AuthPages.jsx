@@ -105,8 +105,11 @@ export default function AuthPage({ isLogin = true }) {
           userId: localStorage.getItem('userId'),
           userName: localStorage.getItem('userName')
         });
+        console.log('Login response data:', data); // Add this debug line
         setSuccess('Login successful!');
-        setTimeout(() => { navigate('/dashboard'); }, 1000);
+        setTimeout(() => { 
+          window.location.href = '/dashboard'; // Force page reload to refresh context
+        }, 1000);
       } else {
         // Signup: simple email validation
         if (!formData.email.includes('@') || !formData.email.includes('.')) {
@@ -496,7 +499,6 @@ export default function AuthPage({ isLogin = true }) {
             {loading ? (isLogin ? 'Logging in...' : 'Signing Up...') : (isLogin ? 'Continue' : 'Sign Up')}
           </Button>
         </form>
-        {success && <div className="text-green-600 text-center mt-4">{success}</div>}
         {error && <div className="text-red-500 text-center mt-4">{error}</div>}
         <div className="text-center text-gray-400 text-xs mt-4">
           {isLogin ? (

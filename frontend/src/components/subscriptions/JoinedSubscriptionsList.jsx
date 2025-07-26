@@ -7,11 +7,11 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
         switch (status) {
             case 'active':
             case 'confirmed':
-                return 'text-green-500';
+                return 'text-[#2bb6c4] dark:text-[#5ed1dc]';
             case 'pending':
                 return 'text-yellow-500';
             case 'completed':
-                return 'text-blue-500';
+                return 'text-[#2bb6c4] dark:text-[#5ed1dc]';
             case 'cancelled':
             case 'disputed':
                 return 'text-red-500';
@@ -22,22 +22,22 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
     
     return (
         <div>
-            <h2 className="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-300">Services I've Joined</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Services I've Joined</h2>
             {subscriptions.length > 0 ? (
                 <div className="space-y-4">
                     {subscriptions.map(booking => (
-                        <div key={booking._id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <div key={booking._id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div className="flex-grow">
                                     <p className="font-bold text-lg text-gray-800 dark:text-gray-100">
                                         {booking.bookingDetails.serviceName}
                                     </p>
-                                    <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 gap-x-4 gap-y-1 mt-1">
+                                    <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 gap-x-4 gap-y-2 mt-2">
                                         <span className="flex items-center gap-1">
-                                            <User size={14} /> Provided by {booking.providerId ? booking.providerId.name : 'N/A'}
+                                            <User size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Provided by {booking.providerId ? booking.providerId.name : 'N/A'}
                                         </span>
                                         <span className="flex items-center gap-1">
-                                            <Calendar size={14} /> Expires on: {new Date(booking.bookingDetails.endDate).toLocaleDateString()}
+                                            <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Expires on: {new Date(booking.bookingDetails.endDate).toLocaleDateString()}
                                         </span>
                                     </div>
                                 </div>
@@ -52,7 +52,9 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
                     ))}
                 </div>
             ) : (
-                <p className="text-gray-500 dark:text-gray-400">You haven't joined any services yet.</p>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
+                    <p className="text-gray-500 dark:text-gray-400">You haven't joined any services yet.</p>
+                </div>
             )}
         </div>
     );

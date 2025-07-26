@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
-  FaBars, FaBook, FaMoon, FaStar, FaSun, FaThLarge,
-  FaWallet, FaSignOutAlt, FaBell, FaCog
+  FaBars, FaBook, FaMoon, FaStar, FaSun, FaHome,
+  FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus
 } from 'react-icons/fa';
 import { CreditCard, PlusCircle } from 'lucide-react';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
@@ -14,10 +14,10 @@ const brandColor = '#2bb6c4';
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
 const sidebarItems = [
-  { name: 'Dashboard', icon: <FaThLarge />, route: '/dashboard' },
+  { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
   { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
-  { name: 'Available Plans', icon: <FaThLarge />, route: '/dashboard/available-plans' },
-  { name: 'Add Service', icon: <PlusCircle />, route: '/dashboard/add-service' },
+  { name: 'Available Plans', icon: <FaListAlt />, route: '/dashboard/available-plans' },
+  { name: 'Add Service', icon: <FaPlus />, route: '/dashboard/add-service' },
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
   { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
@@ -109,92 +109,135 @@ function Dashboard() {
   const isBaseDashboard = location.pathname === '/dashboard';
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200" style={{ fontFamily }}>
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden" style={{ fontFamily }}>
       <Sidebar
         sidebarOpen={sidebarOpen}
         active={active}
         onSidebarClick={handleSidebarClick}
         handleSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header
-          className="relative z-20 flex items-center justify-between px-4 py-3 shadow-sm flex-wrap gap-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[72px]"
+          className="relative z-10 flex items-center justify-between px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-sm -ml-px"
         >
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center">
-              <img src="/logo.jpg" alt="logo" className="w-10 h-10 rounded-full mr-3" />
-              <h2 className="font-bold mb-0 text-[#2bb6c4] tracking-wider">Sublite</h2>
+          {/* Left Section - Logo and Brand */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+                <img src="/logo.jpg" alt="logo" className="w-10 h-10 rounded-full object-cover" />
+              </div>
+                              <div className="hidden sm:block">
+                  <h2 className="font-bold text-xl text-[#2bb6c4] dark:text-[#5ed1dc] tracking-wide">Sublite</h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Management</p>
+                </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-4 relative">
-            <button
-              className="p-2 rounded-full text-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100 focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:scale-98"
-              title="Settings"
-            >
-              <FaCog /> 
-            </button>
-            <button
-              className="p-2 rounded-full text-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100 focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:scale-98"
-              onClick={toggleDarkMode}
-            >
-              {darkMode ? <FaSun /> : <FaMoon />}
-            </button>
-            <button
-              className="p-2 rounded-full text-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100 focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:scale-98"
-              title="Notifications"
-              onClick={() => navigate('/dashboard/notifications')}
-            >
-              <FaBell />
-            </button>
-            {userName && (
-              <button
-                ref={profileButtonRef}
-                className="flex items-center ml-2 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:scale-98"
-                onClick={handleProfileClick}
-                title="View Profile"
-              >
-                {user?.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover mr-2"
-                  />
-                ) : (
-                  <span className="w-9 h-9 rounded-full bg-gray-300 text-gray-800 dark:bg-gray-600 dark:text-gray-200 flex items-center justify-center font-bold text-lg mr-2">
-                    {getInitials(userName)}
-                  </span>
-                )}
-                <span className="ms-1">{firstName}</span>
-              </button>
-            )}
-            
-            {isProfileMenuOpen && (
-              // ======================= FIX #2: CHANGED z-1000 to z-50 =======================
-              <div
-                ref={profileMenuRef}
-                className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-600"
-                style={{ top: profileButtonRef.current ? profileButtonRef.current.offsetHeight + 8 : 'auto' }}
-              >
-                <Link
-                  to="/dashboard/profile"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:scale-98"
-                >
-                  View Profile
-                </Link>
+
+          {/* Right Section - Actions and User */}
+          <div className="flex items-center gap-2">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1">
+              {/* Settings button - only show for admin users */}
+              {user?.isAdmin && (
                 <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 hover:text-red-800 dark:text-red-400 dark:hover:bg-gray-600 dark:hover:text-red-300 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 active:scale-98"
+                  className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
+                  title="Admin Settings"
+                  onClick={() => navigate('/admin')}
                 >
-                  <FaSignOutAlt size={16} className="inline-block mr-2" /> Logout
+                  <FaCog className="text-lg group-hover:rotate-90 transition-transform duration-300" />
                 </button>
+              )}
+              
+              {/* Theme Toggle */}
+              <button
+                className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+                onClick={toggleDarkMode}
+                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {darkMode ? (
+                  <FaSun className="text-lg group-hover:rotate-12 transition-transform duration-300" />
+                ) : (
+                  <FaMoon className="text-lg group-hover:rotate-12 transition-transform duration-300" />
+                )}
+              </button>
+              
+              {/* Notifications */}
+              <button
+                className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
+                title="Notifications"
+                onClick={() => navigate('/dashboard/notifications')}
+              >
+                <FaBell className="text-lg group-hover:scale-110 transition-transform duration-200" />
+                {/* Notification indicator */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              </button>
+            </div>
+
+            {/* User Profile */}
+            {userName && (
+              <div className="relative">
+                <button
+                  ref={profileButtonRef}
+                  className="flex items-center space-x-2 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+                  onClick={handleProfileClick}
+                  title="View Profile"
+                >
+                  {user?.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 group-hover:ring-[#2bb6c4] transition-all duration-200"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center text-white font-bold text-lg ring-2 ring-gray-200 dark:ring-gray-600 group-hover:ring-[#2bb6c4] transition-all duration-200">
+                      {getInitials(userName)}
+                    </div>
+                  )}
+                  <div className="hidden md:block text-left">
+                    <p className="font-medium text-gray-800 dark:text-gray-100 text-sm">{firstName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
+                  </div>
+                </button>
+                
+                {/* Profile Dropdown */}
+                {isProfileMenuOpen && (
+                  <div
+                    ref={profileMenuRef}
+                    className="absolute right-0 mt-3 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 z-50 border border-gray-200 dark:border-gray-700 backdrop-blur-sm"
+                    style={{ top: profileButtonRef.current ? profileButtonRef.current.offsetHeight + 8 : 'auto' }}
+                  >
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{userName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">sublite.app@gmail.com</p>
+                    </div>
+                    <Link
+                      to="/dashboard/profile"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3">
+                        <span className="text-sm">👤</span>
+                      </div>
+                      <span className="text-sm font-medium">View Profile</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3">
+                        <FaSignOutAlt size={14} />
+                      </div>
+                      <span className="text-sm font-medium">Logout</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </header>
 
-        <main className="flex-grow p-4 bg-gray-50 dark:bg-gray-900">
-          <div className="w-full h-full">
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="p-4 w-full">
             {isBaseDashboard ? (
               <DashboardOverview />
             ) : (

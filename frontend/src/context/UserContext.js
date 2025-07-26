@@ -140,7 +140,7 @@ export const UserProvider = ({ children }) => {
   }, [user, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData, sessionExpired, setSessionExpired }}>
+    <UserContext.Provider value={contextValue}>
       {children}
       {sessionExpired && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">

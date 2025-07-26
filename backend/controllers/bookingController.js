@@ -205,10 +205,28 @@ const getBookingById = async (req, res) => {
     }
 };
 
+const confirmBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: req.params.id, providerId: req.user._id });
+        if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
+        
+        // Update booking status to confirmed if it's pending
+        if (booking.bookingStatus === 'pending') {
+            booking.bookingStatus = 'confirmed';
+            await booking.save();
+        }
+        
+        res.json(booking);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     createBooking,
     sendMessageToBooking,
     getAllBookingsForUser,
     getMyJoinedBookings,
-    getBookingById
+    getBookingById,
+    confirmBooking
 };

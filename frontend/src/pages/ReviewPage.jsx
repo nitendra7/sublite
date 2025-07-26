@@ -1,192 +1,202 @@
 import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, PlusCircle, Edit, Trash2 } from 'lucide-react';
-import { useUser } from '../context/UserContext'; // Import useUser to get current user's ID
+import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-// Mock data for reviews (replace with actual API fetch later)
-const mockReviews = [
-  {
-    _id: 'rev1',
-    bookingId: 'book1',
-    clientId: { _id: 'user1', name: 'Alice Johnson' }, // Mock client ID
-    providerId: { _id: 'provider1', name: 'Bob Smith' }, // Mock provider ID
-    serviceId: { _id: 'serv1', name: 'Netflix Premium Shared' },
-    rating: 5,
-    comment: 'Excellent service! Very smooth process and reliable access. Highly recommend!',
-    serviceQuality: 5,
-    responseTime: 5,
-    overallExperience: 5,
-    isVerified: true,
-    helpfulCount: 12,
-    createdAt: '2024-07-15T10:00:00Z',
-  },
-  {
-    _id: 'rev2',
-    bookingId: 'book2',
-    clientId: { _id: 'user3', name: 'Charlie Brown' },
-    providerId: { _id: 'provider2', name: 'Diana Prince' },
-    serviceId: { _id: 'serv2', name: 'Spotify Family Slot' },
-    rating: 4,
-    comment: 'Good experience overall. A minor delay in getting credentials, but resolved quickly.',
-    serviceQuality: 4,
-    responseTime: 3,
-    overallExperience: 4,
-    isVerified: true,
-    helpfulCount: 5,
-    createdAt: '2024-07-12T14:30:00Z',
-  },
-  {
-    _id: 'rev3',
-    bookingId: 'book3',
-    clientId: { _id: 'user5', name: 'Eve Adams' },
-    providerId: { _id: 'provider3', name: 'Frank White' },
-    serviceId: { _id: 'serv3', name: 'Xbox Game Pass (3 Days)' },
-    rating: 5,
-    comment: 'Instant access, perfect for a weekend gaming session. Saved a lot!',
-    serviceQuality: 5,
-    responseTime: 5,
-    overallExperience: 5,
-    isVerified: false, // Not yet verified
-    helpfulCount: 20,
-    createdAt: '2024-07-10T08:00:00Z',
-  },
-  {
-    _id: 'rev4',
-    bookingId: 'book4',
-    clientId: { _id: 'user7', name: 'Grace Hopper' },
-    providerId: { _id: 'provider4', name: 'Hal 9000' },
-    serviceId: { _id: 'serv4', name: 'JioHotstar Premium' },
-    rating: 3,
-    comment: 'Decent service, but video quality was inconsistent at times. Good value for money though.',
-    serviceQuality: 3,
-    responseTime: 4,
-    overallExperience: 3,
-    isVerified: true,
-    helpfulCount: 3,
-    createdAt: '2024-07-08T11:45:00Z',
-  },
-];
-
-// Mock data for subscriptions that are "completed" and can be reviewed by the current user.
-// In a real app, this would come from the user's completed bookings/subscriptions.
-const mockReviewableSubscriptions = [
-  {
-    bookingId: 'book_comp_1',
-    serviceId: { _id: 'serv5', name: 'New Streaming Service' },
-    providerId: { _id: 'provider5', name: 'StreamCo' },
-    status: 'completed',
-    canReview: true, // Flag to indicate it's ready for review
-  },
-  {
-    bookingId: 'book_comp_2',
-    serviceId: { _id: 'serv6', name: 'Gaming Pass Pro' },
-    providerId: { _id: 'provider6', name: 'GameHub' },
-    status: 'completed',
-    canReview: true,
-  },
-  {
-    bookingId: 'book_comp_3',
-    serviceId: { _id: 'serv1', name: 'Netflix Premium Shared' }, // Example of reviewing an existing service
-    providerId: { _id: 'provider1', name: 'Bob Smith' },
-    status: 'completed',
-    canReview: true,
-  },
-];
-
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const ReviewPage = () => {
-  const { user, token } = useUser(); // Get current logged-in user details
+  const { user, token } = useUser();
   const { darkMode } = useTheme();
 
   const [reviews, setReviews] = useState([]);
+  const [reviewableBookings, setReviewableBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [currentReview, setCurrentReview] = useState(null); // State for review being edited/added
-  const [modalType, setModalType] = useState('add'); // 'add' or 'edit'
-  const [selectedSubscriptionToReview, setSelectedSubscriptionToReview] = useState(''); // State for selected subscription in add modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentReview, setCurrentReview] = useState(null);
+  const [modalType, setModalType] = useState('add');
+  const [selectedBookingToReview, setSelectedBookingToReview] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // Function to simulate fetching reviews (replace with actual API fetch later)
+  // Fetch all reviews
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews`);
+      if (!res.ok) throw new Error('Failed to fetch reviews');
+      const data = await res.json();
+      setReviews(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Fetch reviewable bookings for current user
+  const fetchReviewableBookings = async () => {
+    if (!token) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews/my/reviewable-bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch reviewable bookings');
+      const data = await res.json();
+      setReviewableBookings(data);
+    } catch (err) {
+      console.error('Error fetching reviewable bookings:', err);
+    }
+  };
+
+  // Initial data loading
   useEffect(() => {
     setLoading(true);
     setError(null);
-    const timer = setTimeout(() => {
-      setReviews(mockReviews);
+    
+    const loadData = async () => {
+      await Promise.all([
+        fetchReviews(),
+        fetchReviewableBookings()
+      ]);
       setLoading(false);
-    }, 500);
+    };
 
-    return () => clearTimeout(timer);
-  }, []);
+    loadData();
+  }, [token]);
 
   // Handler for marking a review as helpful
-  const handleHelpful = (reviewId) => {
-    // In a real app, you'd send an API request to increment helpfulCount on the backend
+  const handleHelpful = async (reviewId) => {
+    if (!token) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}/helpful`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
     setReviews(prevReviews =>
       prevReviews.map(review =>
-        review._id === reviewId ? { ...review, helpfulCount: review.helpfulCount + 1 } : review
+            review._id === reviewId ? { ...review, helpfulCount: data.helpfulCount } : review
       )
     );
+      }
+    } catch (err) {
+      console.error('Error marking review as helpful:', err);
+    }
   };
 
   // Handlers for Add/Edit/Delete
   const openAddModal = () => {
-    setCurrentReview(null); // Clear previous review data
+    setCurrentReview(null);
     setModalType('add');
-    setSelectedSubscriptionToReview(''); // Reset selected subscription
+    setSelectedBookingToReview('');
     setIsModalOpen(true);
   };
 
   const openEditModal = (review) => {
-    setCurrentReview(review); // Set review data for editing
+    setCurrentReview(review);
     setModalType('edit');
     setIsModalOpen(true);
   };
 
   const closeReviewModal = () => {
     setIsModalOpen(false);
-    setCurrentReview(null); // Clear current review data
-    setSelectedSubscriptionToReview(''); // Clear selected subscription
+    setCurrentReview(null);
+    setSelectedBookingToReview('');
   };
 
-  const handleSaveReview = (reviewData) => {
+  const handleSaveReview = async (reviewData) => {
+    if (!token) {
+      alert('Please log in to submit a review');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let res;
+      
     if (modalType === 'add') {
-      const selectedSub = mockReviewableSubscriptions.find(sub => sub.bookingId === selectedSubscriptionToReview);
-      if (!selectedSub) {
-        alert("Please select a service to review.");
+        const selectedBooking = reviewableBookings.find(booking => booking._id === selectedBookingToReview);
+        if (!selectedBooking) {
+          alert("Please select a booking to review.");
         return;
+        }
+
+        res = await fetch(`${API_BASE}/api/reviews`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            bookingId: selectedBookingToReview,
+            ...reviewData
+          })
+        });
+      } else {
+        res = await fetch(`${API_BASE}/api/reviews/${currentReview._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(reviewData)
+        });
       }
 
-      const newReview = {
-        ...reviewData,
-        _id: `rev${reviews.length + 1}`, // Generate a unique mock ID
-        bookingId: selectedSub.bookingId, // Use bookingId from selected subscription
-        clientId: user ? { _id: user._id, name: user.name || 'Current User' } : { _id: 'mockClient', name: 'Mock Client' }, // Use actual user or mock
-        serviceId: selectedSub.serviceId, // Use serviceId from selected subscription
-        providerId: selectedSub.providerId, // Use providerId from selected subscription
-        createdAt: new Date().toISOString(),
-        isVerified: false, // New reviews are not verified by default
-        helpfulCount: 0,
-      };
-      setReviews(prevReviews => [...prevReviews, newReview]);
-    } else if (modalType === 'edit' && currentReview) {
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to save review');
+      }
+
+      const savedReview = await res.json();
+      
+      if (modalType === 'add') {
+        setReviews(prevReviews => [savedReview, ...prevReviews]);
+        // Remove the booking from reviewable list
+        setReviewableBookings(prev => prev.filter(booking => booking._id !== selectedBookingToReview));
+      } else {
       setReviews(prevReviews =>
         prevReviews.map(review =>
-          review._id === currentReview._id ? { ...review, ...reviewData } : review
+            review._id === currentReview._id ? savedReview : review
         )
       );
     }
-    closeReviewModal();
-    // In a real app, you'd send API requests here (POST for add, PUT for edit)
-  };
 
-  const handleDeleteReview = (reviewId) => {
-    // Confirmation dialog before deleting a review.
-    if (window.confirm("Are you sure you want to delete this review?")) { // Using window.confirm for simplicity, replace with custom modal if needed
-      setReviews(prevReviews => prevReviews.filter(review => review._id !== reviewId));
-      // In a real app, you'd send a DELETE API request here
+    closeReviewModal();
+      alert(modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const handleDeleteReview = async (reviewId) => {
+    if (!token) return;
+    
+    if (!window.confirm("Are you sure you want to delete this review?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete review');
+      }
+
+      setReviews(prevReviews => prevReviews.filter(review => review._id !== reviewId));
+      alert('Review deleted successfully!');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
 
   if (loading) {
     return (
@@ -205,13 +215,10 @@ const ReviewPage = () => {
   }
 
   return (
-    // Main page container with adaptable background and text colors.
     <div className="p-6 md:p-10 min-h-screen animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
       <div className="flex justify-between items-center mb-6">
-        {/* Page title */}
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">User Reviews</h1>
-        {/* Add Review Button - Conditionally displayed if there are reviewable subscriptions */}
-        {mockReviewableSubscriptions.length > 0 && (
+        {reviewableBookings.length > 0 && (
           <button
             onClick={openAddModal}
             className="flex items-center gap-2 bg-[#2bb6c4] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow"
@@ -237,7 +244,9 @@ const ReviewPage = () => {
             >
               {/* Review Header: Service Name and Rating */}
               <div className="mb-4">
-                <h3 className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc] mb-2">{review.serviceId.name}</h3>
+                <h3 className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc] mb-2">
+                  {review.serviceId?.serviceName || 'Unknown Service'}
+                </h3>
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -266,8 +275,12 @@ const ReviewPage = () => {
 
               {/* Reviewer and Provider Info */}
               <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                <p>Reviewed by: <span className="font-medium text-gray-800 dark:text-gray-200">{review.clientId.name}</span></p>
-                <p>Provider: <span className="font-medium text-gray-800 dark:text-gray-200">{review.providerId.name}</span></p>
+                <p>Reviewed by: <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {review.clientId?.name || 'Unknown User'}
+                </span></p>
+                <p>Provider: <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {review.providerId?.name || 'Unknown Provider'}
+                </span></p>
               </div>
 
               {/* Verified and Helpful Count */}
@@ -289,8 +302,9 @@ const ReviewPage = () => {
                   <ThumbsUp size={16} /> {review.helpfulCount} Helpful
                 </button>
               </div>
-              {/* Edit and Delete Buttons - Conditionally rendered */}
-              {user && review.clientId && review.clientId._id === user._id && ( // Only show if current user is the author
+
+              {/* Edit and Delete Buttons - Only show if current user is the author */}
+              {user && review.clientId && review.clientId._id === user._id && (
                 <div className="mt-4 flex justify-end gap-2">
                   <button
                     onClick={() => openEditModal(review)}
@@ -324,8 +338,6 @@ const ReviewPage = () => {
               e.preventDefault();
               const formData = new FormData(e.target);
               const reviewData = {
-                // For mock, serviceId is just a name. In real app, it would be an ID.
-                serviceId: { name: formData.get('serviceName') },
                 rating: parseInt(formData.get('rating')),
                 comment: formData.get('comment'),
                 serviceQuality: parseInt(formData.get('serviceQuality')),
@@ -334,22 +346,22 @@ const ReviewPage = () => {
               };
               handleSaveReview(reviewData);
             }}>
-              {/* Dropdown to select a completed subscription to review */}
+              {/* Dropdown to select a completed booking to review */}
               {modalType === 'add' && (
                 <div className="mb-4">
-                  <label htmlFor="subscriptionToReview" className="block text-sm font-medium mb-1">Select Service to Review</label>
+                  <label htmlFor="bookingToReview" className="block text-sm font-medium mb-1">Select Booking to Review</label>
                   <select
-                    id="subscriptionToReview"
-                    name="subscriptionToReview"
-                    value={selectedSubscriptionToReview}
-                    onChange={(e) => setSelectedSubscriptionToReview(e.target.value)}
+                    id="bookingToReview"
+                    name="bookingToReview"
+                    value={selectedBookingToReview}
+                    onChange={(e) => setSelectedBookingToReview(e.target.value)}
                     className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                     required
                   >
-                    <option value="">-- Select a completed service --</option>
-                    {mockReviewableSubscriptions.map(sub => (
-                      <option key={sub.bookingId} value={sub.bookingId}>
-                        {sub.serviceId.name} (by {sub.providerId.name})
+                    <option value="">-- Select a completed booking --</option>
+                    {reviewableBookings.map(booking => (
+                      <option key={booking._id} value={booking._id}>
+                        {booking.serviceId?.serviceName} (by {booking.providerId?.name})
                       </option>
                     ))}
                   </select>
@@ -364,9 +376,9 @@ const ReviewPage = () => {
                     type="text"
                     id="serviceName"
                     name="serviceName"
-                    defaultValue={currentReview?.serviceId?.name || ''}
+                    defaultValue={currentReview?.serviceId?.serviceName || ''}
                     className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                    readOnly // Make it read-only for edit mode
+                    readOnly
                   />
                 </div>
               )}
@@ -445,22 +457,25 @@ const ReviewPage = () => {
                 <button
                   type="button"
                   onClick={closeReviewModal}
-                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#2bb6c4] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow"
+                  disabled={submitting}
+                  className="bg-[#2bb6c4] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow disabled:opacity-50"
                 >
-                  {modalType === 'add' ? 'Add Review' : 'Save Changes'}
+                  {submitting ? 'Saving...' : (modalType === 'add' ? 'Add Review' : 'Save Changes')}
                 </button>
               </div>
             </form>
             {/* Close button for modal */}
             <button
               onClick={closeReviewModal}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+              disabled={submitting}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl disabled:opacity-50"
             >
               &times;
             </button>
