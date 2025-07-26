@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
-  FaBars, FaBook, FaMoon, FaStar, FaSun, FaHome,
+  FaBook, FaMoon, FaStar, FaSun, FaHome,
   FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus, FaQuestionCircle
 } from 'react-icons/fa';
-import { CreditCard, PlusCircle } from 'lucide-react';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import Sidebar from '../components/dashboard/Sidebar';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const brandColor = '#2bb6c4';
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
 const sidebarItems = [

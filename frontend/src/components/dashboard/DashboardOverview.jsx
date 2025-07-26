@@ -3,11 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   CreditCard, 
   Wallet, 
-  Star, 
-  Bell, 
   TrendingUp, 
-  Users,
-  Calendar,
   DollarSign,
   CheckCircle
 } from 'lucide-react';

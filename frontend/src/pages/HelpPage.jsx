@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { HelpCircle, Clock, Shield, AlertCircle, CheckCircle, CreditCard, Bell, Wallet, Star, MessageSquare, Mail } from 'lucide-react';
+import { HelpCircle, MessageSquare, Mail } from 'lucide-react';
+import { CreditCard, Shield, Bell, Wallet, Star } from 'lucide-react';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
 const HelpPage = () => {

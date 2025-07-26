@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, BookOpen, Users } from 'lucide-react';
+import { BookOpen, Users } from 'lucide-react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
@@ -59,10 +59,10 @@ const SubscriptionsPage = () => {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      <div className="p-6 md:p-10 min-h-full animate-fade-in">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading your subscriptions...</p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CreditCard, Wallet, Clock, DollarSign, Plus } from 'lucide-react';
+import { X, Calendar, CreditCard, Wallet, DollarSign, Plus } from 'lucide-react';
 import { apiFetch, API_BASE } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';

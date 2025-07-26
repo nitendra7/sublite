@@ -76,7 +76,7 @@ const typeIcon = {
 };
 
 export default function NotificationsPage() {
-  const { user, loading: loadingUser } = useUser();
+  const { loading: loadingUser } = useUser();
   const { darkMode } = useTheme();
 
   const [notifications, setNotifications] = useState([]);
@@ -183,10 +183,6 @@ export default function NotificationsPage() {
     } finally {
       setCredLoading(false);
     }
-  };
-
-  const canSendCredentials = (notif) => {
-    return notif.title === 'New Booking!' && notif.relatedId;
   };
 
   const canSendNow = () => {
@@ -350,7 +346,7 @@ export default function NotificationsPage() {
                     </div>
                     
                     {/* Send Credentials Button */}
-                    {canSendCredentials(n) && (
+                    {n.title === 'New Booking!' && n.relatedId && (
                       <SendCredentialsButton 
                         bookingId={n.relatedId} 
                         onOpenModal={openCredModal}

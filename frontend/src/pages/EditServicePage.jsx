@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DollarSign, Clock, Users, Shield, Tag, FileText, Camera, MapPin } from 'lucide-react';
+import { DollarSign, Shield, Tag, FileText, MapPin } from 'lucide-react';
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 const EditServicePage = () => {

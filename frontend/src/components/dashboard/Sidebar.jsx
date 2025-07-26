@@ -13,8 +13,6 @@ import {
 } from 'react-icons/fa';
 
 
-const brandColor = '#2bb6c4';
-
 const sidebarItems = [
   { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
   { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },

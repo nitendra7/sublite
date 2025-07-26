@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle, Loader2, User, Mail, Phone, Lock, Wallet } from 'lucide-react';
-import { Input } from '../components/ui/input';
+import { Loader2 } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -38,7 +37,6 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const token = localStorage.getItem("token");
-  const userId = user?._id;
 
   useEffect(() => {
     if (user) {
@@ -156,13 +154,6 @@ export default function ProfilePage() {
     }
   };
 
-  const getInitialsAvatar = (name) => {
-    if (!name) return '?';
-    const parts = name.split(' ');
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
   if (loading) {
     return (
       <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
@@ -219,7 +210,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center">
                     <span className="text-4xl font-bold text-white">
-                      {getInitialsAvatar(profile.name)}
+                      {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
                     </span>
                   </div>
                 )}
@@ -227,7 +218,9 @@ export default function ProfilePage() {
               {isEditing && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 cursor-pointer rounded-full">
                   <input type="file" accept="image/*" className="hidden" name="profilePicture" onChange={handleChange} />
-                  <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+                  <span className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-camera"><path d="M15 6v-3a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v3"/><path d="M23 19l-6-6"/><path d="M19 19h3v3H2"/><path d="M19 19l-3 3"/><path d="M19 19l-3-3"/></svg>
+                  </span>
                 </label>
               )}
             </div>
@@ -242,18 +235,18 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center gap-2">
                 {profile.isVerified ? (
                   <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium dark:bg-green-800 dark:text-green-100">
-                    <CheckCircle size={14} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
                     Verified
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium dark:bg-gray-700 dark:text-gray-300">
-                    <XCircle size={14} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
                     Unverified
                   </span>
                 )}
                 {profile.rating > 0 && (
                   <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium dark:bg-yellow-800 dark:text-yellow-100">
-                    <Star size={14} fill="currentColor" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     {profile.rating.toFixed(1)} ({profile.totalRatings})
                   </span>
                 )}
@@ -269,7 +262,7 @@ export default function ProfilePage() {
               {/* Full Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <User className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   Full Name
                 </label>
                 <input
@@ -286,7 +279,7 @@ export default function ProfilePage() {
               {/* Username */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <User className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   Username
                 </label>
                 <input
@@ -303,7 +296,7 @@ export default function ProfilePage() {
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Mail className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
                   Email Address
                 </label>
                 <input
@@ -318,7 +311,7 @@ export default function ProfilePage() {
               {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Phone className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.06 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.06-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                   Phone Number
                 </label>
                 <input
@@ -334,7 +327,7 @@ export default function ProfilePage() {
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Lock className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   New Password
                 </label>
                 <input
@@ -351,7 +344,7 @@ export default function ProfilePage() {
               {/* Wallet Balance */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Wallet className="w-4 h-4 inline mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wallet"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 16v-4"/><path d="M12 12v-4"/><path d="M12 8v-4"/></svg>
                   Wallet Balance
                 </label>
                 <div className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] font-bold cursor-not-allowed">

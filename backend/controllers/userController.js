@@ -24,121 +24,38 @@ exports.getMe = async (req, res) => {
  */
 exports.updateMe = async (req, res) => {
   try {
-    console.log('=== UPDATE ME DEBUG ===');
-    console.log('User ID from token:', req.user._id);
-    console.log('Request body:', req.body);
-    console.log('Request body type:', typeof req.body);
-    console.log('Request body keys:', req.body ? Object.keys(req.body) : 'undefined');
-    console.log('Request file:', req.file);
-    console.log('User object from auth:', req.user);
-
     const userId = req.user._id; // Uses req.user._id
-    
-    // Handle case where req.body might be undefined
-    const body = req.body || {};
-    const { name, phone, password, providerSettings } = body;
-
-    console.log('Extracted fields:', { name, phone, password: password ? '[HIDDEN]' : undefined, providerSettings });
-
-    // Parse providerSettings if it's a JSON string (from FormData)
-    let parsedProviderSettings = null;
-    if (providerSettings && typeof providerSettings === 'string') {
-      try {
-        parsedProviderSettings = JSON.parse(providerSettings);
-        console.log('Parsed providerSettings:', parsedProviderSettings);
-      } catch (parseError) {
-        console.error('Failed to parse providerSettings:', parseError);
-        return res.status(400).json({ message: 'Invalid provider settings format.' });
-      }
-    } else if (providerSettings) {
-      parsedProviderSettings = providerSettings;
-    }
+    const { name, phone, password, providerSettings } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
-      console.log('User not found in database');
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    console.log('Found user in database:', { 
-      id: user._id, 
-      name: user.name, 
-      email: user.email,
-      phone: user.phone 
-    });
-
-    // Track what fields are being updated
-    const updates = {};
-
-    if (name) {
-      user.name = name;
-      updates.name = name;
-    }
-    if (phone) {
-      user.phone = phone;
-      updates.phone = phone;
-    }
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
 
     if (password) {
       user.password = await bcrypt.hash(password, 12);
-      updates.password = '[HASHED]';
     }
 
-    // Handle profile picture upload
-    if (req.file) {
-      console.log('Profile picture uploaded:', req.file.path);
-      user.profilePicture = req.file.path; // Cloudinary URL
-      updates.profilePicture = req.file.path;
-    }
-
-    if (parsedProviderSettings) {
-      console.log('Provider settings:', parsedProviderSettings);
-      if (parsedProviderSettings.activeHours) {
-        user.providerSettings.activeHours.start = parsedProviderSettings.activeHours.start || user.providerSettings.activeHours.start;
-        user.providerSettings.activeHours.end = parsedProviderSettings.activeHours.end || user.providerSettings.activeHours.end;
+    if (providerSettings) {
+      if (providerSettings.activeHours) {
+        user.providerSettings.activeHours.start = providerSettings.activeHours.start || user.providerSettings.activeHours.start;
+        user.providerSettings.activeHours.end = providerSettings.activeHours.end || user.providerSettings.activeHours.end;
       }
-      if (parsedProviderSettings.timezone) {
-        user.providerSettings.timezone = parsedProviderSettings.timezone;
+      if (providerSettings.timezone) {
+        user.providerSettings.timezone = providerSettings.timezone;
       }
       user.providerSettingsCompleted = true;
-      updates.providerSettings = 'updated';
     }
 
-    console.log('Fields to be updated:', updates);
-
     const updatedUser = await user.save();
-    console.log('User saved successfully');
-    
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
 
-    console.log('=== UPDATE ME SUCCESS ===');
     res.json(userResponse);
   } catch (err) {
-    console.error('=== UPDATE ME ERROR ===');
-    console.error('Error details:', err);
-    console.error('Error message:', err.message);
-    console.error('Error stack:', err.stack);
-    console.error('Error name:', err.name);
-    
-    // Check for specific error types
-    if (err.name === 'ValidationError') {
-      console.error('Validation errors:', err.errors);
-      return res.status(400).json({ 
-        message: 'Validation error while updating profile.', 
-        error: err.message,
-        details: Object.keys(err.errors).map(key => `${key}: ${err.errors[key].message}`)
-      });
-    }
-    
-    if (err.name === 'CastError') {
-      console.error('Cast error:', err);
-      return res.status(400).json({ 
-        message: 'Invalid data format.', 
-        error: err.message 
-      });
-    }
-
     res.status(500).json({ message: 'Server error while updating profile.', error: err.message });
   }
 };

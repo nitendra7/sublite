@@ -2,7 +2,6 @@ const express = require('express');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin'); 
-const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -14,8 +13,8 @@ const router = express.Router();
 // Now 'auth' correctly refers to the middleware function
 router.get('/me', auth, userController.getMe);
 
-// Update the currently logged-in user's profile (with file upload support)
-router.put('/me', auth, upload, userController.updateMe);
+// Update the currently logged-in user's profile
+router.put('/me', auth, userController.updateMe);
 
 // Deactivate the currently logged-in user's account
 router.delete('/me', auth, userController.deactivateMe);

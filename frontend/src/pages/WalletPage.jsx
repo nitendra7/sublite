@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { BadgeIndianRupee, Clock, Info, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react";
+import { BadgeIndianRupee, Clock, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
@@ -154,10 +154,10 @@ export default function WalletPage() {
 
   if (userContextLoading) {
     return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      <div className="p-6 md:p-10 min-h-full animate-fade-in">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading wallet...</p>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function WalletPage() {
           </div>
           
           <div className="flex items-center gap-2 mt-4 text-sm text-gray-500 dark:text-gray-400">
-            <Info className="w-4 h-4" />
+            <BadgeIndianRupee className="w-4 h-4" />
             <span>Secure payment powered by Razorpay</span>
             <button
               onClick={() => setShowRefundPolicy(true)}
