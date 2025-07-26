@@ -80,8 +80,8 @@ const scheduleBookingCancellation = (bookingId) => {
         return;
       }
       
-      // Only cancel if booking is still in 'confirmed' status
-      if (booking.bookingStatus === 'confirmed') {
+      // Only cancel if booking is still in 'pending' status
+      if (booking.bookingStatus === 'pending') {
         // Update booking status to cancelled
         booking.bookingStatus = 'cancelled';
         booking.cancelledAt = new Date();

@@ -84,7 +84,7 @@ const createBooking = async (req, res) => {
         startDate: new Date(),
         endDate,
       },
-      bookingStatus: 'confirmed',
+      bookingStatus: 'pending', // Start as pending, only confirm when credentials are sent
     });
 
     // 2. Create the payment with bookingId
@@ -115,10 +115,10 @@ const createBooking = async (req, res) => {
         relatedId: booking._id
     });
 
-    let responseMessage = 'Booking confirmed! Waiting for provider to send access details.';
+    let responseMessage = 'Booking created! Waiting for provider to send access details.';
     try {
         if (!isProviderActive(service.providerId)) {
-            responseMessage = 'Booking confirmed! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
+            responseMessage = 'Booking created! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
         }
     } catch (availabilityError) {
         console.warn('Error checking provider availability:', availabilityError.message);
@@ -157,7 +157,7 @@ const sendMessageToBooking = async (req, res) => {
         const booking = await Booking.findById(bookingId).populate('serviceId');
         if (!booking) return res.status(404).json({ message: 'Booking not found.' });
         if (booking.providerId.toString() !== providerId) return res.status(403).json({ message: 'Not authorized.' });
-        if (booking.bookingStatus !== 'confirmed') return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
+        if (booking.bookingStatus !== 'pending') return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
 
         clearCancellationTimer(bookingId.toString());
 
