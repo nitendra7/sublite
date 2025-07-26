@@ -37,6 +37,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // API Routes
 // Authentication middleware is applied within individual route files (middleware/auth.js).

@@ -3,6 +3,7 @@ const Booking = require('../models/booking');
 const Notification = require('../models/notification');
 const { User } = require('../models/user');
 const Service = require('../models/service');
+const WalletTransaction = require('../models/walletTransaction');
 
 // Store timeout references for booking cancellations
 const bookingTimeouts = new Map();
@@ -32,7 +33,12 @@ const completeExpiredBookings = async () => {
       booking.completedAt = now;
       await booking.save();
 
-      // 2. Create a notification for the Client
+      // 2. Restore available slots to the service
+      await Service.findByIdAndUpdate(booking.serviceId._id, {
+        $inc: { availableSlots: 1 }
+      });
+
+      // 3. Create a notification for the Client
       await Notification.create({
         userId: booking.clientId._id,
         title: 'Your rental has ended',
@@ -41,7 +47,7 @@ const completeExpiredBookings = async () => {
         relatedId: booking._id
       });
 
-      // 3. Create a notification for the Provider
+      // 4. Create a notification for the Provider
       await Notification.create({
         userId: booking.providerId._id,
         title: 'A rental has been completed',
@@ -91,6 +97,16 @@ const scheduleBookingCancellation = (bookingId) => {
         // Refund the client
         await User.findByIdAndUpdate(booking.clientId._id, {
           $inc: { walletBalance: booking.bookingDetails.rentalPrice }
+        });
+        
+        // Create refund transaction record
+        await WalletTransaction.create({
+          userId: booking.clientId._id,
+          amount: booking.bookingDetails.rentalPrice,
+          type: 'credit',
+          description: `Refund for cancelled booking: ${booking.serviceId.serviceName}`,
+          relatedId: booking._id,
+          relatedType: 'booking'
         });
         
         // Restore available slots to the service
