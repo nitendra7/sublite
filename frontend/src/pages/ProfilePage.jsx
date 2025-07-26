@@ -134,33 +134,58 @@ export default function ProfilePage() {
     setLocalError(null);
     setSaveSuccess(false);
 
-    // Prepare only the fields the backend expects
-    const dataToUpdate = {};
-    if (profile.name !== initialProfile?.name) dataToUpdate.name = profile.name;
-    if (profile.phone !== initialProfile?.phone) dataToUpdate.phone = profile.phone;
-    if (profile.password && profile.password.trim() !== "") dataToUpdate.password = profile.password;
-    if (profile.userType === 'provider' && profile.providerSettings) {
-      dataToUpdate.providerSettings = profile.providerSettings;
-    }
-
-    if (Object.keys(dataToUpdate).length === 0) {
-      setIsEditing(false);
-      setSaveSuccess(true);
-      return;
-    }
-
     try {
+      // Check if there are any changes to save
+      const hasChanges = 
+        profile.name !== initialProfile?.name ||
+        profile.phone !== initialProfile?.phone ||
+        (profile.password && profile.password.trim() !== "") ||
+        (profile.profilePicture && typeof profile.profilePicture !== 'string');
+
+      if (!hasChanges) {
+        setIsEditing(false);
+        setSaveSuccess(true);
+        return;
+      }
+
+      // Use FormData for file uploads
+      const formData = new FormData();
+      
+      // Add text fields
+      if (profile.name !== initialProfile?.name) formData.append('name', profile.name);
+      if (profile.phone !== initialProfile?.phone) formData.append('phone', profile.phone);
+      if (profile.password && profile.password.trim() !== "") formData.append('password', profile.password);
+      
+      // Add profile picture if it's a file
+      if (profile.profilePicture && typeof profile.profilePicture !== 'string') {
+        formData.append('profilePicture', profile.profilePicture);
+      }
+
+      // Add provider settings if applicable
+      if (profile.userType === 'provider' && profile.providerSettings) {
+        formData.append('providerSettings', JSON.stringify(profile.providerSettings));
+      }
+
+      console.log('Sending FormData with fields:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
       const res = await fetch(`${API_BASE}/api/users/me`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser will set it with boundary
         },
-        body: JSON.stringify(dataToUpdate),
+        body: formData,
       });
+
+      console.log('Response status:', res.status);
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
 
       if (!res.ok) {
         const errorData = await res.json();
+        console.error('Error response:', errorData);
         throw new Error(errorData.message || `HTTP error! Status: ${res.status}`);
       }
 
@@ -168,6 +193,15 @@ export default function ProfilePage() {
       updateUserContext(data);
       setSaveSuccess(true);
       setIsEditing(false);
+      
+      // Update initial profile to reflect the saved state
+      setInitialProfile({
+        ...initialProfile,
+        name: profile.name,
+        phone: profile.phone,
+        profilePicture: data.profilePicture || profile.profilePicture
+      });
+      
     } catch (err) {
       setLocalError(`Failed to save profile: ${err.message}`);
     }

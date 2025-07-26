@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { BadgeIndianRupee, Clock } from "lucide-react";
+import { BadgeIndianRupee, Clock, Info } from "lucide-react";
 import { useUser } from '../context/UserContext';
+import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
 // Your backend API base URL
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -14,6 +15,7 @@ export default function WalletPage() {
   const [error, setError] = useState(null);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [showRefundPolicy, setShowRefundPolicy] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     if (!token) {
@@ -193,6 +195,18 @@ export default function WalletPage() {
           </div>
         </div>
 
+        {/* Quick Info */}
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Need help? Check our{' '}
+          <button
+            onClick={() => setShowRefundPolicy(true)}
+            className="text-[#2bb6c4] hover:text-[#1ea1b0] underline font-medium"
+          >
+            Refund Policy
+          </button>
+          {' '}for booking information.
+        </div>
+
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 animate-fade-in
                         dark:border dark:border-gray-700">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800 dark:text-gray-200">
@@ -235,6 +249,13 @@ export default function WalletPage() {
           )}
         </div>
       </div>
+
+      {/* Refund Policy Modal */}
+      <RefundPolicyModal 
+        isOpen={showRefundPolicy} 
+        onClose={() => setShowRefundPolicy(false)} 
+      />
+
       <style>{`
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.7s ease both; }

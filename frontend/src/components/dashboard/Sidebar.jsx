@@ -8,7 +8,8 @@ import {
   FaHome,
   FaListAlt,
   FaPlus,
-  FaEnvelope
+  FaEnvelope,
+  FaQuestionCircle
 } from 'react-icons/fa';
 
 
@@ -22,6 +23,7 @@ const sidebarItems = [
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
   { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
+  { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' },
 ];
 
 function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {

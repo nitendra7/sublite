@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar, Circle } from 'lucide-react';
+import { User, Calendar, Circle, Clock } from 'lucide-react';
 
 const JoinedSubscriptionsList = ({ subscriptions }) => {
     
@@ -18,6 +18,17 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
             default:
                 return 'text-gray-400';
         }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
     };
     
     return (
@@ -38,8 +49,18 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
                                         </span>
                                         {['active', 'confirmed', 'pending'].includes(booking.bookingStatus) && (
                                             <span className="flex items-center gap-1">
-                                                <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Expires on: {new Date(booking.bookingDetails.endDate).toLocaleDateString()}
+                                                <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Expires on: {formatDate(booking.bookingDetails.endDate)}
                                             </span>
+                                        )}
+                                        {booking.bookingStatus === 'completed' && (
+                                            <>
+                                                <span className="flex items-center gap-1">
+                                                    <Clock size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Used from: {formatDate(booking.bookingDetails.startDate)}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> To: {formatDate(booking.bookingDetails.endDate)}
+                                                </span>
+                                            </>
                                         )}
                                     </div>
                                 </div>

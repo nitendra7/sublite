@@ -1,30 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Star, LayoutGrid, List } from 'lucide-react';
-import { useUser } from '../context/UserContext'; // To get the auth token
+import { Users, Star, LayoutGrid, List, Search, Loader2 } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 import BookingModal from '../components/modals/BookingModal';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-// This should fetch from your backend, not use mock data
-// const availablePlansList = [ ... ];
-
 const Availableplans = () => {
   const navigate = useNavigate();
-  const { token } = useUser(); // Get token for authenticated requests
-  const [isGridView, setIsGridView] = useState(false);
+  const { token } = useUser();
+  const [isGridView, setIsGridView] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [plans, setPlans] = useState([]); // State to hold plans from backend
+  const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [userBookings, setUserBookings] = useState([]); // State to hold user's bookings
+  const [userBookings, setUserBookings] = useState([]);
 
-  // Fetch plans and user bookings from the backend when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Include auth header if user is logged in to exclude own services
         const headers = {};
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
@@ -37,23 +32,29 @@ const Availableplans = () => {
 
         const plansData = await plansRes.json();
 
-        // FIX: Check if the API response is an array before setting state
         if (Array.isArray(plansData)) {
-          setPlans(plansData);
+          const availablePlans = plansData.filter(plan => plan.availableSlots > 0);
+          setPlans(availablePlans);
         } else {
           console.error("API did not return an array of plans:", plansData);
-          setPlans([]); // Default to an empty array to prevent the app from crashing
+          setPlans([]);
         }
 
-        // Fetch user bookings if logged in
         if (token && bookingsRes) {
           const bookingsData = await bookingsRes.json();
-          setUserBookings(bookingsData);
+          if (Array.isArray(bookingsData)) {
+            setUserBookings(bookingsData);
+          } else {
+            console.error("Bookings API did not return an array:", bookingsData);
+            setUserBookings([]);
+          }
+        } else {
+          setUserBookings([]);
         }
 
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        setPlans([]); // Also default to an empty array on error
+        setPlans([]);
       } finally {
         setLoading(false);
       }
@@ -62,14 +63,12 @@ const Availableplans = () => {
     fetchData();
   }, [token]);
 
-  // Function to open booking modal
   const handleBookService = async (service) => {
     if (!token) {
       alert('Please login to book a service.');
       return;
     }
     
-    // Check if user has already booked this service
     try {
       const response = await fetch(`${API_BASE}/api/bookings/my-bookings`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -77,10 +76,10 @@ const Availableplans = () => {
       
       if (response.ok) {
         const userBookings = await response.json();
-        const existingBooking = userBookings.find(booking => 
+        const existingBooking = Array.isArray(userBookings) ? userBookings.find(booking => 
           booking.serviceId === service._id && 
           ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
-        );
+        ) : null;
         
         if (existingBooking) {
           alert('You have already booked this service. You cannot book the same service twice.');
@@ -89,21 +88,19 @@ const Availableplans = () => {
       }
     } catch (error) {
       console.error('Error checking existing bookings:', error);
-      // Continue with booking modal even if check fails
     }
     
     setSelectedService(service);
     setIsBookingModalOpen(true);
   };
 
-  // Function to close booking modal
   const closeBookingModal = () => {
     setIsBookingModalOpen(false);
     setSelectedService(null);
   };
 
   const toggleView = () => {
-    setIsGridView(prevState => !prevState);
+    setIsGridView(!isGridView);
   };
 
   const filteredPlans = plans.filter(service =>
@@ -112,119 +109,173 @@ const Availableplans = () => {
     (service.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading available plans...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">All Available Plans</h1>
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          Available Plans
+        </h1>
+        <p className="text-gray-500 dark:text-gray-300">
+          Browse and join shared subscriptions from the community.
+        </p>
+      </div>
+
+      {/* Search and Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="relative flex-1 max-w-xl">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search plans by name, owner, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
+          />
+        </div>
+        
         <button
           onClick={toggleView}
-          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+          className="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all duration-200 group"
           title={isGridView ? "Switch to List View" : "Switch to Grid View"}
         >
-          {isGridView ? <List size={24} /> : <LayoutGrid size={24} />}
+          {isGridView ? (
+            <List size={20} className="group-hover:scale-110 transition-transform duration-200" />
+          ) : (
+            <LayoutGrid size={20} className="group-hover:scale-110 transition-transform duration-200" />
+          )}
         </button>
       </div>
-      
-      <div className="mb-8">
-        <input
-          type="text"
-          placeholder="Search plans by name, owner, or description..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-xl rounded-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-colors"
-        />
-      </div>
-      
-      <p className="text-gray-600 dark:text-gray-300 mb-8">Browse and join shared subscriptions from the community.</p>
 
-      {loading ? <p>Loading plans...</p> : (
+      {/* Plans Grid/List */}
+      {filteredPlans.length > 0 ? (
         <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-          {filteredPlans.length > 0 ? (
-            filteredPlans.map(service => (
-              <div key={service._id}
-                   className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex 
-                               ${isGridView ? 'flex-col items-center text-center' : 'flex-col'} 
-                               hover:shadow-lg transition-shadow text-gray-900 dark:text-gray-100`}
-              >
-                <div className={`flex-grow ${isGridView ? 'mb-4' : 'mb-4'} ${isGridView ? 'text-center' : ''}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-xl text-gray-800 dark:text-white">{service.serviceName}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      service.serviceStatus === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                    }`}>
-                      {service.serviceStatus}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">{service.description || 'No description available'}</p>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm mb-3">
-                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                      <Users size={14} className="text-gray-500 dark:text-gray-400" /> 
-                      {service.availableSlots}/{service.maxUsers} slots available
-                    </span>
-                    <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                      <Star size={14} className="text-gray-500 dark:text-gray-400" /> 
-                      By {service.providerId?.name || service.providerId?.username || 'Unknown'}
-                    </span>
-                  </div>
-                  
-                  {service.features && service.features.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {service.features.map((feature, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 rounded-full text-xs">
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+          {filteredPlans.map((service, index) => (
+            <div 
+              key={service._id}
+              className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in`}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {/* Service Header */}
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100">
+                  {service.serviceName}
+                </h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  service.serviceStatus === 'active' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' 
+                    : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                }`}>
+                  {service.serviceStatus}
+                </span>
+              </div>
+              
+              {/* Description */}
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                {service.description || 'No description available'}
+              </p>
+              
+              {/* Service Details */}
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Users size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                  <span>{service.availableSlots}/{service.maxUsers} slots available</span>
                 </div>
-                
-                  <div className={`flex items-center justify-between w-full ${isGridView ? 'flex-col gap-2' : 'flex-row'}`}>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{service.rentalPrice}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">per month (user decides duration)</p>
-                  </div>
-                  {(() => {
-                    // Check if user has already booked this service
-                    const existingBooking = userBookings.find(booking => 
-                      booking.serviceId === service._id && 
-                      ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
-                    );
-
-                    if (existingBooking) {
-                      return (
-                        <button
-                          disabled
-                          className="px-6 py-2 rounded-lg font-semibold bg-gray-400 text-gray-600 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
-                        >
-                          Already Booked
-                        </button>
-                      );
-                    }
-
-                    return (
-                      <button
-                        onClick={() => handleBookService(service)}
-                        disabled={service.availableSlots <= 0}
-                        className={`px-6 py-2 rounded-lg font-semibold transition-colors shadow ${
-                          service.availableSlots > 0 
-                            ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
-                            : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
-                      </button>
-                    );
-                  })()}
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Star size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                  <span>By {service.providerId?.name || service.providerId?.username || 'Unknown'}</span>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center text-gray-600 dark:text-gray-400 col-span-full">
-              No matching plans found.
+              
+              {/* Features */}
+              {service.features && service.features.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {service.features.map((feature, idx) => (
+                    <span 
+                      key={idx} 
+                      className="px-3 py-1 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-full text-xs font-medium"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Price and Action */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                    ₹{service.rentalPrice}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    per day (user decides duration)
+                  </p>
+                </div>
+                
+                {(() => {
+                  const existingBooking = Array.isArray(userBookings) ? userBookings.find(booking => 
+                    booking.serviceId === service._id && 
+                    ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
+                  ) : null;
+
+                  if (existingBooking && existingBooking.bookingStatus === 'pending') {
+                    return (
+                      <button
+                        disabled
+                        className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
+                      >
+                        Already Booked
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      onClick={() => handleBookService(service)}
+                      disabled={service.availableSlots <= 0}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
+                        service.availableSlots > 0 
+                          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
+                    </button>
+                  );
+                })()}
+              </div>
             </div>
-          )}
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              {searchTerm ? 'No matching plans found' : 'No plans available'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {searchTerm 
+                ? 'Try adjusting your search terms or browse all available plans.'
+                : 'Check back later for new subscription opportunities.'
+              }
+            </p>
+          </div>
         </div>
       )}
       

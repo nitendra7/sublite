@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
   FaBars, FaBook, FaMoon, FaStar, FaSun, FaHome,
-  FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus
+  FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus, FaQuestionCircle
 } from 'react-icons/fa';
 import { CreditCard, PlusCircle } from 'lucide-react';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
@@ -21,6 +21,7 @@ const sidebarItems = [
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
   { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
+  { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' },
 ];
 
 function getInitials(name) {
@@ -34,6 +35,7 @@ function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [active, setActive] = useState(0);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const profileMenuRef = useRef(null);
   const profileButtonRef = useRef(null);
 
@@ -79,6 +81,30 @@ function Dashboard() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const notifications = await response.json();
+          const unreadCount = notifications.filter(n => !n.isRead).length;
+          setUnreadNotifications(unreadCount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
+    fetchNotifications();
   }, []);
 
   const handleLogout = () => {
@@ -168,8 +194,10 @@ function Dashboard() {
                 onClick={() => navigate('/dashboard/notifications')}
               >
                 <FaBell className="text-lg group-hover:scale-110 transition-transform duration-200" />
-                {/* Notification indicator */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                {/* Notification indicator - only show if there are unread notifications */}
+                {unreadNotifications > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
               </button>
             </div>
 

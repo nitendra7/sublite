@@ -12,8 +12,10 @@ const BookingModal = ({ isOpen, onClose, service }) => {
     const [error, setError] = useState(null);
 
     // Calculate total cost based on rental duration
-    const dailyRate = service ? service.rentalPrice / 30 : 0; // Convert monthly rate to daily
-    const totalCost = Math.ceil(dailyRate * rentalDuration);
+    const baseDailyRate = service ? service.rentalPrice / 28 : 0;
+    const platformFee = baseDailyRate * 0.10;
+    const totalDailyRate = baseDailyRate + platformFee;
+    const totalCost = Math.ceil(totalDailyRate * rentalDuration);
     
     // Check if user has sufficient balance
     const hasSufficientBalance = user && user.walletBalance >= totalCost;
@@ -93,6 +95,27 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                         </div>
                     </div>
 
+                    {/* Pricing Breakdown */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Pricing Breakdown</h4>
+                        <div className="flex justify-between text-sm mb-1">
+                            <span>Base Daily Rate</span>
+                            <span>₹{baseDailyRate.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm mb-1">
+                            <span>Platform Fee <span className="text-xs text-gray-400">(10%)</span></span>
+                            <span>₹{platformFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-base font-semibold border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
+                            <span>Total Daily Rate</span>
+                            <span>₹{totalDailyRate.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-base font-bold border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
+                            <span>Total for {rentalDuration} days</span>
+                            <span>₹{totalCost}</span>
+                        </div>
+                    </div>
+
                     {/* Rental Duration Selection */}
                     <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -147,7 +170,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-300">Daily rate:</span>
-                                <span className="text-gray-900 dark:text-white">₹{dailyRate.toFixed(2)}</span>
+                                <span className="text-gray-900 dark:text-white">₹{baseDailyRate.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-300">Duration:</span>
@@ -191,6 +214,19 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Refund Policy Notice */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                        <div className="flex items-start gap-2">
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <div className="text-sm text-blue-700 dark:text-blue-300">
+                                <p className="font-medium mb-1">Refund Policy:</p>
+                                <p>If the provider doesn't respond within 15 minutes, you'll be automatically refunded to your wallet. No action needed!</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Service Details */}

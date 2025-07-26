@@ -16,6 +16,7 @@ import ReviewPage from './pages/ReviewPage';
 import NotificationsPage from './pages/NotificationsPage';
 import AddServicePage from './pages/AddServicePage';
 import EditServicePage from './pages/EditServicePage';
+import HelpPage from './pages/HelpPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -87,6 +88,7 @@ function App() {
                     <Route path="notifications" element={<NotificationsPage />} />
                     <Route path="add-service" element={<AddServicePage />} />
                     <Route path="edit-service/:serviceId" element={<EditServicePage />} />
+                    <Route path="help" element={<HelpPage />} />
                   </Route>
 
                   {/* Standalone protected pages. */}

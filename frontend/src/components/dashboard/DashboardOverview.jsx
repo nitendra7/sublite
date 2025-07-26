@@ -8,7 +8,8 @@ import {
   TrendingUp, 
   Users,
   Calendar,
-  DollarSign
+  DollarSign,
+  CheckCircle
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 
@@ -18,7 +19,7 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 const DashboardOverview = () => {
   const { user, token } = useUser();
   const [dashboardData, setDashboardData] = useState({
-    subscriptions: { active: 0, owned: 0, borrowed: 0 },
+    subscriptions: { active: 0, completed: 0, provided: 0 },
     wallet: { balance: 0, transactions: 0 },
     reviews: { given: 0, received: 0 },
     notifications: { unread: 0, total: 0 },
@@ -45,6 +46,11 @@ const DashboardOverview = () => {
             headers: { Authorization: `Bearer ${token}` }
           }),
           
+          // Fetch services provided by the user
+          fetch(`${API_BASE}/api/services/my-services`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          
           // Fetch wallet data
           fetch(`${API_BASE}/api/wallettransactions`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -65,11 +71,12 @@ const DashboardOverview = () => {
         ]);
         
         // Process results
-        const [bookingsRes, walletRes, reviewsRes, notificationsRes, servicesRes] = results;
+        const [bookingsRes, providedServicesRes, walletRes, reviewsRes, notificationsRes, servicesRes] = results;
         
         // Log results for debugging
         console.log('API Results:', {
           bookings: { status: bookingsRes.status, ok: bookingsRes.status === 'fulfilled' ? bookingsRes.value.ok : false },
+          providedServices: { status: providedServicesRes.status, ok: providedServicesRes.status === 'fulfilled' ? providedServicesRes.value.ok : false },
           wallet: { status: walletRes.status, ok: walletRes.status === 'fulfilled' ? walletRes.value.ok : false },
           reviews: { status: reviewsRes.status, ok: reviewsRes.status === 'fulfilled' ? reviewsRes.value.ok : false },
           notifications: { status: notificationsRes.status, ok: notificationsRes.status === 'fulfilled' ? notificationsRes.value.ok : false },
@@ -78,6 +85,10 @@ const DashboardOverview = () => {
         
         const bookings = bookingsRes.status === 'fulfilled' && bookingsRes.value.ok 
           ? await bookingsRes.value.json() 
+          : [];
+        
+        const providedServices = providedServicesRes.status === 'fulfilled' && providedServicesRes.value.ok 
+          ? await providedServicesRes.value.json() 
           : [];
         
         const walletTransactions = walletRes.status === 'fulfilled' && walletRes.value.ok 
@@ -98,8 +109,7 @@ const DashboardOverview = () => {
         
         // Process data
         const activeBookings = bookings.filter(b => b.bookingStatus === 'active' || b.bookingStatus === 'confirmed' || b.bookingStatus === 'pending');
-        const ownedServices = bookings.filter(b => b.providerId === user._id);
-        const borrowedServices = bookings.filter(b => b.clientId === user._id && b.providerId !== user._id);
+        const completedBookings = bookings.filter(b => b.bookingStatus === 'completed');
         
         const walletBalance = user?.walletBalance || 0;
         const unreadNotifications = notifications.filter(n => !n.isRead).length;
@@ -107,8 +117,8 @@ const DashboardOverview = () => {
         setDashboardData({
           subscriptions: {
             active: activeBookings.length,
-            owned: ownedServices.length,
-            borrowed: borrowedServices.length
+            completed: completedBookings.length,
+            provided: providedServices.length
           },
           wallet: {
             balance: walletBalance,
@@ -200,6 +210,19 @@ const DashboardOverview = () => {
           </div>
         </div>
 
+        {/* Completed Subscriptions */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed Subscriptions</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {dashboardData.subscriptions.completed}
+              </p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+          </div>
+        </div>
+
         {/* Available Plans */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -210,19 +233,6 @@ const DashboardOverview = () => {
               </p>
             </div>
             <TrendingUp className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-          </div>
-        </div>
-
-        {/* Unread Notifications */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Unread Notifications</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.notifications.unread}
-              </p>
-            </div>
-            <Bell className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
           </div>
         </div>
       </div>
@@ -252,15 +262,15 @@ const DashboardOverview = () => {
             </div>
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.subscriptions.owned}
+                {dashboardData.subscriptions.provided}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Owned</p>
+              <p className="text-xs text-gray-500 dark:text-gray-300">Provided</p>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.subscriptions.borrowed}
+                {dashboardData.subscriptions.completed}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Borrowed</p>
+              <p className="text-xs text-gray-500 dark:text-gray-300">Completed</p>
             </div>
           </div>
         </Link>

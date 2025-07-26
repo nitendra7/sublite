@@ -357,11 +357,21 @@ const ReviewPage = () => {
                     required
                   >
                     <option value="">-- Select a completed service --</option>
-                    {reviewableBookings.map(booking => (
-                      <option key={booking._id} value={booking._id}>
-                        {booking.serviceId?.serviceName} (by {booking.providerId?.name})
-                      </option>
-                    ))}
+                    {reviewableBookings.map(booking => {
+                      const startDate = new Date(booking.bookingDetails?.startDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                      const endDate = new Date(booking.bookingDetails?.endDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                      return (
+                        <option key={booking._id} value={booking._id}>
+                          {booking.serviceId?.serviceName} (by {booking.providerId?.name}) - Used {startDate} to {endDate}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
