@@ -3,7 +3,70 @@ import { Bell, CheckCircle, Info, Gift, Loader } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
+
+// Component for Send Credentials button with its own state
+const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
+  const [bookingStatus, setBookingStatus] = useState(null);
+  const [bookingCreatedAt, setBookingCreatedAt] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBookingDetails = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const bookingRes = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const booking = await bookingRes.json();
+        setBookingStatus(booking.bookingStatus);
+        setBookingCreatedAt(booking.createdAt);
+      } catch (err) {
+        console.error('Failed to fetch booking details:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookingDetails();
+  }, [bookingId]);
+
+  const isEligible = () => {
+    if (isLoading || !bookingStatus || !bookingCreatedAt) return false;
+    if (bookingStatus !== 'pending') return false;
+    const created = new Date(bookingCreatedAt);
+    const now = new Date();
+    const diffMinutes = (now - created) / (1000 * 60);
+    return diffMinutes <= 15;
+  };
+
+  if (isLoading) {
+    return (
+      <button disabled className="mt-2 px-4 py-2 rounded-lg font-semibold bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400">
+        Loading...
+      </button>
+    );
+  }
+
+  return (
+    <button
+      className={`mt-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 
+        ${isEligible()
+          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4]'
+          : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
+        }`}
+      onClick={() => {
+        if (isEligible()) {
+          onOpenModal(bookingId);
+        }
+      }}
+      disabled={!isEligible()}
+      title={!isEligible() ? 'Booking not eligible (must be pending and within 15 minutes)' : ''}
+    >
+      Send Credentials
+    </button>
+  );
+};
 
 // Define icons with consistent colors
 const typeIcon = {
@@ -149,7 +212,9 @@ export default function NotificationsPage() {
     setCredSuccess('');
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/bookings/${credBookingId}/send-message`, {
+
+      
+      const res = await fetch(`${API_BASE}/api/bookings/${credBookingId}/send-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(credValues)
@@ -231,7 +296,7 @@ export default function NotificationsPage() {
 
   // Helper to check if Send Credentials is allowed (in modal)
   const canSendNow = () => {
-    if (credBookingStatus !== 'confirmed') return false;
+    if (credBookingStatus !== 'pending') return false;
     if (!credBookingCreatedAt) return false;
     const created = new Date(credBookingCreatedAt);
     const now = new Date();
@@ -247,6 +312,8 @@ export default function NotificationsPage() {
           <h1 className="text-3xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">Notifications</h1>
         </div>
         
+
+
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[300px] animate-fade-in">
           {loading ? (
             <div className="flex justify-center items-center h-40">
@@ -302,42 +369,10 @@ export default function NotificationsPage() {
                     </div>
                     {/* Always show Send Credentials button for eligible bookings */}
                     {n.title === 'New Booking!' && n.relatedId && (
-                                              <button
-                          className={`mt-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 
-                            ${credBookingStatus === 'pending' && credBookingCreatedAt && (() => {
-                              const created = new Date(credBookingCreatedAt);
-                              const now = new Date();
-                              const diffMinutes = (now - created) / (1000 * 60);
-                              return diffMinutes <= 15;
-                            })()
-                              ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4]'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
-                          }`}
-                        onClick={() => {
-                          if (credBookingStatus === 'pending' && credBookingCreatedAt) {
-                            const created = new Date(credBookingCreatedAt);
-                            const now = new Date();
-                            const diffMinutes = (now - created) / (1000 * 60);
-                            if (diffMinutes <= 15) {
-                              openCredModal(n.relatedId);
-                            }
-                          }
-                        }}
-                        disabled={!(credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
-                          const created = new Date(credBookingCreatedAt);
-                          const now = new Date();
-                          const diffMinutes = (now - created) / (1000 * 60);
-                          return diffMinutes <= 15;
-                        })())}
-                        title={!(credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
-                          const created = new Date(credBookingCreatedAt);
-                          const now = new Date();
-                          const diffMinutes = (now - created) / (1000 * 60);
-                          return diffMinutes <= 15;
-                        })()) ? 'Booking not eligible (must be confirmed and within 15 minutes)' : ''}
-                      >
-                        Send Credentials
-                      </button>
+                      <SendCredentialsButton 
+                        bookingId={n.relatedId} 
+                        onOpenModal={openCredModal}
+                      />
                     )}
                     {expandedId === n._id && (
                       <>

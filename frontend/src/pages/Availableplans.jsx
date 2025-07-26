@@ -196,7 +196,7 @@ const Availableplans = () => {
                       return (
                         <button
                           disabled
-                          className="px-6 py-2 rounded-lg font-semibold bg-green-600 text-white cursor-not-allowed"
+                          className="px-6 py-2 rounded-lg font-semibold bg-gray-400 text-gray-600 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
                         >
                           Already Booked
                         </button>

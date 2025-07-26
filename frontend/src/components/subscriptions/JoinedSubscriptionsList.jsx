@@ -36,9 +36,11 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
                                         <span className="flex items-center gap-1">
                                             <User size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Provided by {booking.providerId ? booking.providerId.name : 'N/A'}
                                         </span>
-                                        <span className="flex items-center gap-1">
-                                            <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Expires on: {new Date(booking.bookingDetails.endDate).toLocaleDateString()}
-                                        </span>
+                                        {['active', 'confirmed', 'pending'].includes(booking.bookingStatus) && (
+                                            <span className="flex items-center gap-1">
+                                                <Calendar size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" /> Expires on: {new Date(booking.bookingDetails.endDate).toLocaleDateString()}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
