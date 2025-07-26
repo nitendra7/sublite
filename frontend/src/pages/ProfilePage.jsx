@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle } from 'lucide-react';
-// Import the reusable Input component
-import { Input } from '../components/ui/input'; // Adjust the path if input.jsx is in a different directory
+import { Camera, MapPin, Briefcase, Star, CheckCircle, XCircle, Loader2, User, Mail, Phone, Lock, Wallet } from 'lucide-react';
+import { Input } from '../components/ui/input';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -36,11 +35,11 @@ export default function ProfilePage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [localError, setLocalError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const token = localStorage.getItem("token");
   const userId = user?._id;
 
-  // Effect to initialize local 'profile' state when user data is available from context
   useEffect(() => {
     if (user) {
       const fetchedProfile = {
@@ -82,7 +81,6 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Effect to manage the image preview URL for newly selected files
   useEffect(() => {
     if (profile.profilePicture && typeof profile.profilePicture !== 'string') {
       const objectUrl = URL.createObjectURL(profile.profilePicture);
@@ -98,116 +96,66 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'profilePicture' && files && files[0]) {
-      setProfile((prev) => ({ ...prev, profilePicture: files[0] }));
-    } else if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setProfile(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
+      setProfile(prev => ({ ...prev, [name]: files[0] }));
     } else {
       setProfile(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleEditToggle = () => {
-    setIsEditing(prev => !prev);
-    if (isEditing && initialProfile) {
+    if (isEditing) {
       setProfile(initialProfile);
-      setImagePreview(initialProfile.profilePicture);
-      setLocalError(null);
-      setSaveSuccess(false);
+      setImagePreview(initialProfile?.profilePicture || null);
     }
+    setIsEditing(!isEditing);
+    setLocalError(null);
+    setSaveSuccess(false);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-
-    if (!token) {
-      setLocalError("Authentication required to save changes. Please log in.");
-      return;
-    }
-
+    setSaving(true);
     setLocalError(null);
     setSaveSuccess(false);
 
     try {
-      // Check if there are any changes to save
-      const hasChanges = 
-        profile.name !== initialProfile?.name ||
-        profile.phone !== initialProfile?.phone ||
-        (profile.password && profile.password.trim() !== "") ||
-        (profile.profilePicture && typeof profile.profilePicture !== 'string');
-
-      if (!hasChanges) {
-        setIsEditing(false);
-        setSaveSuccess(true);
-        return;
-      }
-
-      // Use FormData for file uploads
       const formData = new FormData();
-      
-      // Add text fields
-      if (profile.name !== initialProfile?.name) formData.append('name', profile.name);
-      if (profile.phone !== initialProfile?.phone) formData.append('phone', profile.phone);
-      if (profile.password && profile.password.trim() !== "") formData.append('password', profile.password);
-      
-      // Add profile picture if it's a file
-      if (profile.profilePicture && typeof profile.profilePicture !== 'string') {
-        formData.append('profilePicture', profile.profilePicture);
-      }
-
-      // Add provider settings if applicable
-      if (profile.userType === 'provider' && profile.providerSettings) {
-        formData.append('providerSettings', JSON.stringify(profile.providerSettings));
-      }
-
-      console.log('Sending FormData with fields:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
-
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Don't set Content-Type for FormData - browser will set it with boundary
-        },
-        body: formData,
+      Object.keys(profile).forEach(key => {
+        if (key === 'profilePicture' && profile[key] instanceof File) {
+          formData.append(key, profile[key]);
+        } else if (key === 'profilePicture' && typeof profile[key] === 'string') {
+          // Don't append if it's already a URL
+        } else if (typeof profile[key] === 'object') {
+          formData.append(key, JSON.stringify(profile[key]));
+        } else if (profile[key] !== undefined && profile[key] !== null) {
+          formData.append(key, profile[key]);
+        }
       });
 
-      console.log('Response status:', res.status);
-      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+      const res = await fetch(`${API_BASE}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error('Error response:', errorData);
-        throw new Error(errorData.message || `HTTP error! Status: ${res.status}`);
+        throw new Error('Failed to update profile');
       }
 
       const data = await res.json();
       updateUserContext(data);
       setSaveSuccess(true);
       setIsEditing(false);
-      
-      // Update initial profile to reflect the saved state
-      setInitialProfile({
-        ...initialProfile,
-        name: profile.name,
-        phone: profile.phone,
-        profilePicture: data.profilePicture || profile.profilePicture
-      });
-      
+      setInitialProfile(profile);
     } catch (err) {
       setLocalError(`Failed to save profile: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Helper to get initials for profile picture fallback
   const getInitialsAvatar = (name) => {
     if (!name) return '?';
     const parts = name.split(' ');
@@ -217,81 +165,241 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <p className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">Loading Profile...</p>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <p className="text-xl font-semibold text-red-500 dark:text-red-400">Error: {error}</p>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="text-center text-red-500 dark:text-red-400">
+          <p>Error: {error}</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <p className="text-xl font-semibold text-gray-600 dark:text-gray-300">Please log in to view your profile.</p>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="text-center text-gray-600 dark:text-gray-400">
+          <p>Please log in to view your profile.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 px-4 py-10">
-      <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-        <h1 className="text-4xl font-bold text-center mb-8 text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow">User Profile</h1>
-        <div className="flex flex-col items-center mb-8">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-lg overflow-hidden border-4 border-[#2bb6c4] dark:border-[#5ed1dc]">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-5xl text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5v2.25m0 0c-3.75 0-6.75-3-6.75-6.75S8.25 5.25 12 5.25s6.75 3 6.75 6.75-3 6.75-6.75 6.75z" /></svg></span>
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          My Profile
+        </h1>
+        <p className="text-gray-500 dark:text-gray-300">
+          Manage your account information and preferences.
+        </p>
+      </div>
+
+      <div className="max-w-4xl mx-auto">
+        {/* Profile Picture Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 mb-8">
+          <div className="flex flex-col items-center">
+            <div className="relative group mb-6">
+              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-lg overflow-hidden border-4 border-[#2bb6c4] dark:border-[#5ed1dc]">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white">
+                      {getInitialsAvatar(profile.name)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {isEditing && (
+                <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 cursor-pointer rounded-full">
+                  <input type="file" accept="image/*" className="hidden" name="profilePicture" onChange={handleChange} />
+                  <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+                </label>
               )}
-              <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" name="profilePicture" onChange={handleChange} />
-                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition">Change</span>
-              </label>
+            </div>
+            
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                {profile.name || 'User'}
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-2">
+                @{profile.username}
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                {profile.isVerified ? (
+                  <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium dark:bg-green-800 dark:text-green-100">
+                    <CheckCircle size={14} />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium dark:bg-gray-700 dark:text-gray-300">
+                    <XCircle size={14} />
+                    Unverified
+                  </span>
+                )}
+                {profile.rating > 0 && (
+                  <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium dark:bg-yellow-800 dark:text-yellow-100">
+                    <Star size={14} fill="currentColor" />
+                    {profile.rating.toFixed(1)} ({profile.totalRatings})
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-1 font-medium">Full Name</label>
-              <input type="text" name="name" value={profile.name} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
+
+        {/* Profile Form */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Full Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <User className="w-4 h-4 inline mr-2" />
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={profile.name}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <User className="w-4 h-4 inline mr-2" />
+                  Username
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  value={profile.username}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Mail className="w-4 h-4 inline mr-2" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profile.email}
+                  disabled
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Phone className="w-4 h-4 inline mr-2" />
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={profile.phone}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Lock className="w-4 h-4 inline mr-2" />
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={profile.password}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  placeholder="Enter new password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              {/* Wallet Balance */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Wallet className="w-4 h-4 inline mr-2" />
+                  Wallet Balance
+                </label>
+                <div className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] font-bold cursor-not-allowed">
+                  ₹{profile.walletBalance?.toFixed(2) || '0.00'}
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Username</label>
-              <input type="text" name="username" value={profile.username} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" required />
+
+            {/* Status Messages */}
+            {localError && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
+                {localError}
+              </div>
+            )}
+            {saveSuccess && (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400">
+                Profile updated successfully!
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={handleEditToggle}
+                className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              >
+                {isEditing ? 'Cancel' : 'Edit Profile'}
+              </button>
+              {isEditing && (
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-3 bg-[#2bb6c4] text-white rounded-xl font-semibold hover:bg-[#1ea1b0] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              )}
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Email ID</label>
-              <input type="email" name="email" value={profile.email} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed" disabled />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Phone Number</label>
-              <input type="text" name="phone" value={profile.phone} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">New Password</label>
-              <input type="password" name="password" value={profile.password} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[#2bb6c4] outline-none" placeholder="Enter new password" />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Wallet Balance</label>
-              <div className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] font-bold cursor-not-allowed">₹{profile.walletBalance?.toFixed(2) || '0.00'}</div>
-            </div>
-          </div>
-          {localError && <div className="text-red-500 text-center">{localError}</div>}
-          {saveSuccess && <div className="text-green-600 text-center">Profile updated successfully!</div>}
-          <div className="flex justify-end gap-4 mt-6">
-            <button type="button" onClick={handleEditToggle} className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancel</button>
-            <button type="submit" className="px-6 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold shadow-md hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition">Save Changes</button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

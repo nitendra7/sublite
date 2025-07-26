@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Loader2, BookOpen, Users } from 'lucide-react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
@@ -58,23 +59,69 @@ const SubscriptionsPage = () => {
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-gray-500 dark:text-gray-400">
-        <p>Loading your subscriptions...</p>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading your subscriptions...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-10 text-center text-red-500">
-        <p>Error: {error}</p>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="text-center text-red-500 dark:text-red-400">
+          <p>Error: {error}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 min-h-full animate-fade-in">
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">My Subscriptions</h1>
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          My Subscriptions
+        </h1>
+        <p className="text-gray-500 dark:text-gray-300">
+          Manage your owned services and joined subscriptions.
+        </p>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Services I Provide</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {providedServices.length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Services I've Joined</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {joinedSubscriptions.length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="space-y-12">
         <ProvidedServicesList 

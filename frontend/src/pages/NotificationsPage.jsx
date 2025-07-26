@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, CheckCircle, Info, Gift, Loader } from "lucide-react";
+import { Bell, CheckCircle, Info, Gift, Loader2, MessageSquare, Clock } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-// Component for Send Credentials button with its own state
 const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   const [bookingStatus, setBookingStatus] = useState(null);
   const [bookingCreatedAt, setBookingCreatedAt] = useState(null);
@@ -42,7 +41,8 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   if (isLoading) {
     return (
-      <button disabled className="mt-2 px-4 py-2 rounded-lg font-semibold bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400">
+      <button disabled className="mt-3 px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200">
+        <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
         Loading...
       </button>
     );
@@ -50,11 +50,11 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   return (
     <button
-      className={`mt-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 
-        ${isEligible()
-          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4]'
-          : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
-        }`}
+      className={`mt-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
+        isEligible()
+          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+      }`}
       onClick={() => {
         if (isEligible()) {
           onOpenModal(bookingId);
@@ -68,20 +68,11 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   );
 };
 
-// Define icons with consistent colors
 const typeIcon = {
-  booking: <CheckCircle className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
-  payment: <Info className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
-  reminder: <Bell className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
-  promotion: <Gift className="text-[#2bb6c4] dark:text-[#5ed1dc]" />,
-};
-
-// Define background for notification types - consistent with theme
-const typeBg = {
-  booking: "bg-white dark:bg-gray-800",
-  payment: "bg-white dark:bg-gray-800",
-  reminder: "bg-white dark:bg-gray-800",
-  promotion: "bg-white dark:bg-gray-800",
+  booking: <CheckCircle className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  payment: <Info className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  reminder: <Bell className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  promotion: <Gift className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
 };
 
 export default function NotificationsPage() {
@@ -91,52 +82,29 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
-  // Modal state for sending credentials
   const [showCredModal, setShowCredModal] = useState(false);
   const [credBookingId, setCredBookingId] = useState(null);
   const [credValues, setCredValues] = useState({ username: '', password: '', profileName: '', accessInstructions: '' });
   const [credLoading, setCredLoading] = useState(false);
   const [credError, setCredError] = useState('');
-  const [credSuccess, setCredSuccess] = useState('');
-  const [credBookingStatus, setCredBookingStatus] = useState('');
   const [credBookingCreatedAt, setCredBookingCreatedAt] = useState(null);
 
-  const [expandedId, setExpandedId] = useState(null);
-
-  // Mark notification as read in backend and update local state
   const markRead = async (notifId) => {
     try {
       const token = localStorage.getItem("token");
-      console.log('Marking notification as read:', notifId);
-      console.log('API_BASE:', API_BASE);
-      
       const response = await fetch(`${API_BASE}/api/notifications/${notifId}/read`, {
         method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log('Mark as read response status:', response.status);
-      
-      if (response.ok) {
-        const updatedNotification = await response.json();
-        console.log('Updated notification:', updatedNotification);
-        return true; // Success
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to mark notification as read:', response.status, errorData);
-        return false; // Failed
-      }
+      return response.ok;
     } catch (err) {
-      console.error('Error marking notification as read:', err);
-      return false; // Failed
+      console.error('Failed to mark notification as read:', err);
+      return false;
     }
   };
 
-  // For credential notifications, mark booking as active/confirmed
   const confirmBooking = async (bookingId) => {
     try {
       const token = localStorage.getItem("token");
@@ -145,91 +113,71 @@ export default function NotificationsPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
-      // Ignore error for now
+      console.error('Failed to confirm booking:', err);
     }
   };
 
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/notifications`, {
+      const response = await fetch(`${API_BASE}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.status === 401 || res.status === 403) {
-        throw new Error('Session expired. Please log in again.');
-      }
-      if (!res.ok) throw new Error("Failed to fetch notifications");
-      return await res.json();
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const data = await response.json();
+      setNotifications(data);
     } catch (err) {
-      throw new Error(err.message || 'Failed to fetch notifications');
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch booking and service details for autofill and status check
   const openCredModal = async (bookingId) => {
-    setCredBookingId(bookingId);
-    setCredError('');
-    setCredSuccess('');
-    setCredLoading(true);
     try {
       const token = localStorage.getItem("token");
-      // Fetch booking details
       const bookingRes = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const booking = await bookingRes.json();
-      setCredBookingStatus(booking.bookingStatus);
       setCredBookingCreatedAt(booking.createdAt);
-      // Fetch service details for autofill
-      const serviceRes = await fetch(`${API_BASE}/api/services/${booking.serviceId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const service = await serviceRes.json();
-      setCredValues({
-        username: service.credentials?.username || '',
-        password: service.credentials?.password || '',
-        profileName: service.credentials?.profileName || '',
-        accessInstructions: service.accessInstructionsTemplate || ''
-      });
+      setCredBookingId(bookingId);
       setShowCredModal(true);
+      setCredError('');
     } catch (err) {
-      setCredError('Failed to fetch booking/service details');
-      setShowCredModal(true);
-    } finally {
-      setCredLoading(false);
+      console.error('Failed to fetch booking details:', err);
+      setCredError('Failed to load booking details');
     }
   };
 
   const handleCredChange = (e) => {
-    const { name, value } = e.target;
-    setCredValues((prev) => ({ ...prev, [name]: value }));
+    setCredValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSendCredentials = async (e) => {
     e.preventDefault();
     setCredLoading(true);
     setCredError('');
-    setCredSuccess('');
+
     try {
       const token = localStorage.getItem("token");
-
-      
-      const res = await fetch(`${API_BASE}/api/bookings/${credBookingId}/send-message`, {
+      const response = await fetch(`${API_BASE}/api/bookings/${credBookingId}/send-message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify(credValues)
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to send credentials');
-      setCredSuccess('Credentials sent successfully!');
-      setTimeout(() => {
-        setShowCredModal(false);
-        setCredBookingId(null);
-        setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
-        setCredError('');
-        setCredSuccess('');
-        // Don't refresh notifications to preserve read status
-      }, 1500);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send credentials');
+      }
+
+      setShowCredModal(false);
+      setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
+      await fetchNotifications();
     } catch (err) {
       setCredError(err.message);
     } finally {
@@ -237,66 +185,11 @@ export default function NotificationsPage() {
     }
   };
 
-  useEffect(() => {
-    if (!loadingUser && user) {
-      setLoading(true);
-      setError(null);
-      fetchNotifications()
-        .then((data) => setNotifications(data))
-        .catch((err) => {
-          setError(err.message);
-          console.error('Error fetching notifications:', err);
-        })
-        .finally(() => setLoading(false));
-    }
-    if (!loadingUser && !user) {
-      setNotifications([]);
-      setLoading(false);
-    }
-  }, [loadingUser, user]);
-
-  if (loadingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <div className="flex items-center gap-2">
-          <Loader className="w-6 h-6 animate-spin text-[#2bb6c4]" />
-          <span className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">Loading user data...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <div className="text-center">
-          <Bell className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <p className="text-xl font-semibold text-gray-600 dark:text-gray-300">Please log in to view notifications.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Helper to check if Send Credentials should be shown (for notification list)
   const canSendCredentials = (notif) => {
-    if (notif.title !== 'New Booking!' || !notif.relatedId) return false;
-    // Only show if not cancelled and within 15 minutes (use booking status/createdAt if available)
-    // If modal is open for this booking, use modal state; otherwise, don't show button
-    if (expandedId === notif._id && credBookingStatus && credBookingCreatedAt) {
-      if (credBookingStatus !== 'confirmed') return false;
-      const created = new Date(credBookingCreatedAt);
-      const now = new Date();
-      const diffMinutes = (now - created) / (1000 * 60);
-      if (diffMinutes > 15) return false;
-      return true;
-    }
-    // Otherwise, show button and check on modal open
-    return true;
+    return notif.title === 'New Booking!' && notif.relatedId;
   };
 
-  // Helper to check if Send Credentials is allowed (in modal)
   const canSendNow = () => {
-    if (credBookingStatus !== 'pending') return false;
     if (!credBookingCreatedAt) return false;
     const created = new Date(credBookingCreatedAt);
     const now = new Date();
@@ -304,164 +197,291 @@ export default function NotificationsPage() {
     return diffMinutes <= 15;
   };
 
-  return (
-    <div className="min-h-screen py-10 px-4 relative overflow-hidden animate-fade-in">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-8 animate-slide-in-down">
-          <Bell className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-          <h1 className="text-3xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">Notifications</h1>
+  useEffect(() => {
+    if (!loadingUser) {
+      fetchNotifications();
+    }
+  }, [loadingUser]);
+
+  if (loading) {
+    return (
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
+          </div>
         </div>
-        
+      </div>
+    );
+  }
 
+  return (
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+            <Bell className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+              Notifications
+            </h1>
+            <p className="text-gray-500 dark:text-gray-300">
+              Stay updated with your latest activities and messages.
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[300px] animate-fade-in">
-          {loading ? (
-            <div className="flex justify-center items-center h-40">
-              <Loader className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc] animate-spin" />
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Notifications</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {notifications.length}
+              </p>
             </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-40 text-red-500">
-              <p className="text-lg font-semibold mb-2">Error loading notifications</p>
-              <p className="text-sm">{error}</p>
+            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </div>
-          ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-gray-400 dark:text-gray-500">
-              <Bell className="w-12 h-12 mb-2" />
-              <span>No notifications yet.</span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Unread</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {notifications.filter(n => !n.isRead).length}
+              </p>
             </div>
-          ) : (
-            <ul className="space-y-4">
-              {notifications.map((n, idx) => (
-                <li
-                  key={n._id}
-                  className={`
-                    flex items-start gap-4 rounded-xl px-5 py-4 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 cursor-pointer
-                    ${typeBg[n.type] || "bg-white dark:bg-gray-800"}
-                    hover:shadow-xl hover:scale-[1.01]
-                    ${n.isRead ? "opacity-70" : "opacity-100"}
-                    ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
-                  `}
-                  style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                  onClick={async () => {
-                    // Mark as read immediately when clicked, regardless of expansion
-                    if (!n.isRead) {
-                      // Update local state immediately for instant UI feedback
+            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+              <Bell className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Recent</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                {notifications.filter(n => {
+                  const created = new Date(n.createdAt);
+                  const now = new Date();
+                  const diffHours = (now - created) / (1000 * 60 * 60);
+                  return diffHours <= 24;
+                }).length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-16 text-red-500 dark:text-red-400">
+            <p className="text-lg font-semibold mb-2">Error loading notifications</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+              <Bell className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              No notifications yet
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              You'll see notifications here when you have new activities.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            {notifications.map((n, idx) => (
+              <div
+                key={n._id}
+                className={`p-6 transition-all duration-300 cursor-pointer animate-fade-in hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                  n.isRead ? "opacity-70" : "opacity-100"
+                }`}
+                style={{ animationDelay: `${idx * 100}ms` }}
+                onClick={async () => {
+                  if (!n.isRead) {
+                    setNotifications((prev) => prev.map(notification => 
+                      notification._id === n._id ? { ...notification, isRead: true } : notification
+                    ));
+                    const success = await markRead(n._id);
+                    if (!success) {
                       setNotifications((prev) => prev.map(notification => 
-                        notification._id === n._id ? { ...notification, isRead: true } : notification
+                        notification._id === n._id ? { ...notification, isRead: false } : notification
                       ));
-                      // Then update backend
-                      const success = await markRead(n._id);
-                      // If backend update failed, revert the state
-                      if (!success) {
-                        setNotifications((prev) => prev.map(notification => 
-                          notification._id === n._id ? { ...notification, isRead: false } : notification
-                        ));
-                      }
                     }
-                    setExpandedId(expandedId === n._id ? null : n._id);
-                    if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
-                  }}
-                >
-                  <div className="pt-1">{typeIcon[n.type] || <Info className="text-gray-400 dark:text-gray-500" />}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-semibold ${n.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-100'}`}>{n.title}</span>
+                  }
+                  setExpandedId(expandedId === n._id ? null : n._id);
+                  if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
+                }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    {typeIcon[n.type] || <Info className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className={`font-semibold text-lg ${n.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-100'}`}>
+                          {n.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mt-1">
+                          {n.message}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                          <Clock className="w-4 h-4" />
+                          {new Date(n.createdAt).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
-                    {/* Always show Send Credentials button for eligible bookings */}
-                    {n.title === 'New Booking!' && n.relatedId && (
+                    
+                    {/* Send Credentials Button */}
+                    {canSendCredentials(n) && (
                       <SendCredentialsButton 
                         bookingId={n.relatedId} 
                         onOpenModal={openCredModal}
                       />
                     )}
-                    {expandedId === n._id && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">{n.message}</div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                          {new Date(n.createdAt).toLocaleString()}
-                        </div>
-                      </>
-                    )}
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {/* Modal for sending credentials */}
+
+      {/* Credentials Modal */}
       {showCredModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">Send Credentials</h2>
-            {canSendNow() ? (
-              <form onSubmit={handleSendCredentials}>
-                <div className="mb-3">
-                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Username</label>
-                  <input type="text" name="username" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.username} onChange={handleCredChange} required />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+                Send Credentials
+              </h2>
+              
+              {canSendNow() ? (
+                <form onSubmit={handleSendCredentials} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={credValues.username}
+                      onChange={handleCredChange}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="text"
+                      name="password"
+                      value={credValues.password}
+                      onChange={handleCredChange}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Profile Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="profileName"
+                      value={credValues.profileName}
+                      onChange={handleCredChange}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Access Instructions (Optional)
+                    </label>
+                    <textarea
+                      name="accessInstructions"
+                      value={credValues.accessInstructions}
+                      onChange={handleCredChange}
+                      rows="3"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 resize-none"
+                    />
+                  </div>
+
+                  {credError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
+                      {credError}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="submit"
+                      disabled={credLoading}
+                      className="flex-1 bg-[#2bb6c4] text-white py-3 rounded-xl font-semibold hover:bg-[#1ea1b0] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    >
+                      {credLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Credentials'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCredModal(false)}
+                      className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-red-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    Time Expired
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">
+                    Credentials can only be sent within 15 minutes of booking creation.
+                  </p>
+                  <button
+                    onClick={() => setShowCredModal(false)}
+                    className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                  >
+                    Close
+                  </button>
                 </div>
-                <div className="mb-3">
-                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Password</label>
-                  <input type="text" name="password" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.password} onChange={handleCredChange} required />
-                </div>
-                <div className="mb-3">
-                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Profile Name</label>
-                  <input type="text" name="profileName" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.profileName} onChange={handleCredChange} />
-                </div>
-                <div className="mb-3">
-                  <label className="block mb-1 text-gray-700 dark:text-gray-300">Access Instructions</label>
-                  <textarea name="accessInstructions" className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]" value={credValues.accessInstructions} onChange={handleCredChange} rows={2} />
-                </div>
-                {credError && <div className="text-red-500 mb-2">{credError}</div>}
-                {credSuccess && <div className="text-green-500 mb-2">{credSuccess}</div>}
-                <div className="flex justify-between items-center mt-4">
-                  <button type="button" className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" onClick={() => setShowCredModal(false)} disabled={credLoading}>Cancel</button>
-                  <button type="submit" className="bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:text-gray-900 dark:hover:bg-[#2bb6c4] text-white px-4 py-2 rounded-lg transition-all duration-200" disabled={credLoading}>{credLoading ? 'Sending...' : 'Send'}</button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="text-red-500 text-center mb-4">This booking is no longer eligible for sending credentials (cancelled or more than 15 minutes old).</div>
-                <div className="flex justify-center mt-4">
-                  <button type="button" className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg transition-all duration-200" onClick={() => setShowCredModal(false)}>Close</button>
-                </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
-      
-      {/* Animations */}
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.7s ease both;
-        }
-        @keyframes slide-in-left {
-          from { opacity: 0; transform: translateX(-40px);}
-          to { opacity: 1; transform: translateX(0);}
-        }
-        .animate-slide-in-left {
-          animation: slide-in-left 0.7s cubic-bezier(.4,0,.2,1) both;
-        }
-        @keyframes slide-in-right {
-          from { opacity: 0; transform: translateX(40px);}
-          to { opacity: 1; transform: translateX(0);}
-        }
-        .animate-slide-in-right {
-          animation: slide-in-right 0.7s cubic-bezier(.4,0,.2,1) both;
-        }
-        @keyframes slide-in-down {
-          from { opacity: 0; transform: translateY(-40px);}
-          to { opacity: 1; transform: translateY(0);}
-        }
-        .animate-slide-in-down {
-          animation: slide-in-down 0.7s cubic-bezier(.4,0,.2,1) both;
-        }
-      `}</style>
     </div>
   );
 }

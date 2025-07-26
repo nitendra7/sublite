@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { BadgeIndianRupee, Clock, Info } from "lucide-react";
+import { BadgeIndianRupee, Clock, Info, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react";
 import { useUser } from '../context/UserContext';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
-// Your backend API base URL
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 export default function WalletPage() {
@@ -48,7 +47,6 @@ export default function WalletPage() {
   }, [fetchTransactions, userContextLoading]);
 
   const handleTopUp = async () => {
-
     const amount = parseFloat(topUpAmount);
     if (isNaN(amount) || amount <= 0) {
       alert("Please enter a valid amount.");
@@ -99,26 +97,24 @@ export default function WalletPage() {
               }),
             });
 
-            const verificationData = await verificationRes.json();
-
             if (verificationRes.ok) {
-              alert(verificationData.message);
-              // Refresh user data to get updated wallet balance
               await fetchUserProfile();
-              // Refresh transaction history
               await fetchTransactions();
               setTopUpAmount("");
+              alert("Payment successful! Your wallet has been topped up.");
             } else {
-              throw new Error(verificationData.message || "Payment verification failed.");
+              throw new Error("Payment verification failed.");
             }
-          } catch (err) {
-            alert(`An error occurred during payment verification: ${err.message}`);
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            alert("Payment verification failed. Please contact support.");
+          } finally {
+            setPaymentProcessing(false);
           }
         },
         prefill: {
           name: user?.name || "",
           email: user?.email || "",
-          contact: user?.phoneNumber || ""
         },
         theme: {
           color: "#2bb6c4"
@@ -127,145 +123,222 @@ export default function WalletPage() {
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-
-      rzp.on('payment.failed', function (response) {
-        alert(`Payment failed: ${response.error.description}`);
-      });
-
-    } catch (err) {
-      alert(`An error occurred: ${err.message}`);
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Failed to initiate payment. Please try again.");
     } finally {
       setPaymentProcessing(false);
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getTransactionIcon = (type) => {
+    switch (type) {
+      case 'credit':
+        return <ArrowDownLeft className="w-5 h-5 text-green-500" />;
+      case 'debit':
+        return <ArrowUpRight className="w-5 h-5 text-red-500" />;
+      default:
+        return <BadgeIndianRupee className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
   if (userContextLoading) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-            <div className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">Loading Wallet...</div>
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading wallet...</p>
+          </div>
         </div>
+      </div>
     );
   }
 
   if (userContextError) {
-      return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-              <div className="text-xl font-semibold text-red-500 dark:text-red-400">{userContextError}</div>
-          </div>
-      );
+    return (
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+        <div className="text-center text-red-500 dark:text-red-400">
+          <p>Error: {userContextError}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 relative overflow-hidden animate-fade-in
-                    bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100
-                    dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 flex items-center gap-2 drop-shadow animate-slide-in-down
-                       text-gray-800 dark:text-gray-100">
-          <BadgeIndianRupee className="w-7 h-7 text-[#2bb6c4] dark:text-[#5ed1dc]" /> Wallet
+    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          My Wallet
         </h1>
+        <p className="text-gray-500 dark:text-gray-300">
+          Manage your wallet balance and view transaction history.
+        </p>
+      </div>
 
-        <div className="rounded-xl shadow-lg p-6 mb-8 transition-transform duration-500 hover:scale-105 animate-fade-in
-                        bg-white dark:bg-gray-800 dark:border dark:border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">Current Balance</h2>
-          <p className="text-3xl font-bold tracking-wide text-[#2bb6c4] dark:text-[#5ed1dc]">₹{balance.toFixed(2)}</p>
+      {/* Wallet Balance Card */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+              Current Balance
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              Available funds in your wallet
+            </p>
+          </div>
+          <div className="w-16 h-16 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-2xl flex items-center justify-center">
+            <BadgeIndianRupee className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+          </div>
+        </div>
+        
+        <div className="text-center mb-8">
+          <p className="text-4xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-2">
+            ₹{balance.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Indian Rupees
+          </p>
         </div>
 
-        <div className="rounded-xl shadow-lg p-6 mb-8 transition-transform duration-500 hover:scale-105 animate-fade-in
-                        bg-white dark:bg-gray-800 dark:border dark:border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">Top-Up Wallet</h2>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <input
-              type="number"
-              placeholder="Enter amount"
-              value={topUpAmount}
-              onChange={(e) => setTopUpAmount(e.target.value)}
-              className="w-40 rounded border p-2 focus:ring-2 focus:ring-[#2bb6c4] outline-none transition-colors
-                         border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            />
+        {/* Top Up Section */}
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+            Add Money to Wallet
+          </h3>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="number"
+                placeholder="Enter amount (₹)"
+                value={topUpAmount}
+                onChange={(e) => setTopUpAmount(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
+                min="1"
+                step="0.01"
+              />
+            </div>
             <button
               onClick={handleTopUp}
-              disabled={paymentProcessing}
-              className="bg-[#2bb6c4] text-white px-6 py-2 rounded shadow transition-all duration-300 font-semibold
-                         hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]
-                         disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={paymentProcessing || !topUpAmount || parseFloat(topUpAmount) <= 0}
+              className="px-8 py-3 bg-[#2bb6c4] text-white rounded-xl font-semibold hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
-              {paymentProcessing ? "Processing..." : "Add Money"}
+              {paymentProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5" />
+                  Add Money
+                </>
+              )}
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-4 text-sm text-gray-500 dark:text-gray-400">
+            <Info className="w-4 h-4" />
+            <span>Secure payment powered by Razorpay</span>
+            <button
+              onClick={() => setShowRefundPolicy(true)}
+              className="text-[#2bb6c4] dark:text-[#5ed1dc] hover:underline"
+            >
+              View refund policy
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Quick Info */}
-        <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Need help? Check our{' '}
-          <button
-            onClick={() => setShowRefundPolicy(true)}
-            className="text-[#2bb6c4] hover:text-[#1ea1b0] underline font-medium"
-          >
-            Refund Policy
-          </button>
-          {' '}for booking information.
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 animate-fade-in
-                        dark:border dark:border-gray-700">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800 dark:text-gray-200">
-            <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" /> Transaction History
+      {/* Transaction History */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Transaction History
           </h2>
-          {loading ? (
-            <p className="text-gray-600 dark:text-gray-300">Loading transactions...</p>
-          ) : error ? (
-            <p className="text-red-500 dark:text-red-400">{error}</p>
-          ) : transactions.length > 0 ? (
-            <ul className="space-y-3">
-              {transactions.map((tx, idx) => (
-                <li
-                  key={tx._id}
-                  className={`
-                    flex justify-between items-center rounded-lg px-4 py-3 shadow-sm transition-all duration-500 hover:scale-105
-                    ${tx.type === 'credit'
-                      ? "bg-green-100 dark:bg-green-800/40 text-green-800 dark:text-green-200"
-                      : "bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200"}
-                    ${idx % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right"}
-                  `}
-                  style={{ animationDelay: `${idx * 100 + 200}ms` }}
-                >
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-gray-100">{tx.description}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <p
-                    className={`text-lg font-bold ${
-                      tx.type === 'credit' ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {tx.type === 'credit' ? `+₹${tx.amount.toFixed(2)}` : `-₹${Math.abs(tx.amount).toFixed(2)}`}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-600 dark:text-gray-400">No transactions found.</p>
-          )}
+          <Clock className="w-5 h-5 text-gray-400" />
         </div>
+        
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2bb6c4] mr-3" />
+            <span className="text-gray-600 dark:text-gray-400">Loading transactions...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 dark:text-red-400">{error}</p>
+          </div>
+        ) : transactions.length > 0 ? (
+          <div className="space-y-4">
+            {transactions.map((tx, idx) => (
+              <div
+                key={tx._id}
+                className={`flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-md animate-fade-in ${
+                  tx.type === 'credit'
+                    ? "bg-green-50 dark:bg-green-900/20"
+                    : "bg-red-50 dark:bg-red-900/20"
+                }`}
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center shadow-sm">
+                    {getTransactionIcon(tx.type)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">
+                      {tx.description}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(tx.createdAt)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold text-lg ${
+                    tx.type === 'credit' 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {tx.type === 'credit' ? '+' : '-'}₹{tx.amount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                    {tx.type}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BadgeIndianRupee className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              No transactions yet
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              Your transaction history will appear here once you make your first transaction.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Refund Policy Modal */}
-      <RefundPolicyModal 
-        isOpen={showRefundPolicy} 
-        onClose={() => setShowRefundPolicy(false)} 
+      <RefundPolicyModal
+        isOpen={showRefundPolicy}
+        onClose={() => setShowRefundPolicy(false)}
       />
-
-      <style>{`
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fade-in 0.7s ease both; }
-        @keyframes slide-in-left { from { opacity: 0; transform: translateX(-40px);} to { opacity: 1; transform: translateX(0);} }
-        .animate-slide-in-left { animation: slide-in-left 0.7s cubic-bezier(.4,0,.2,1) both; }
-        @keyframes slide-in-right { from { opacity: 0; transform: translateX(40px);} to { opacity: 1; transform: translateX(0);} }
-        .animate-slide-in-right { animation: slide-in-right 0.7s cubic-bezier(.4,0,.2,1) both; }
-        @keyframes slide-in-down { from { opacity: 0; transform: translateY(-40px);} to { opacity: 1; transform: translateY(0);} }
-        .animate-slide-in-down { animation: slide-in-down 0.7s cubic-bezier(.4,0,.2,1) both; }
-      `}</style>
     </div>
   );
 }

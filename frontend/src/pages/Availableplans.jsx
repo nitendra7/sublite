@@ -218,10 +218,10 @@ const Availableplans = () => {
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                    ₹{service.rentalPrice}
+                    ₹{((service.rentalPrice / 28) * 1.10).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    per day (user decides duration)
+                    per day (incl. commission)
                   </p>
                 </div>
                 
