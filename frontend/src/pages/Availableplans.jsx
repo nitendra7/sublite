@@ -18,10 +18,11 @@ const Availableplans = () => {
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [userBookings, setUserBookings] = useState([]); // State to hold user's bookings
 
-  // Fetch plans from the backend when the component mounts
+  // Fetch plans and user bookings from the backend when the component mounts
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchData = async () => {
       try {
         // Include auth header if user is logged in to exclude own services
         const headers = {};
@@ -29,39 +30,66 @@ const Availableplans = () => {
           headers['Authorization'] = `Bearer ${token}`;
         }
         
-        const res = await fetch(`${API_BASE}/api/services`, {
-          headers
-        });
-        const data = await res.json();
+        const [plansRes, bookingsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/services`, { headers }),
+          token ? fetch(`${API_BASE}/api/bookings/my-bookings`, { headers }) : Promise.resolve(null)
+        ]);
+
+        const plansData = await plansRes.json();
 
         // FIX: Check if the API response is an array before setting state
-        if (Array.isArray(data)) {
-          setPlans(data);
+        if (Array.isArray(plansData)) {
+          setPlans(plansData);
         } else {
-          // If the API sends an object like { services: [...] }, you could handle it here:
-          // else if (data && Array.isArray(data.services)) {
-          //   setPlans(data.services);
-          // }
-          console.error("API did not return an array of plans:", data);
+          console.error("API did not return an array of plans:", plansData);
           setPlans([]); // Default to an empty array to prevent the app from crashing
         }
 
+        // Fetch user bookings if logged in
+        if (token && bookingsRes) {
+          const bookingsData = await bookingsRes.json();
+          setUserBookings(bookingsData);
+        }
+
       } catch (error) {
-        console.error("Failed to fetch plans:", error);
+        console.error("Failed to fetch data:", error);
         setPlans([]); // Also default to an empty array on error
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlans();
+    fetchData();
   }, [token]);
 
   // Function to open booking modal
-  const handleBookService = (service) => {
+  const handleBookService = async (service) => {
     if (!token) {
       alert('Please login to book a service.');
       return;
+    }
+    
+    // Check if user has already booked this service
+    try {
+      const response = await fetch(`${API_BASE}/api/bookings/my-bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const userBookings = await response.json();
+        const existingBooking = userBookings.find(booking => 
+          booking.serviceId === service._id && 
+          ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
+        );
+        
+        if (existingBooking) {
+          alert('You have already booked this service. You cannot book the same service twice.');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing bookings:', error);
+      // Continue with booking modal even if check fails
     }
     
     setSelectedService(service);
@@ -157,17 +185,38 @@ const Availableplans = () => {
                     <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">₹{service.rentalPrice}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">per month (user decides duration)</p>
                   </div>
-                  <button
-                    onClick={() => handleBookService(service)}
-                    disabled={service.availableSlots <= 0}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-colors shadow ${
-                      service.availableSlots > 0 
-                        ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
-                        : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                    }`}
-                  >
-                    {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
-                  </button>
+                  {(() => {
+                    // Check if user has already booked this service
+                    const existingBooking = userBookings.find(booking => 
+                      booking.serviceId === service._id && 
+                      ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
+                    );
+
+                    if (existingBooking) {
+                      return (
+                        <button
+                          disabled
+                          className="px-6 py-2 rounded-lg font-semibold bg-green-600 text-white cursor-not-allowed"
+                        >
+                          Already Booked
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        onClick={() => handleBookService(service)}
+                        disabled={service.availableSlots <= 0}
+                        className={`px-6 py-2 rounded-lg font-semibold transition-colors shadow ${
+                          service.availableSlots > 0 
+                            ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4]'
+                            : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             ))

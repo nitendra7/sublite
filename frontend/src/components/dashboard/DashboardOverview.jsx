@@ -97,7 +97,7 @@ const DashboardOverview = () => {
           : [];
         
         // Process data
-        const activeBookings = bookings.filter(b => b.bookingStatus === 'active' || b.bookingStatus === 'confirmed');
+        const activeBookings = bookings.filter(b => b.bookingStatus === 'active' || b.bookingStatus === 'confirmed' || b.bookingStatus === 'pending');
         const ownedServices = bookings.filter(b => b.providerId === user._id);
         const borrowedServices = bookings.filter(b => b.clientId === user._id && b.providerId !== user._id);
         

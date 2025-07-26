@@ -304,7 +304,7 @@ export default function NotificationsPage() {
                     {n.title === 'New Booking!' && n.relatedId && (
                                               <button
                           className={`mt-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 
-                            ${credBookingStatus === 'confirmed' && credBookingCreatedAt && (() => {
+                            ${credBookingStatus === 'pending' && credBookingCreatedAt && (() => {
                               const created = new Date(credBookingCreatedAt);
                               const now = new Date();
                               const diffMinutes = (now - created) / (1000 * 60);
@@ -314,7 +314,7 @@ export default function NotificationsPage() {
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
                           }`}
                         onClick={() => {
-                          if (credBookingStatus === 'confirmed' && credBookingCreatedAt) {
+                          if (credBookingStatus === 'pending' && credBookingCreatedAt) {
                             const created = new Date(credBookingCreatedAt);
                             const now = new Date();
                             const diffMinutes = (now - created) / (1000 * 60);
