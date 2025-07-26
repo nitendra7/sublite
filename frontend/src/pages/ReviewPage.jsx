@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+import { apiFetch, API_BASE } from '../utils/api';
 
 const ReviewPage = () => {
   const { user, token } = useUser();
@@ -19,67 +18,60 @@ const ReviewPage = () => {
   const [selectedBookingToReview, setSelectedBookingToReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch all reviews
-  const fetchReviews = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/reviews`);
-      if (!res.ok) throw new Error('Failed to fetch reviews');
-      const data = await res.json();
-      setReviews(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Fetch reviewable bookings for current user
-  const fetchReviewableBookings = async () => {
-    if (!token) return;
-    
-    try {
-      const res = await fetch(`${API_BASE}/api/reviews/my/reviewable-bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Failed to fetch reviewable bookings');
-      const data = await res.json();
-      setReviewableBookings(data);
-    } catch (err) {
-      console.error('Error fetching reviewable bookings:', err);
-    }
-  };
-
-  // Initial data loading
+  // Fetch reviews and reviewable bookings
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    
-    const loadData = async () => {
-      await Promise.all([
-        fetchReviews(),
-        fetchReviewableBookings()
-      ]);
-      setLoading(false);
+    const fetchData = async () => {
+      if (!token) {
+        setError('Please log in to view reviews');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch user's reviews
+        const reviewsResponse = await apiFetch(`${API_BASE}/api/reviews/my/reviews`);
+        if (!reviewsResponse.ok) {
+          throw new Error('Failed to fetch reviews');
+        }
+        const reviewsData = await reviewsResponse.json();
+
+        // Fetch reviewable bookings (completed bookings that haven't been reviewed)
+        const bookingsResponse = await apiFetch(`${API_BASE}/api/reviews/my/reviewable-bookings`);
+        if (!bookingsResponse.ok) {
+          throw new Error('Failed to fetch reviewable bookings');
+        }
+        const bookingsData = await bookingsResponse.json();
+
+        setReviews(reviewsData);
+        setReviewableBookings(bookingsData);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    loadData();
+    fetchData();
   }, [token]);
 
   // Handler for marking a review as helpful
   const handleHelpful = async (reviewId) => {
-    if (!token) return;
-    
     try {
-      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}/helpful`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await apiFetch(`${API_BASE}/api/reviews/${reviewId}/helpful`, {
+        method: 'PATCH'
       });
-      
-      if (res.ok) {
-        const data = await res.json();
-    setReviews(prevReviews =>
-      prevReviews.map(review =>
-            review._id === reviewId ? { ...review, helpfulCount: data.helpfulCount } : review
-      )
-    );
+
+      if (response.ok) {
+        const { helpfulCount } = await response.json();
+        setReviews(prevReviews =>
+          prevReviews.map(review =>
+            review._id === reviewId ? { ...review, helpfulCount } : review
+          )
+        );
       }
     } catch (err) {
       console.error('Error marking review as helpful:', err);
@@ -108,93 +100,96 @@ const ReviewPage = () => {
 
   const handleSaveReview = async (reviewData) => {
     if (!token) {
-      alert('Please log in to submit a review');
+      setError('Please log in to submit a review');
       return;
     }
 
     setSubmitting(true);
+
     try {
-      let res;
-      
-    if (modalType === 'add') {
-        const selectedBooking = reviewableBookings.find(booking => booking._id === selectedBookingToReview);
-        if (!selectedBooking) {
-          alert("Please select a booking to review.");
-        return;
+      if (modalType === 'add') {
+        if (!selectedBookingToReview) {
+          setError("Please select a service to review.");
+          setSubmitting(false);
+          return;
         }
 
-        res = await fetch(`${API_BASE}/api/reviews`, {
+        const response = await apiFetch(`${API_BASE}/api/reviews`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
           body: JSON.stringify({
             bookingId: selectedBookingToReview,
-            ...reviewData
+            rating: reviewData.rating,
+            comment: reviewData.comment,
+            serviceQuality: reviewData.serviceQuality,
+            responseTime: reviewData.responseTime,
+            overallExperience: reviewData.overallExperience,
           })
         });
-      } else {
-        res = await fetch(`${API_BASE}/api/reviews/${currentReview._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(reviewData)
-        });
-      }
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to save review');
-      }
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create review');
+        }
 
-      const savedReview = await res.json();
-      
-      if (modalType === 'add') {
-        setReviews(prevReviews => [savedReview, ...prevReviews]);
-        // Remove the booking from reviewable list
+        const newReview = await response.json();
+        setReviews(prevReviews => [newReview, ...prevReviews]);
+        
+        // Remove the booking from reviewable bookings since it's now reviewed
         setReviewableBookings(prev => prev.filter(booking => booking._id !== selectedBookingToReview));
-      } else {
-      setReviews(prevReviews =>
-        prevReviews.map(review =>
-            review._id === currentReview._id ? savedReview : review
-        )
-      );
-    }
 
-    closeReviewModal();
-      alert(modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!');
+      } else if (modalType === 'edit' && currentReview) {
+        const response = await apiFetch(`${API_BASE}/api/reviews/${currentReview._id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            rating: reviewData.rating,
+            comment: reviewData.comment,
+            serviceQuality: reviewData.serviceQuality,
+            responseTime: reviewData.responseTime,
+            overallExperience: reviewData.overallExperience,
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update review');
+        }
+
+        const updatedReview = await response.json();
+        setReviews(prevReviews =>
+          prevReviews.map(review =>
+            review._id === currentReview._id ? updatedReview : review
+          )
+        );
+      }
+
+      closeReviewModal();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      console.error('Error saving review:', err);
+      setError(err.message || 'Failed to save review');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!token) return;
-    
     if (!window.confirm("Are you sure you want to delete this review?")) {
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await apiFetch(`${API_BASE}/api/reviews/${reviewId}`, {
+        method: 'DELETE'
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (response.ok) {
+        setReviews(prevReviews => prevReviews.filter(review => review._id !== reviewId));
+      } else {
+        const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete review');
       }
-
-      setReviews(prevReviews => prevReviews.filter(review => review._id !== reviewId));
-      alert('Review deleted successfully!');
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      console.error('Error deleting review:', err);
+      setError(err.message || 'Failed to delete review');
     }
   };
 
@@ -245,7 +240,7 @@ const ReviewPage = () => {
               {/* Review Header: Service Name and Rating */}
               <div className="mb-4">
                 <h3 className="text-xl font-semibold text-[#2bb6c4] dark:text-[#5ed1dc] mb-2">
-                  {review.serviceId?.serviceName || 'Unknown Service'}
+                  {review.serviceId?.serviceName || 'Service'}
                 </h3>
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -275,12 +270,8 @@ const ReviewPage = () => {
 
               {/* Reviewer and Provider Info */}
               <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                <p>Reviewed by: <span className="font-medium text-gray-800 dark:text-gray-200">
-                  {review.clientId?.name || 'Unknown User'}
-                </span></p>
-                <p>Provider: <span className="font-medium text-gray-800 dark:text-gray-200">
-                  {review.providerId?.name || 'Unknown Provider'}
-                </span></p>
+                <p>Reviewed by: <span className="font-medium text-gray-800 dark:text-gray-200">{review.clientId?.name || 'User'}</span></p>
+                <p>Provider: <span className="font-medium text-gray-800 dark:text-gray-200">{review.providerId?.name || 'Provider'}</span></p>
               </div>
 
               {/* Verified and Helpful Count */}
@@ -334,6 +325,13 @@ const ReviewPage = () => {
             <h2 className="text-2xl font-bold mb-4 text-[#2bb6c4] dark:text-[#5ed1dc]">
               {modalType === 'add' ? 'Add New Review' : 'Edit Review'}
             </h2>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-800 dark:text-red-100">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target);
@@ -349,7 +347,7 @@ const ReviewPage = () => {
               {/* Dropdown to select a completed booking to review */}
               {modalType === 'add' && (
                 <div className="mb-4">
-                  <label htmlFor="bookingToReview" className="block text-sm font-medium mb-1">Select Booking to Review</label>
+                  <label htmlFor="bookingToReview" className="block text-sm font-medium mb-1">Select Service to Review</label>
                   <select
                     id="bookingToReview"
                     name="bookingToReview"
@@ -358,7 +356,7 @@ const ReviewPage = () => {
                     className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                     required
                   >
-                    <option value="">-- Select a completed booking --</option>
+                    <option value="">-- Select a completed service --</option>
                     {reviewableBookings.map(booking => (
                       <option key={booking._id} value={booking._id}>
                         {booking.serviceId?.serviceName} (by {booking.providerId?.name})
@@ -368,7 +366,7 @@ const ReviewPage = () => {
                 </div>
               )}
 
-              {/* Service Name (Read-only for edit, derived from selection for add) */}
+              {/* Service Name (Read-only for edit) */}
               {modalType === 'edit' && (
                 <div className="mb-4">
                   <label htmlFor="serviceName" className="block text-sm font-medium mb-1">Service Name</label>
@@ -471,6 +469,7 @@ const ReviewPage = () => {
                 </button>
               </div>
             </form>
+            
             {/* Close button for modal */}
             <button
               onClick={closeReviewModal}

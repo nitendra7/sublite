@@ -36,6 +36,8 @@ bookingSchema.index({ clientId: 1 });
 bookingSchema.index({ providerId: 1 });
 bookingSchema.index({ serviceId: 1 });
 bookingSchema.index({ bookingStatus: 1 });
+bookingSchema.index({ clientId: 1, serviceId: 1, bookingStatus: 1 }); // Compound index for duplicate booking checks
+bookingSchema.index({ completedAt: 1 }); // Index for recent completed bookings check
 
 const Booking = mongoose.model("Booking", bookingSchema);
 module.exports = Booking;

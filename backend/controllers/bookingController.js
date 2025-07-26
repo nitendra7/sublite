@@ -24,6 +24,33 @@ const createBooking = async (req, res) => {
     if (service.providerId._id.equals(clientId)) return res.status(400).json({ message: 'You cannot book your own service.' });
     if (service.availableSlots <= 0) return res.status(400).json({ message: 'No available slots for this service.' });
     
+    // Check if user has already booked this service
+    const existingBooking = await Booking.findOne({
+      clientId: clientId,
+      serviceId: serviceId,
+      bookingStatus: { $in: ['pending', 'confirmed', 'active'] } // Check for active bookings only
+    });
+    
+    if (existingBooking) {
+      return res.status(400).json({ 
+        message: 'You have already booked this service. You cannot book the same service twice.' 
+      });
+    }
+    
+    // Check for recently completed bookings (within last 24 hours) to prevent immediate re-booking
+    const recentCompletedBooking = await Booking.findOne({
+      clientId: clientId,
+      serviceId: serviceId,
+      bookingStatus: 'completed',
+      completedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+    });
+    
+    if (recentCompletedBooking) {
+      return res.status(400).json({ 
+        message: 'You recently completed this service. Please wait 24 hours before booking again.' 
+      });
+    }
+    
     // Calculate total cost based on rental duration (daily rate)
     const dailyRate = service.rentalPrice / 30; // Assuming rentalPrice is monthly, convert to daily
     totalCost = Math.ceil(dailyRate * rentalDuration);
