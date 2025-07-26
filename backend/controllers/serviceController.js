@@ -143,20 +143,44 @@ const updateService = async (req, res) => {
  */
 const deleteService = async (req, res) => {
     try {
+        console.log('Delete service request:', {
+            serviceId: req.params.id,
+            userId: req.user._id,
+            userType: typeof req.user._id
+        });
+
         const service = await Service.findById(req.params.id);
 
         if (!service) {
             return res.status(404).json({ message: 'Service not found' });
         }
 
-        if (service.providerId.toString() !== req.user._id) { // Uses req.user._id
-            return res.status(403).json({ message: 'User not authorized to delete this service' });
+        console.log('Service found:', {
+            serviceId: service._id,
+            providerId: service.providerId,
+            providerIdType: typeof service.providerId,
+            userId: req.user._id,
+            userIdType: typeof req.user._id,
+            isEqual: service.providerId.toString() === req.user._id.toString()
+        });
+
+        // Compare as strings to avoid ObjectId comparison issues
+        if (service.providerId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ 
+                message: 'User not authorized to delete this service',
+                debug: {
+                    serviceProviderId: service.providerId.toString(),
+                    userId: req.user._id.toString(),
+                    isEqual: service.providerId.toString() === req.user._id.toString()
+                }
+            });
         }
 
         await service.deleteOne();
 
         res.status(200).json({ message: 'Service removed successfully' });
     } catch (error) {
+        console.error('Error in deleteService:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
