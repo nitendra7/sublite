@@ -128,7 +128,7 @@ const updateService = async (req, res) => {
         if (!service) {
             return res.status(404).json({ message: 'Service not found.' });
         }
-        if (service.providerId.toString() !== req.user._id) { // Uses req.user._id
+        if (service.providerId.toString() !== req.user._id.toString()) { // Uses req.user._id
             return res.status(403).json({ message: 'You are not authorized to update this service.' });
         }
         const updatedService = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });

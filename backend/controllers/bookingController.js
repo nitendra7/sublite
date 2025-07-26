@@ -156,7 +156,8 @@ const sendMessageToBooking = async (req, res) => {
     try {
         const booking = await Booking.findById(bookingId).populate('serviceId');
         if (!booking) return res.status(404).json({ message: 'Booking not found.' });
-        if (booking.providerId.toString() !== providerId) return res.status(403).json({ message: 'Not authorized.' });
+
+        if (booking.providerId.toString() !== providerId.toString()) return res.status(403).json({ message: 'Not authorized.' });
         if (booking.bookingStatus !== 'pending') return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
 
         clearCancellationTimer(bookingId.toString());
