@@ -13,7 +13,7 @@ const Header = () => {
       <Link to="/" className="flex items-center gap-3 group">
         <div className="relative">
           <img
-            src="/logo4.png"
+            src="/logo.png"
             alt="Sublite Logo"
             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-200"
           />
