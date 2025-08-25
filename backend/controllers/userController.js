@@ -54,7 +54,10 @@ exports.updateMe = async (req, res) => {
     }
 
     if (providerSettings) {
+      // Ensure user.providerSettings and user.providerSettings.activeHours exist
+      if (!user.providerSettings) user.providerSettings = {};
       if (providerSettings.activeHours) {
+        if (!user.providerSettings.activeHours) user.providerSettings.activeHours = {};
         user.providerSettings.activeHours.start = providerSettings.activeHours.start || user.providerSettings.activeHours.start;
         user.providerSettings.activeHours.end = providerSettings.activeHours.end || user.providerSettings.activeHours.end;
       }
