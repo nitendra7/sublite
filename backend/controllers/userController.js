@@ -1,8 +1,7 @@
+
 const { User } = require('../models/user');
 const RefreshToken = require('../models/refreshtoken');
 const bcrypt = require('bcryptjs');
-
-// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
 /**
  * @desc    Get current authenticated user's profile
@@ -19,14 +18,9 @@ exports.getMe = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update current authenticated user's profile
- */
 exports.updateMe = async (req, res) => {
   try {
     const userId = req.user._id;
-    // Support both JSON and multipart/form-data
-    // req.body is always defined, but fields may be missing
     const name = req.body.name;
     const phone = req.body.phone;
     const password = req.body.password;
@@ -42,38 +36,26 @@ exports.updateMe = async (req, res) => {
     }
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found.' });
 
     if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
-
-    if (password) {
-      user.password = await bcrypt.hash(password, 12);
-    }
+    if (password) user.password = await bcrypt.hash(password, 12);
 
     if (providerSettings) {
-      // Ensure user.providerSettings and user.providerSettings.activeHours exist
-      if (!user.providerSettings) user.providerSettings = {};
+      if (!user.providerSettings || typeof user.providerSettings !== 'object') user.providerSettings = {};
       if (providerSettings.activeHours) {
-        if (!user.providerSettings.activeHours) user.providerSettings.activeHours = {};
-        user.providerSettings.activeHours.start = providerSettings.activeHours.start || user.providerSettings.activeHours.start;
-        user.providerSettings.activeHours.end = providerSettings.activeHours.end || user.providerSettings.activeHours.end;
+        if (!user.providerSettings.activeHours || typeof user.providerSettings.activeHours !== 'object') user.providerSettings.activeHours = {};
+        if ('start' in providerSettings.activeHours) user.providerSettings.activeHours.start = providerSettings.activeHours.start;
+        if ('end' in providerSettings.activeHours) user.providerSettings.activeHours.end = providerSettings.activeHours.end;
       }
-      if (providerSettings.timezone) {
-        user.providerSettings.timezone = providerSettings.timezone;
-      }
+      if ('timezone' in providerSettings) user.providerSettings.timezone = providerSettings.timezone;
       user.providerSettingsCompleted = true;
     }
-
-    // If you want to handle file uploads (e.g., profile picture), add logic here
-    // Example: if (req.file) { user.avatar = req.file.path; }
 
     const updatedUser = await user.save();
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
-
     res.json(userResponse);
   } catch (err) {
     res.status(500).json({ message: 'Server error while updating profile.', error: err.message });
