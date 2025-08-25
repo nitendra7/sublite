@@ -24,16 +24,30 @@ exports.getMe = async (req, res) => {
  */
 exports.updateMe = async (req, res) => {
   try {
-    const userId = req.user._id; // Uses req.user._id
-    const { name, phone, password, providerSettings } = req.body;
+    const userId = req.user._id;
+    // Support both JSON and multipart/form-data
+    // req.body is always defined, but fields may be missing
+    const name = req.body.name;
+    const phone = req.body.phone;
+    const password = req.body.password;
+    let providerSettings;
+    if (req.body.providerSettings) {
+      try {
+        providerSettings = typeof req.body.providerSettings === 'string'
+          ? JSON.parse(req.body.providerSettings)
+          : req.body.providerSettings;
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid providerSettings format. Must be valid JSON.' });
+      }
+    }
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    if (name) user.name = name;
-    if (phone) user.phone = phone;
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
 
     if (password) {
       user.password = await bcrypt.hash(password, 12);
@@ -49,6 +63,9 @@ exports.updateMe = async (req, res) => {
       }
       user.providerSettingsCompleted = true;
     }
+
+    // If you want to handle file uploads (e.g., profile picture), add logic here
+    // Example: if (req.file) { user.avatar = req.file.path; }
 
     const updatedUser = await user.save();
     const userResponse = updatedUser.toObject();
