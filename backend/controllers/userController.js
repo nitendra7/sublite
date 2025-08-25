@@ -34,14 +34,11 @@ exports.updateMe = async (req, res) => {
         return res.status(400).json({ message: 'Invalid providerSettings format. Must be valid JSON.' });
       }
     }
-
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found.' });
-
     if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
     if (password) user.password = await bcrypt.hash(password, 12);
-
     if (providerSettings) {
       if (!user.providerSettings || typeof user.providerSettings !== 'object') user.providerSettings = {};
       if (providerSettings.activeHours) {
@@ -52,12 +49,18 @@ exports.updateMe = async (req, res) => {
       if ('timezone' in providerSettings) user.providerSettings.timezone = providerSettings.timezone;
       user.providerSettingsCompleted = true;
     }
-
+    // Save profile picture if uploaded
+    if (req.file && req.file.path) {
+      user.profilePicture = req.file.path;
+    } else if (req.file && req.file.filename) {
+      user.profilePicture = req.file.filename;
+    }
     const updatedUser = await user.save();
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
     res.json(userResponse);
   } catch (err) {
+    console.error('Profile update error:', err);
     res.status(500).json({ message: 'Server error while updating profile.', error: err.message });
   }
 };

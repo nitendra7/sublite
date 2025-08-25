@@ -13,8 +13,9 @@ const router = express.Router();
 // Now 'auth' correctly refers to the middleware function
 router.get('/me', auth, userController.getMe);
 
-// Update the currently logged-in user's profile
-router.put('/me', auth, userController.updateMe);
+const upload = require('../middleware/upload');
+// Update the currently logged-in user's profile (with profile picture upload support)
+router.put('/me', auth, upload, userController.updateMe);
 
 // Deactivate the currently logged-in user's account
 router.delete('/me', auth, userController.deactivateMe);
