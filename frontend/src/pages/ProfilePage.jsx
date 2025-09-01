@@ -3,7 +3,13 @@ import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Loader2 } from 'lucide-react';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+// Debug logging
+console.log('Environment variables:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  API_BASE: API_BASE
+});
 
 export default function ProfilePage() {
   const { user, loading, error, updateUserContext } = useUser();
@@ -116,30 +122,40 @@ export default function ProfilePage() {
     setLocalError(null);
     setSaveSuccess(false);
 
-    try {
-      const formData = new FormData();
-      Object.keys(profile).forEach(key => {
-        if (key === 'profilePicture' && profile[key] instanceof File) {
-          formData.append(key, profile[key]);
-        } else if (key === 'profilePicture' && typeof profile[key] === 'string') {
-          // Don't append if it's already a URL
-        } else if (typeof profile[key] === 'object') {
-          formData.append(key, JSON.stringify(profile[key]));
-        } else if (profile[key] !== undefined && profile[key] !== null) {
-          formData.append(key, profile[key]);
-        }
-      });
+    // Validate token
+    if (!token) {
+      setLocalError('No authentication token found. Please log in again.');
+      setSaving(false);
+      return;
+    }
 
-      const res = await fetch(`${API_BASE}/api/users/profile`, {
+    try {
+      // Prepare FormData for multipart/form-data
+      const formData = new FormData();
+      // Add text fields
+      formData.append('name', profile.name || '');
+      formData.append('username', profile.username || '');
+      formData.append('phone', profile.phone || '');
+      if (profile.password) formData.append('password', profile.password);
+      // If you have providerSettings, send as JSON string (not used in this UI, but backend expects it as JSON string)
+      // formData.append('providerSettings', JSON.stringify(...));
+      // Add profile picture if changed
+      if (profile.profilePicture instanceof File) {
+        formData.append('profilePicture', profile.profilePicture);
+      }
+
+      const res = await fetch(`${API_BASE}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
+          // Do NOT set Content-Type; browser will set it to multipart/form-data with boundary
         },
         body: formData
       });
 
       if (!res.ok) {
-        throw new Error('Failed to update profile');
+        const errorText = await res.text();
+        throw new Error(`Failed to update profile: ${res.status} ${res.statusText}\n${errorText}`);
       }
 
       const data = await res.json();
@@ -364,6 +380,7 @@ export default function ProfilePage() {
                 Profile updated successfully!
               </div>
             )}
+            {/* No warning needed; profile picture changes are now supported */}
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">

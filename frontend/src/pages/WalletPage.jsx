@@ -3,7 +3,7 @@ import { BadgeIndianRupee, Clock, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } f
 import { useUser } from '../context/UserContext';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 export default function WalletPage() {
   const { user, token, fetchUserProfile, loading: userContextLoading, error: userContextError } = useUser();
@@ -76,7 +76,7 @@ export default function WalletPage() {
       const orderData = await orderRes.json();
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_here',
         amount: orderData.amount,
         currency: orderData.currency,
         name: "SubLite Wallet Top-Up",

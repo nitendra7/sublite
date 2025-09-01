@@ -1,24 +1,24 @@
 // App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { UserProvider, useUser } from './context/UserContext';
-import { useTheme } from './context/ThemeContext';
+import { UserProvider, useUser } from './context/UserContext.jsx';
+import { useTheme } from './context/ThemeContext.jsx';
 
 // Page components
-import HomePage from './pages/HomePage';
-import AuthPage from './pages/AuthPages';
-import Dashboard from './pages/Dashboard';
-import Availableplans from './pages/Availableplans';
-import SubscriptionsPage from './pages/SubscriptionsPage';
-import WalletPage from './pages/WalletPage';
-import ProfilePage from './pages/ProfilePage';
-import ReviewPage from './pages/ReviewPage';
-import NotificationsPage from './pages/NotificationsPage';
-import AddServicePage from './pages/AddServicePage';
-import EditServicePage from './pages/EditServicePage';
-import HelpPage from './pages/HelpPage';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/AdminDashboard';
+import HomePage from './pages/HomePage.jsx';
+import AuthPage from './pages/AuthPages.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Availableplans from './pages/Availableplans.jsx';
+import SubscriptionsPage from './pages/SubscriptionsPage.jsx';
+import WalletPage from './pages/WalletPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import ReviewPage from './pages/ReviewPage.jsx';
+import NotificationsPage from './pages/NotificationsPage.jsx';
+import AddServicePage from './pages/AddServicePage.jsx';
+import EditServicePage from './pages/EditServicePage.jsx';
+import HelpPage from './pages/HelpPage.jsx';
+import AdminLayout from './components/admin/AdminLayout.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 
 // PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.

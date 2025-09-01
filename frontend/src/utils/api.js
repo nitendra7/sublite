@@ -1,5 +1,5 @@
 // API utility with automatic token refresh
-export const API_BASE = process.env.REACT_APP_API_BASE_URL;
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // Function to get fresh token using refresh token
 const refreshAccessToken = async () => {

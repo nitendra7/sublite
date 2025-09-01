@@ -3,7 +3,7 @@ import { Bell, CheckCircle, Info, Gift, Loader2, MessageSquare, Clock } from "lu
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   const [bookingStatus, setBookingStatus] = useState(null);

@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
 
 // Assuming API_BASE is correctly set in your environment variables
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 export default function AuthPage({ isLogin = true }) {
   const navigate = useNavigate();

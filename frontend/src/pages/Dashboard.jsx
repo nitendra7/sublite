@@ -88,7 +88,7 @@ function Dashboard() {
         const token = localStorage.getItem('token');
         if (!token) return;
         
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/notifications`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/notifications`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

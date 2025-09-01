@@ -3,7 +3,7 @@ import { Users, Star, LayoutGrid, List, Search, Loader2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import BookingModal from '../components/modals/BookingModal';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const Availableplans = () => {
   const { token } = useUser();

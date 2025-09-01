@@ -31,7 +31,7 @@ export const UserProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  const API_BASE = process.env.REACT_APP_API_BASE_URL;
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
   // Clears all authentication-related data from localStorage and context.
   const clearAuthData = useCallback(() => {

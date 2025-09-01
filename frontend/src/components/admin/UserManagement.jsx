@@ -12,7 +12,7 @@ const UserManagement = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/users`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/admin/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch users');
@@ -30,7 +30,7 @@ const UserManagement = () => {
   const handleDelete = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}`, {
+              const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -47,7 +47,7 @@ const UserManagement = () => {
     const action = currentIsAdmin ? 'remove admin rights from' : 'make admin';
     if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/${userId}/role`, {
+              const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/users/${userId}/role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
