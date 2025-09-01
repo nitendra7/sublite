@@ -20,6 +20,7 @@ const supportTicketRoutes = require('./routes/supportTicket');
 const categoryRoutes = require('./routes/category');
 const settingRoutes = require('./routes/setting');
 const walletTransactionRoutes = require('./routes/walletTransaction');
+const adminRoutes = require('./routes/admin');
 
 
 const app = express();
@@ -51,7 +52,7 @@ app.use('/api/support-tickets', supportTicketRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/wallettransactions', walletTransactionRoutes);
-
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 
