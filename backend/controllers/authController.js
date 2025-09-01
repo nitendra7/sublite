@@ -1,3 +1,4 @@
+
 // controllers/authController.js
 
 const { User, PendingUser } = require('../models/user');
