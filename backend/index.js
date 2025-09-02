@@ -45,9 +45,7 @@ const app = express();
 // Core Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000',
-      'http://localhost:3001',
-      'https://sublite.vercel.app')
+    const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://sublite.vercel.app')
       .split(',')
       .map(s => s.trim());
     // Allow requests with no origin (like mobile apps or curl) or if origin is in whitelist
@@ -58,6 +56,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// CORS preflight handler -- place immediately after above CORS middleware
+app.options('*', cors());
 
 // Prefer JSON body limit config in future (see other todos)
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '1mb' }));
