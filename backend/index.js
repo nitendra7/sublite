@@ -41,6 +41,10 @@ const adminRoutes = require('./routes/admin');
 
 
 const app = express();
+// --- Debug: Print all environment variables on server startup ---
+if (process.env.NODE_ENV !== 'production') {
+  console.log('[DEBUG] ENV VARIABLES:', JSON.stringify(process.env, null, 2));
+}
 
 // Core Middleware
 app.use(cors({
