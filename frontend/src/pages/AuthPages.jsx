@@ -3,7 +3,6 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
-import { useNavigate } from 'react-router-dom';
 
 // Assuming API_BASE is correctly set in your environment variables
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
