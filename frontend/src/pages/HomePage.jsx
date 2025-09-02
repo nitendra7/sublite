@@ -1,4 +1,3 @@
-// (same imports as before)
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/ui/Header";
@@ -8,18 +7,17 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 
-// Updated AppIcon with AI Tools
 const AppIcon = ({ name, size = 48 }) => {
   const iconPaths = {
-    Netflix: "/netflix.svg",
-    Spotify: "/spotify.svg",
-    GamePass: "/xbox.svg",
-    "Prime Video": "/primevideo.svg",
-    "JioHotstar": "/hotstar.svg",
-    "YouTube Premium": "/yt.svg",
-    "OpenAI": "/chatgpt.svg",
-    "GitHub Copilot": "/copilot.svg",
-    "Adobe CC": "/adobe.svg",
+    Netflix: "/icons/netflix.svg",
+    Spotify: "/icons/spotify.svg",
+    GamePass: "/icons/xbox.svg",
+    "Prime Video": "/icons/primevideo.svg",
+    "JioHotstar": "/icons/hotstar.svg",
+    "YouTube Premium": "/icons/yt.svg",
+    "OpenAI": "/icons/chatgpt.svg",
+    "GitHub Copilot": "/icons/copilot.svg",
+    "Adobe CC": "/icons/adobe.svg",
   };
 
   const iconSrc = iconPaths[name];
@@ -42,7 +40,7 @@ const AppIcon = ({ name, size = 48 }) => {
   );
 };
 
-// Updated services array with AI Tools
+
 const services = [
   { name: "Netflix", price: "₹80", duration: "3 days", color: "#E50914", savings: "Save ₹119" },
   { name: "Spotify", price: "₹40", duration: "1 week", color: "#1DB954", savings: "Save ₹89" },

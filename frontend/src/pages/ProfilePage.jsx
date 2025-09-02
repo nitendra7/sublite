@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Loader2 } from 'lucide-react';
+import OtpModal from "../components/ui/OtpModal";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -16,6 +17,11 @@ export default function ProfilePage() {
   const { darkMode } = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [changePasswordMode, setChangePasswordMode] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     username: '',
@@ -110,10 +116,35 @@ export default function ProfilePage() {
     if (isEditing) {
       setProfile(initialProfile);
       setImagePreview(initialProfile?.profilePicture || null);
+      setOtpVerified(false);
+      setChangePasswordMode(false);
     }
     setIsEditing(!isEditing);
     setLocalError(null);
     setSaveSuccess(false);
+  };
+
+  // Show OTP modal before allowing password edit
+  const handleOtpVerify = async otp => {
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify-profile-change-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ otp }),
+      });
+      if (!res.ok) {
+        throw new Error((await res.json()).message || "Failed to verify OTP.");
+      }
+      setOtpVerified(true);
+      setChangePasswordMode(true);
+      setShowOtpModal(false);
+    } catch (err) {
+      setOtpError(err.message || "OTP verification failed.");
+    } finally {
+      setOtpLoading(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -344,17 +375,43 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  New Password
+                  Change Password
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={profile.password}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  placeholder="Enter new password"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                />
+                {isEditing ? (
+                  <>
+                    {!changePasswordMode ? (
+                      <button
+                        type="button"
+                        className="mt-2 text-blue-600 underline text-sm"
+                        onClick={() => {
+                          setShowOtpModal(true);
+                          setOtpError("");
+                        }}
+                        disabled={changePasswordMode}
+                      >
+                        Change Password
+                      </button>
+                    ) : otpVerified ? (
+                      <input
+                        type="password"
+                        name="password"
+                        value={profile.password}
+                        onChange={handleChange}
+                        disabled={!isEditing || !otpVerified}
+                        placeholder="Enter new password"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <input
+                    type="password"
+                    name="password"
+                    value="********"
+                    disabled
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  />
+                )}
               </div>
 
               {/* Wallet Balance */}
@@ -413,4 +470,12 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+     {/* OTP Modal for Password Change */}
+     <OtpModal
+       isOpen={showOtpModal}
+       onVerify={handleOtpVerify}
+       onCancel={() => setShowOtpModal(false)}
+       loading={otpLoading}
+       error={otpError}
+     />
 }

@@ -390,7 +390,7 @@ export default function AuthPage({ isLogin = true }) {
       <div className="w-full max-w-md sm:max-w-md md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6">
           <img
-            src="/logo.jpg"
+            src="/logos/logo.png"
             alt="Sublite Logo"
             className="w-12 h-12 rounded-full"
             onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/48x48/2bb6c4/ffffff?text=SL'; }}

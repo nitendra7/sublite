@@ -148,7 +148,7 @@ function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
-                <img src="/logo.jpg" alt="logo" className="w-10 h-10 rounded-full object-cover" />
+                <img src="/logos/logo.png" alt="logo" className="w-10 h-10 rounded-full object-cover" />
               </div>
                               <div className="hidden sm:block">
                   <h2 className="font-bold text-xl text-[#2bb6c4] dark:text-[#5ed1dc] tracking-wide">Sublite</h2>
