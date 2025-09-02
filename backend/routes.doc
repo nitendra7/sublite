@@ -6,24 +6,24 @@ All routes are prefixed with `/api/`
 ---
 
 ## Authentication
-- [POST register](https://sublite-wmu2.onrender.com/api/auth/register)
-- [POST login](https://sublite-wmu2.onrender.com/api/auth/login)
-- [POST refresh token](https://sublite-wmu2.onrender.com/api/auth/refresh)
-- [POST logout](https://sublite-wmu2.onrender.com/api/auth/logout)
+- [POST register](https://sublite-wmu2.onrender.com/api/v1/auth/register)
+- [POST login](https://sublite-wmu2.onrender.com/api/v1/auth/login)
+- [POST refresh token](https://sublite-wmu2.onrender.com/api/v1/auth/refresh)
+- [POST logout](https://sublite-wmu2.onrender.com/api/v1/auth/logout)
 
 ---
 
 ## Authentication (JWT)
 
 ### Endpoints
-- **Register:** `POST /api/auth/register`
-- **Login:** `POST /api/auth/login`
-- **Refresh Token:** `POST /api/auth/refresh`
-- **Logout:** `POST /api/auth/logout`
+- **Register:** `POST /api/v1/auth/register`
+- **Login:** `POST /api/v1/auth/login`
+- **Refresh Token:** `POST /api/v1/auth/refresh`
+- **Logout:** `POST /api/v1/auth/logout`
 
 ### Example: Register
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 Content-Type: application/json
 {
   "name": "Test User",
@@ -35,7 +35,7 @@ Content-Type: application/json
 
 ### Example: Login
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 Content-Type: application/json
 {
   "email": "testuser@example.com",
@@ -52,7 +52,7 @@ Content-Type: application/json
 
 ### Example: Refresh Token
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 Content-Type: application/json
 {
   "refreshToken": "..."
@@ -61,7 +61,7 @@ Content-Type: application/json
 
 ### Example: Logout
 ```
-POST /api/auth/logout
+POST /api/v1/auth/logout
 Content-Type: application/json
 {
   "refreshToken": "..."
@@ -105,18 +105,18 @@ Authorization: Bearer <accessToken>
 - [DELETE user](https://sublite-wmu2.onrender.com/api/users/{id}) *(Authorization required)*
 
 ## Services
-- [GET all services](https://sublite-wmu2.onrender.com/api/services/) *(Authorization required)*
-- [GET service by ID](https://sublite-wmu2.onrender.com/api/services/{id}) *(Authorization required)*
-- [POST create service](https://sublite-wmu2.onrender.com/api/services/) *(Authorization required)*
-- [PUT update service](https://sublite-wmu2.onrender.com/api/services/{id}) *(Authorization required)*
-- [DELETE service](https://sublite-wmu2.onrender.com/api/services/{id}) *(Authorization required)*
+- [GET all services](https://sublite-wmu2.onrender.com/api/v1/services/) *(Authorization required)*
+- [GET service by ID](https://sublite-wmu2.onrender.com/api/v1/services/{id}) *(Authorization required)*
+- [POST create service](https://sublite-wmu2.onrender.com/api/v1/services/) *(Authorization required)*
+- [PUT update service](https://sublite-wmu2.onrender.com/api/v1/services/{id}) *(Authorization required)*
+- [DELETE service](https://sublite-wmu2.onrender.com/api/v1/services/{id}) *(Authorization required)*
 
 ## Bookings
-- [GET all bookings](https://sublite-wmu2.onrender.com/api/bookings/) *(Authorization required)*
-- [GET booking by ID](https://sublite-wmu2.onrender.com/api/bookings/{id}) *(Authorization required)*
-- [POST create booking](https://sublite-wmu2.onrender.com/api/bookings/) *(Authorization required)*
-- [PUT update booking](https://sublite-wmu2.onrender.com/api/bookings/{id}) *(Authorization required)*
-- [DELETE booking](https://sublite-wmu2.onrender.com/api/bookings/{id}) *(Authorization required)*
+- [GET all bookings](https://sublite-wmu2.onrender.com/api/v1/bookings/) *(Authorization required)*
+- [GET booking by ID](https://sublite-wmu2.onrender.com/api/v1/bookings/{id}) *(Authorization required)*
+- [POST create booking](https://sublite-wmu2.onrender.com/api/v1/bookings/) *(Authorization required)*
+- [PUT update booking](https://sublite-wmu2.onrender.com/api/v1/bookings/{id}) *(Authorization required)*
+- [DELETE booking](https://sublite-wmu2.onrender.com/api/v1/bookings/{id}) *(Authorization required)*
 
 ## Payments
 - [GET all payments](https://sublite-wmu2.onrender.com/api/payments/) *(Authorization required)*
@@ -124,41 +124,41 @@ Authorization: Bearer <accessToken>
 - [POST create payment](https://sublite-wmu2.onrender.com/api/payments/) *(Authorization required)*
 
 ## Reviews
-- [GET all reviews](https://sublite-wmu2.onrender.com/api/reviews/) *(Authorization required)*
-- [GET review by ID](https://sublite-wmu2.onrender.com/api/reviews/{id}) *(Authorization required)*
-- [POST create review](https://sublite-wmu2.onrender.com/api/reviews/) *(Authorization required)*
-- [PUT update review](https://sublite-wmu2.onrender.com/api/reviews/{id}) *(Authorization required)*
-- [DELETE review](https://sublite-wmu2.onrender.com/api/reviews/{id}) *(Authorization required)*
+- [GET all reviews](https://sublite-wmu2.onrender.com/api/v1/reviews/) *(Authorization required)*
+- [GET review by ID](https://sublite-wmu2.onrender.com/api/v1/reviews/{id}) *(Authorization required)*
+- [POST create review](https://sublite-wmu2.onrender.com/api/v1/reviews/) *(Authorization required)*
+- [PUT update review](https://sublite-wmu2.onrender.com/api/v1/reviews/{id}) *(Authorization required)*
+- [DELETE review](https://sublite-wmu2.onrender.com/api/v1/reviews/{id}) *(Authorization required)*
 
 ## Categories
-- [GET all categories](https://sublite-wmu2.onrender.com/api/categories/) *(Authorization required)*
-- [GET category by ID](https://sublite-wmu2.onrender.com/api/categories/{id}) *(Authorization required)*
-- [POST create category](https://sublite-wmu2.onrender.com/api/categories/) *(Authorization required)*
-- [PUT update category](https://sublite-wmu2.onrender.com/api/categories/{id}) *(Authorization required)*
-- [DELETE category](https://sublite-wmu2.onrender.com/api/categories/{id}) *(Authorization required)*
+- [GET all categories](https://sublite-wmu2.onrender.com/api/v1/categories/) *(Authorization required)*
+- [GET category by ID](https://sublite-wmu2.onrender.com/api/v1/categories/{id}) *(Authorization required)*
+- [POST create category](https://sublite-wmu2.onrender.com/api/v1/categories/) *(Authorization required)*
+- [PUT update category](https://sublite-wmu2.onrender.com/api/v1/categories/{id}) *(Authorization required)*
+- [DELETE category](https://sublite-wmu2.onrender.com/api/v1/categories/{id}) *(Authorization required)*
 
 ## Notifications
-- [GET all notifications](https://sublite-wmu2.onrender.com/api/notifications/) *(Authorization required)*
-- [GET notification by ID](https://sublite-wmu2.onrender.com/api/notifications/{id}) *(Authorization required)*
-- [POST create notification](https://sublite-wmu2.onrender.com/api/notifications/) *(Authorization required)*
-- [PUT update notification](https://sublite-wmu2.onrender.com/api/notifications/{id}) *(Authorization required)*
+- [GET all notifications](https://sublite-wmu2.onrender.com/api/v1/notifications/) *(Authorization required)*
+- [GET notification by ID](https://sublite-wmu2.onrender.com/api/v1/notifications/{id}) *(Authorization required)*
+- [POST create notification](https://sublite-wmu2.onrender.com/api/v1/notifications/) *(Authorization required)*
+- [PUT update notification](https://sublite-wmu2.onrender.com/api/v1/notifications/{id}) *(Authorization required)*
 
 ## Support Tickets
-- [GET all support tickets](https://sublite-wmu2.onrender.com/api/support-tickets/) *(Authorization required)*
+- [GET all support tickets](https://sublite-wmu2.onrender.com/api/v1/support-tickets/) *(Authorization required)*
 - [GET support ticket by ID](https://sublite-wmu2.onrender.com/api/support-tickets/{id}) *(Authorization required)*
 - [POST create support ticket](https://sublite-wmu2.onrender.com/api/support-tickets/) *(Authorization required)*
 - [PUT update support ticket](https://sublite-wmu2.onrender.com/api/support-tickets/{id}) *(Authorization required)*
 - [DELETE support ticket](https://sublite-wmu2.onrender.com/api/support-tickets/{id}) *(Authorization required)*
 
 ## Wallet Transactions
-- [GET all wallet transactions](https://sublite-wmu2.onrender.com/api/wallet-transactions/) *(Authorization required)*
-- [GET wallet transaction by ID](https://sublite-wmu2.onrender.com/api/wallet-transactions/{id}) *(Authorization required)*
-- [POST create wallet transaction](https://sublite-wmu2.onrender.com/api/wallet-transactions/) *(Authorization required)*
+- [GET all wallet transactions](https://sublite-wmu2.onrender.com/api/v1/wallet-transactions/) *(Authorization required)*
+- [GET wallet transaction by ID](https://sublite-wmu2.onrender.com/api/v1/wallet-transactions/{id}) *(Authorization required)*
+- [POST create wallet transaction](https://sublite-wmu2.onrender.com/api/v1/wallet-transactions/) *(Authorization required)*
 
 ## Settings
-- [GET all settings](https://sublite-wmu2.onrender.com/api/settings/) *(Authorization required)*
-- [GET setting by ID](https://sublite-wmu2.onrender.com/api/settings/{id}) *(Authorization required)*
-- [PUT update setting](https://sublite-wmu2.onrender.com/api/settings/{id}) *(Authorization required)*
+- [GET all settings](https://sublite-wmu2.onrender.com/api/v1/settings/) *(Authorization required)*
+- [GET setting by ID](https://sublite-wmu2.onrender.com/api/v1/settings/{id}) *(Authorization required)*
+- [PUT update setting](https://sublite-wmu2.onrender.com/api/v1/settings/{id}) *(Authorization required)*
 
 ---
 
