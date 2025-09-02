@@ -7,8 +7,10 @@ import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
 // Assuming API_BASE is correctly set in your environment variables
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+import { useUser } from '../context/UserContext';
 export default function AuthPage({ isLogin = true }) {
   const navigate = useNavigate();
+  const { rehydrateUserContext } = useUser();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -106,10 +108,13 @@ export default function AuthPage({ isLogin = true }) {
           userName: localStorage.getItem('userName')
         });
         console.log('Login response data:', data); // Add this debug line
+        if (data.user) {
+          rehydrateUserContext(data.user, true);
+        }
         setSuccess('Login successful!');
         setTimeout(() => {
           navigate('/dashboard', { replace: true });
-        }, 1000);
+        }, 400);
       } else {
         // Signup: simple email validation
         if (!formData.email.includes('@') || !formData.email.includes('.')) {

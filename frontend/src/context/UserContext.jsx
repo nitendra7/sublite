@@ -106,6 +106,18 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   // Updates the user object within the context directly.
+  // Allows immediate context rehydrate for login: set user and optimistically end loading, then fetch profile in background
+  const rehydrateUserContext = useCallback((userData, triggerProfileFetch = true) => {
+    setUser(userData);
+    setLoading(false);
+    if (userData?.name) {
+      localStorage.setItem('userName', userData.name);
+    }
+    if (triggerProfileFetch) {
+      setTimeout(fetchUserProfile, 0); // trigger real fetch in background next tick
+    }
+  }, [fetchUserProfile]);
+
   const updateUserContext = useCallback((updatedUserData) => {
     setUser(prevUser => {
       if (!prevUser) return updatedUserData;
@@ -134,10 +146,11 @@ export const UserProvider = ({ children }) => {
       token: tokenInContext,
       fetchUserProfile,
       updateUserContext,
+      rehydrateUserContext, // Expose new util for fast context update
       setAuthError,
       clearAuthData,
     };
-  }, [user, loading, error, fetchUserProfile, updateUserContext, setAuthError, clearAuthData]);
+  }, [user, loading, error, fetchUserProfile, updateUserContext, rehydrateUserContext, setAuthError, clearAuthData]);
 
   return (
     <UserContext.Provider value={contextValue}>
