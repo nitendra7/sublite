@@ -3,6 +3,7 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
+import { useNavigate } from 'react-router-dom';
 
 // Assuming API_BASE is correctly set in your environment variables
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -108,7 +109,7 @@ export default function AuthPage({ isLogin = true }) {
         console.log('Login response data:', data); // Add this debug line
         setSuccess('Login successful!');
         setTimeout(() => {
-          window.location.href = '/dashboard'; // Force page reload to refresh context
+          navigate('/dashboard', { replace: true });
         }, 1000);
       } else {
         // Signup: simple email validation
