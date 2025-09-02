@@ -58,6 +58,10 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await user.save();
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
+    // Ensure profilePicture is always present - fallback to existing or default
+    if (!userResponse.profilePicture) {
+      userResponse.profilePicture = user.profilePicture || '/logos/logo.png';
+    }
     res.json(userResponse);
   } catch (err) {
     console.error('Profile update error:', err);
