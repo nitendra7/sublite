@@ -45,7 +45,9 @@ const app = express();
 // Core Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://sublite.vercel.app')
+    const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000',
+      'http://localhost:3001',
+      'https://sublite.vercel.app')
       .split(',')
       .map(s => s.trim());
     // Allow requests with no origin (like mobile apps or curl) or if origin is in whitelist
