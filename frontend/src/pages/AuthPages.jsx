@@ -107,7 +107,7 @@ export default function AuthPage({ isLogin = true }) {
         });
         console.log('Login response data:', data); // Add this debug line
         setSuccess('Login successful!');
-        setTimeout(() => { 
+        setTimeout(() => {
           window.location.href = '/dashboard'; // Force page reload to refresh context
         }, 1000);
       } else {
