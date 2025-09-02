@@ -2,6 +2,23 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+
+// Minimal OpenAPI 3.0 schema for live docs; expand as needed for your endpoints later
+const swaggerDocument = {
+  openapi: '3.0.0',
+  info: {
+    title: 'Sublite API',
+    version: '1.0.0',
+    description: 'Live documentation for all available API endpoints.',
+  },
+  servers: [{ url: '/api/v1' }],
+  paths: {},
+};
+
+
 
 // Import custom modules
 const connectDB = require('./lib/db');
@@ -27,32 +44,75 @@ const app = express();
 
 // Core Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://sublite.vercel.app',
-  ],
+  origin: (origin, callback) => {
+    const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://sublite.vercel.app')
+      .split(',')
+      .map(s => s.trim());
+    // Allow requests with no origin (like mobile apps or curl) or if origin is in whitelist
+    if (!origin || allowed.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-app.use(express.json());
+// Prefer JSON body limit config in future (see other todos)
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '1mb' }));
 
+// Dynamic, environment-responsive Helmet security configuration
+const helmetConfig = {
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+};
+// Apply Helmet security middleware
+// Helmet already configured
+app.use(helmet(helmetConfig));
+
+// Mount Swagger API docs at /api-docs (live and self-updating)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// --- Global API rate limiting middleware ---
+// Allow environment override for production/easy tuning in dev
+const apiRateLimiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000, // 15 min default
+  max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(apiRateLimiter);
 // API Routes
 // Authentication middleware is applied within individual route files (middleware/auth.js).
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/support-tickets', supportTicketRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/settings', settingRoutes);
-app.use('/api/wallettransactions', walletTransactionRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/services', serviceRoutes);
+app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/support-tickets', supportTicketRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/settings', settingRoutes);
+app.use('/api/v1/wallettransactions', walletTransactionRoutes);
+app.use('/api/v1/admin', adminRoutes);
+
+// --- Centralized error-handling middleware (standardizes error format & prevents leakage) ---
+app.use((err, req, res, next) => {
+  // If error has no status, it's a server bug
+  const status = err.status || 500;
+  res.status(status).json({
+    status,
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
+
+// --- 404 handler for unmatched routes ---
+app.use((req, res) => {
+  res.status(404).json({
+    status: 404,
+    message: 'API route not found'
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
