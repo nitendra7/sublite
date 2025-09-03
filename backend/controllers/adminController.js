@@ -27,3 +27,14 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({ error: 'Error fetching stats' });
   }
 };
+
+// Get all users for admin management
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, '-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: 'Error fetching users' });
+  }
+};
