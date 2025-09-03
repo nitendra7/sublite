@@ -69,18 +69,26 @@ app.use(helmet(helmetConfig));
 
 // Mount Swagger API docs at /api-docs (live and self-updating)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
+
 // --- Global API rate limiting middleware ---
 // Allow environment override for production/easy tuning in dev
+
 const apiRateLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000, // 15 min default
   max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100, // Limit each IP to 100 requests per windowMs
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-});
+}); 
+if(process.env.NODE_ENV == 'production') {
 app.use(apiRateLimiter);
+}
+
 // API Routes
 // Authentication middleware is applied within individual route files (middleware/auth.js).
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/services', serviceRoutes);
