@@ -3,9 +3,6 @@ const { User } = require('../models/user');
 const RefreshToken = require('../models/refreshtoken');
 const bcrypt = require('bcryptjs');
 
-/**
- * @desc    Get current authenticated user's profile
- */
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password'); // Uses req.user._id
@@ -49,7 +46,6 @@ exports.updateMe = async (req, res) => {
       if ('timezone' in providerSettings) user.providerSettings.timezone = providerSettings.timezone;
       user.providerSettingsCompleted = true;
     }
-    // Save profile picture if uploaded
     if (req.file && req.file.path) {
       user.profilePicture = req.file.path;
     } else if (req.file && req.file.filename) {
@@ -58,7 +54,6 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await user.save();
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
-    // Ensure profilePicture is always present - fallback to existing or default
     if (!userResponse.profilePicture) {
       userResponse.profilePicture = user.profilePicture || '/logos/logo.png';
     }
@@ -69,9 +64,6 @@ exports.updateMe = async (req, res) => {
   }
 };
 
-/**
- * @desc    Deactivate the currently logged-in user's account
- */
 exports.deactivateMe = async (req, res) => {
     try {
         const userId = req.user._id; // Uses req.user._id
@@ -84,8 +76,6 @@ exports.deactivateMe = async (req, res) => {
         user.isActive = false;
         await user.save();
 
-        // For manual JWTs, also delete refresh tokens to log out
-        // For Firebase users, their session is managed by Firebase client SDK
         if (req.user.tokenType === 'custom_jwt') {
             await RefreshToken.deleteMany({ userId: userId });
         }
@@ -97,9 +87,6 @@ exports.deactivateMe = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get a single user by ID (Admin only)
- */
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -115,9 +102,6 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete a user by ID (Admin only)
- */
 exports.deleteUserById = async (req, res) => {
   try {
     // Prevent admin from deleting themselves
@@ -134,9 +118,6 @@ exports.deleteUserById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all users (Admin only)
- */
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -146,12 +127,8 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update a user's admin status (Admin only)
- */
 exports.updateUserRole = async (req, res) => {
   try {
-    // Prevent admin from demoting themselves
     if (req.user._id.toString() === req.params.id) {
       return res.status(400).json({ message: "Admins cannot change their own admin status." });
     }
@@ -173,29 +150,11 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-/**
- * @desc    (NEW) Onboard / Sync user profile data to MongoDB after Firebase signup/login.
- * This endpoint is protected by middleware/auth.js which verifies Firebase ID token.
- * @route   POST /api/users/onboard-profile
- * @access  Private (Firebase authenticated user)
- */
 exports.onboardProfile = async (req, res) => {
     try {
-        // req.user is populated by middleware/auth.js with the MongoDB user document
-        // if user already exists in DB from a previous sync or manual creation.
-        // If it's a completely new user to MongoDB, req.user might be null or you'd rely on req.body for initial data.
+        const { firebaseUid, email, name, username } = req.body;
 
-        const { firebaseUid, email, name, username } = req.body; // Data sent from frontend
-        
-        // IMPORTANT: Security check for Firebase users
-        // For new Firebase users, req.user will be null (they don't exist in MongoDB yet)
-        // For existing Firebase users, req.user.firebaseUid should match the firebaseUid from body
-        // The firebaseUid from the decoded Firebase ID token should match the one in the request body
-        
-        // Get the Firebase UID from the decoded token (middleware puts it in req.user if user exists, or we get it from the token)
-        // Since middleware already verified the Firebase ID token, we can trust that the firebaseUid in the body matches the token
-        // But let's add an extra check by getting the UID from the token payload
-        
+        // Security: ensure the firebaseUid matches the authenticated user's UID
         if (req.user && req.user.firebaseUid && req.user.firebaseUid !== firebaseUid) {
             return res.status(403).json({ message: 'Unauthorized: Cannot onboard profile for another user.' });
         }
@@ -203,9 +162,6 @@ exports.onboardProfile = async (req, res) => {
         let user = await User.findOne({ firebaseUid });
 
         if (user) {
-            // User already exists in DB, update their profile
-            // This happens if a user logs in with Google (Firebase) and then later sets a username.
-            // Or if a user existed manually before, and now signs up via Firebase.
             let updated = false;
             if (name && user.name !== name) { user.name = name; updated = true; }
             if (username && user.username !== username) { user.username = username; updated = true; }
@@ -216,15 +172,12 @@ exports.onboardProfile = async (req, res) => {
                 return res.status(200).json({ message: 'User profile already up to date.' });
             }
         } else {
-            // New user, create a new entry in your MongoDB
-            // Ensure your User model can accommodate users without a 'password' if they're Firebase-only.
             user = new User({
                 firebaseUid: firebaseUid,
                 email: email,
                 name: name,
                 username: username,
-                isSocialLogin: true, // Mark this user as originating from social/Firebase
-                // You might set default values for other fields here
+                isSocialLogin: true
             });
             await user.save();
             return res.status(201).json({ message: 'User profile created successfully.', userProfile: user });

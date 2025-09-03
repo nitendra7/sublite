@@ -9,8 +9,6 @@ const razorpayInstance = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
-
 /**
  * @desc    Creates a Razorpay order
  */

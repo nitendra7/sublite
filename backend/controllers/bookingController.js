@@ -7,7 +7,6 @@ const WalletTransaction = require('../models/walletTransaction'); // Added Walle
 const { isProviderActive } = require('../utils/availability');
 const { scheduleBookingCancellation, clearCancellationTimer } = require('../jobs/bookingScheduler');
 
-// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
 const createBooking = async (req, res) => {
   const { serviceId, rentalDuration, paymentMethod = 'wallet' } = req.body;
@@ -24,11 +23,10 @@ const createBooking = async (req, res) => {
     if (service.providerId._id.equals(clientId)) return res.status(400).json({ message: 'You cannot book your own service.' });
     if (service.availableSlots <= 0) return res.status(400).json({ message: 'No available slots for this service.' });
     
-    // Check if user has already booked this service
     const existingBooking = await Booking.findOne({
       clientId: clientId,
       serviceId: serviceId,
-      bookingStatus: { $in: ['pending', 'confirmed', 'active'] } // Check for active bookings only
+      bookingStatus: { $in: ['pending', 'confirmed', 'active'] }
     });
     
     if (existingBooking) {
@@ -37,12 +35,11 @@ const createBooking = async (req, res) => {
       });
     }
     
-    // Check for recently completed bookings (within last 24 hours) to prevent immediate re-booking
     const recentCompletedBooking = await Booking.findOne({
       clientId: clientId,
       serviceId: serviceId,
       bookingStatus: 'completed',
-      completedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+      completedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
     });
     
     if (recentCompletedBooking) {
@@ -51,8 +48,7 @@ const createBooking = async (req, res) => {
       });
     }
     
-    // Calculate total cost based on rental duration (daily rate)
-    const dailyRate = service.rentalPrice / 30; // Assuming rentalPrice is monthly, convert to daily
+    const dailyRate = service.rentalPrice / 30;
     totalCost = Math.ceil(dailyRate * rentalDuration);
     
     if (client.walletBalance < totalCost) return res.status(400).json({ message: 'Insufficient wallet balance.' });
@@ -72,7 +68,6 @@ const createBooking = async (req, res) => {
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + rentalDuration);
 
-    // 1. Create the booking (without paymentId)
     const booking = await Booking.create({
       clientId,
       providerId: service.providerId._id,
@@ -84,10 +79,9 @@ const createBooking = async (req, res) => {
         startDate: new Date(),
         endDate,
       },
-      bookingStatus: 'pending', // Start as pending, only confirm when credentials are sent
+      bookingStatus: 'pending',
     });
 
-    // 2. Create the payment with bookingId
     const payment = await Payment.create({
         userId: clientId,
         providerId: service.providerId._id,
@@ -98,7 +92,6 @@ const createBooking = async (req, res) => {
         type: 'service-payment'
     });
 
-    // 3. Update the booking with paymentId
     booking.paymentId = payment._id;
     await booking.save();
 
@@ -122,7 +115,6 @@ const createBooking = async (req, res) => {
         }
     } catch (availabilityError) {
         console.warn('Error checking provider availability:', availabilityError.message);
-        // Continue with default message if availability check fails
     }
 
     res.status(201).json({ message: responseMessage, booking });
@@ -136,7 +128,6 @@ const createBooking = async (req, res) => {
       rentalDuration
     });
     
-    // Rollback wallet balance if payment was made
     if(service && totalCost) {
         try {
             await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
@@ -204,7 +195,7 @@ Username: ${booking.sharedCredentials.username}\nPassword: ${booking.sharedCrede
 
 const getAllBookingsForUser = async (req, res) => {
     try {
-        const bookings = await Booking.find({ $or: [{ clientId: req.user._id }, { providerId: req.user._id }] }) // Uses req.user._id
+        const bookings = await Booking.find({ $or: [{ clientId: req.user._id }, { providerId: req.user._id }] })
             .sort({ createdAt: -1 });
         res.json(bookings);
     } catch (err) {
@@ -214,7 +205,7 @@ const getAllBookingsForUser = async (req, res) => {
 
 const getMyJoinedBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({ clientId: req.user._id }) // Uses req.user._id
+        const bookings = await Booking.find({ clientId: req.user._id })
             .populate('providerId', 'name username')
             .sort({ createdAt: -1 });
         res.json(bookings);
@@ -225,7 +216,7 @@ const getMyJoinedBookings = async (req, res) => {
 
 const getBookingById = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: req.params.id, $or: [{ clientId: req.user._id }, { providerId: req.user._id }] }); // Uses req.user._id
+        const booking = await Booking.findOne({ _id: req.params.id, $or: [{ clientId: req.user._id }, { providerId: req.user._id }] });
         if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
         res.json(booking);
     } catch (err) {
@@ -238,7 +229,6 @@ const confirmBooking = async (req, res) => {
         const booking = await Booking.findOne({ _id: req.params.id, providerId: req.user._id });
         if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
         
-        // Update booking status to confirmed if it's pending
         if (booking.bookingStatus === 'pending') {
             booking.bookingStatus = 'confirmed';
             await booking.save();

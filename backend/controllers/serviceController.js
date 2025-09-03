@@ -1,11 +1,7 @@
 const Service = require('../models/service');
 const { User } = require('../models/user');
 
-// All routes here are assumed to be protected by isAuthenticated middleware in index.js.
 
-/**
- * @desc    Create a new service
- */
 const createService = async (req, res) => {
   try {
     console.log('Creating service for user:', req.user._id);
@@ -13,9 +9,7 @@ const createService = async (req, res) => {
     
     const provider = await User.findById(req.user._id); // Uses req.user._id
     
-    // If user is not yet a provider, set default provider settings
     if (!provider.isProvider || !provider.providerSettingsCompleted) {
-        // Set default provider settings for first-time providers
         provider.providerSettings = {
             activeHours: {
                 start: '09:00',
@@ -35,7 +29,7 @@ const createService = async (req, res) => {
 
     const service = new Service({
       ...req.body,
-      providerId: req.user._id, // Uses req.user._id
+      providerId: req.user._id,
     });
     
     console.log('Service object before save:', JSON.stringify(service.toObject(), null, 2));
@@ -60,19 +54,12 @@ const createService = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all active and available services
- */
 const getAllServices = async (req, res) => {
   try {
-    // Base query for active services with available slots
     let query = { serviceStatus: 'active', availableSlots: { $gt: 0 } };
-    
-    // If user is authenticated, exclude their own services
     if (req.user && req.user._id) {
       query.providerId = { $ne: req.user._id };
     }
-    
     const services = await Service.find(query)
                                   .populate('providerId', 'username name rating providerSettings')
                                   .sort({ createdAt: -1 });
@@ -83,12 +70,9 @@ const getAllServices = async (req, res) => {
 };
 
 
-/**
- * @desc    Get services created by the logged-in user (as a provider)
- */
 const getMyServices = async (req, res) => {
     try {
-        if (!req.user || !req.user._id) { // Uses req.user._id
+        if (!req.user || !req.user._id) {
             return res.status(401).json({ message: 'User not authenticated or user ID missing.' });
         }
 
@@ -104,9 +88,6 @@ const getMyServices = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get a single service by its ID
- */
 const getServiceById = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id).populate('providerId', 'username name rating providerSettings');
@@ -119,16 +100,13 @@ const getServiceById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update a service owned by the user
- */
 const updateService = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id);
         if (!service) {
             return res.status(404).json({ message: 'Service not found.' });
         }
-        if (service.providerId.toString() !== req.user._id.toString()) { // Uses req.user._id
+        if (service.providerId.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You are not authorized to update this service.' });
         }
         const updatedService = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -138,9 +116,6 @@ const updateService = async (req, res) => {
     }
 };
 
-/**
- * @desc    Delete a service owned by the user
- */
 const deleteService = async (req, res) => {
     try {
         console.log('Delete service request:', {
@@ -166,7 +141,7 @@ const deleteService = async (req, res) => {
 
         // Compare as strings to avoid ObjectId comparison issues
         if (service.providerId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 message: 'User not authorized to delete this service',
                 debug: {
                     serviceProviderId: service.providerId.toString(),
