@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
 
-import api, { API_BASE } from '../utils/api';
-// API_BASE comes from api.js and always includes /api/v1, so append /auth/login only
+import api from '../utils/api';
 
 import { useUser } from '../context/UserContext';
+AuthPage.propTypes = {
+  isLogin: PropTypes.bool
+};
+
+AuthPage.defaultProps = {
+  isLogin: true
+};
+
 export default function AuthPage({ isLogin = true }) {
   const navigate = useNavigate();
   const { rehydrateUserContext } = useUser();
@@ -20,7 +28,7 @@ export default function AuthPage({ isLogin = true }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  // const [success, setSuccess] = useState(''); // Not currently displayed to user
 
   // Modals and their states
   const [showAccountNotFoundModal, setShowAccountNotFoundModal] = useState(false);
@@ -70,12 +78,9 @@ export default function AuthPage({ isLogin = true }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       if (isLogin) {
-        // Debug: check what API_BASE and env is before sending login
-        console.log('Login REQUEST — API_BASE:', API_BASE, 'VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
         // Login API call
         const res = await api.post(`/auth/login`, { emailOrUsername: formData.email, password: formData.password });
         const data = res.data;
@@ -95,7 +100,6 @@ export default function AuthPage({ isLogin = true }) {
         if (data.user) {
           rehydrateUserContext(data.user, true);
         }
-        setSuccess('Login successful!');
         setTimeout(() => {
           navigate('/dashboard', { replace: true });
         }, 400);
@@ -107,17 +111,15 @@ export default function AuthPage({ isLogin = true }) {
           return;
         }
         // Signup API call
-        const res = await api.post(`/auth/register`, {
-          name: formData.name,
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        });
-        const data = res.data;
+        await api.post(`/auth/register`, {
+           name: formData.name,
+           username: formData.username,
+           email: formData.email,
+           password: formData.password,
+         });
 
         // If registration is successful, show OTP modal
         setShowOtpModal(true);
-        setSuccess(''); // Clear main success message for OTP flow
       }
     } catch (err) {
       setError(err.message || 'Failed to connect to the server.');
@@ -165,12 +167,12 @@ export default function AuthPage({ isLogin = true }) {
     setResendSuccess('');
     try {
       // Re-trigger the registration endpoint to send a new OTP
-      const res = await api.post(`/auth/register`, {
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
+      await api.post(`/auth/register`, {
+         name: formData.name,
+         username: formData.username,
+         email: formData.email,
+         password: formData.password,
+       });
       setResendSuccess('OTP resent! Check your email.');
       setOtpTimer(30); // Reset timer
     } catch (err) {
@@ -346,7 +348,7 @@ export default function AuthPage({ isLogin = true }) {
             asChild
             className={`flex-1 py-2 font-semibold text-center rounded-none ${!isLogin ? 'bg-[#2bb6c4] text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'} shadow-none border-none`}
           >
-            <Link to="/register">Signup</Link>
+            <Link to="/register">Sign up</Link>
           </Button>
         </div>
 
@@ -437,7 +439,7 @@ export default function AuthPage({ isLogin = true }) {
         {error && <div className="text-red-500 text-center mt-4">{error}</div>}
         <div className="text-center text-gray-400 text-xs mt-4">
           {isLogin ? (
-            <>Don't have an account? <Link to="/register" className="text-[#2bb6c4] hover:underline font-semibold">Sign Up</Link></>
+            <>Don&apos;t have an account? <Link to="/register" className="text-[#2bb6c4] hover:underline font-semibold">Sign Up</Link></>
           ) : (
             <>Already have an account? <Link to="/login" className="text-[#2bb6c4] hover:underline font-semibold">Sign In</Link></>
           )}

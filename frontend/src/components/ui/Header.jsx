@@ -1,10 +1,7 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext'; // useTheme is needed here if the header includes theme toggle or needs theme-aware logic.
-
 const Header = () => {
   // Consume dark mode state if needed for header logic/styling.
-  const { darkMode } = useTheme(); 
+
   const location = useLocation();
   const hideAuthLinks = location.pathname === '/login' || location.pathname === '/register';
 

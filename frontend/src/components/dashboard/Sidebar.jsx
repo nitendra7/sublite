@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import {
   FaBars,
   FaBook,
@@ -11,6 +11,7 @@ import {
   FaEnvelope,
   FaQuestionCircle
 } from 'react-icons/fa';
+import { useUser } from '../../context/UserContext';
 
 
 const sidebarItems = [
@@ -25,6 +26,9 @@ const sidebarItems = [
 ];
 
 function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
+  const { user } = useUser();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <nav
       className={`z-20 flex flex-col justify-between items-center md:items-stretch shadow-lg bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out overflow-hidden h-screen ${
@@ -36,7 +40,9 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
         <div className="flex items-center justify-between py-5 px-4 border-b border-gray-200 dark:border-gray-700 min-h-[65px]">
                       {sidebarOpen ? (
               <div className="flex items-center space-x-3">
-                <span className="text-base font-bold text-gray-800 dark:text-gray-100">Sublite</span>
+                <span className="text-base font-bold text-gray-800 dark:text-gray-100">
+                  {isAdmin ? 'Admin' : 'Sublite'}
+                </span>
               </div>
             ) : (
             <div className="flex items-center justify-center w-full">
@@ -128,4 +134,11 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
   );
 }
 
-export default Sidebar; 
+Sidebar.propTypes = {
+  sidebarOpen: PropTypes.bool.isRequired,
+  active: PropTypes.number.isRequired,
+  onSidebarClick: PropTypes.func.isRequired,
+  handleSidebarToggle: PropTypes.func.isRequired
+};
+
+export default Sidebar;

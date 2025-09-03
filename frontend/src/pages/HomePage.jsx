@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 import Header from "../components/ui/Header";
 import Footer from "../components/ui/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -235,3 +236,24 @@ function ServiceCard({ service, index }) {
     </Card>
   );
 }
+
+// PropTypes definitions
+AppIcon.propTypes = {
+  name: PropTypes.string.isRequired,
+  size: PropTypes.number
+};
+
+AppIcon.defaultProps = {
+  size: 48
+};
+
+ServiceCard.propTypes = {
+  service: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    price: PropTypes.string.isRequired,
+    duration: PropTypes.string.isRequired,
+    color: PropTypes.string,
+    savings: PropTypes.string
+  }).isRequired,
+  index: PropTypes.number.isRequired
+};

@@ -1,5 +1,6 @@
 // src/context/ThemeContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import PropTypes from 'prop-types';
 
 const ThemeContext = createContext();
 
@@ -33,12 +34,17 @@ export const ThemeProvider = ({ children }) => {
   }, [darkMode]);
 
   // Toggles the dark mode state.
-  const toggleDarkMode = () => {
+  const toggleDarkMode = useCallback(() => {
     setDarkMode(prevMode => !prevMode);
-  };
+  }, []);
 
   // Memoizes the context value to prevent unnecessary re-renders.
-  const value = React.useMemo(() => ({ darkMode, toggleDarkMode }), [darkMode, toggleDarkMode]);
+  const value = useMemo(() => ({ darkMode, toggleDarkMode }), [darkMode, toggleDarkMode]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+};
+
+// PropTypes validation for ThemeProvider
+ThemeProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

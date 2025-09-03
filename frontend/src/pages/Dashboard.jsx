@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
   FaBook, FaMoon, FaStar, FaSun, FaHome,
@@ -8,7 +8,7 @@ import DashboardOverview from '../components/dashboard/DashboardOverview';
 import Sidebar from '../components/dashboard/Sidebar';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import api, { API_BASE } from '../utils/api';
+import api from '../utils/api';
 
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
@@ -193,6 +193,15 @@ function Dashboard() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
               </button>
+              
+              {/* New Help Button */}
+              <button
+                className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
+                title="Open Help Center"
+                onClick={() => window.open('https://sublite.app/help', '_blank')}
+              >
+                <FaQuestionCircle className="text-lg group-hover:scale-105 transition-transform duration-200" />
+              </button>
             </div>
 
             {/* User Profile */}
@@ -259,13 +268,7 @@ function Dashboard() {
         </header>
 
         <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-          <div className="p-4 w-full">
-            {isBaseDashboard ? (
-              <DashboardOverview />
-            ) : (
-              <Outlet />
-            )}
-          </div>
+          {isBaseDashboard ? <DashboardOverview /> : <Outlet />}
         </main>
       </div>
     </div>

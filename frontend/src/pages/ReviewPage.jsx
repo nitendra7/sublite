@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, PlusCircle, Edit, Trash2, Loader2, MessageSquare } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext';
-import api, { API_BASE } from '../utils/api';
+import Loading from '../components/ui/Loading';
+import api from '../utils/api';
 
 const ReviewPage = () => {
   const { user, token } = useUser();
-  const { darkMode } = useTheme();
-
   const [reviews, setReviews] = useState([]);
   const [reviewableBookings, setReviewableBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,16 +131,7 @@ const ReviewPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading reviews...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading reviews..." />;
   }
 
   if (error) {
@@ -272,7 +261,7 @@ const ReviewPage = () => {
               {/* Review Comment */}
               {review.comment && (
                 <p className="text-gray-700 dark:text-gray-200 text-base mb-4 italic leading-relaxed">
-                  "{review.comment}"
+                  &quot;{review.comment}&quot;
                 </p>
               )}
 

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import api, { API_BASE } from '../../utils/api';
+import { useEffect, useState } from 'react';
+import api from '../../utils/api';
 
 export default function ServiceList() {
   const [services, setServices] = useState([]);

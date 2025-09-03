@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, Users, Tag, X, AlertTriangle } from 'lucide-react';
 
@@ -81,7 +82,7 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
 
     return (
         <div>
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Services I'm Providing</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Services I&apos;m Providing</h2>
             {services.length > 0 ? (
                 <div className="space-y-4">
                     {services.map(service => (
@@ -106,7 +107,7 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
                 </div>
             ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-                    <p className="text-gray-500 dark:text-gray-400">You haven't provided any services yet.</p>
+                    <p className="text-gray-500 dark:text-gray-400">You haven&apos;t provided any services yet.</p>
                 </div>
             )}
 
@@ -129,7 +130,7 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
                             <AlertTriangle className="text-red-500 mt-1 flex-shrink-0" size={20} />
                             <div>
                                 <p className="text-gray-700 dark:text-gray-300 mb-2">
-                                    Are you sure you want to delete <span className="font-semibold">"{deleteModal.serviceName}"</span>?
+                                    Are you sure you want to delete <span className="font-semibold">&quot;{deleteModal.serviceName}&quot;</span>?
                                 </p>
                                 <p className="text-sm text-red-600 dark:text-red-400">
                                     This action cannot be undone. All active bookings for this service will be affected.
@@ -165,6 +166,19 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
             )}
         </div>
     );
+};
+
+ProvidedServicesList.propTypes = {
+  services: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      serviceName: PropTypes.string.isRequired,
+      rentalPrice: PropTypes.number.isRequired,
+      currentUsers: PropTypes.number,
+      maxUsers: PropTypes.number.isRequired
+    })
+  ).isRequired,
+  onServiceDeleted: PropTypes.func.isRequired
 };
 
 export default ProvidedServicesList;

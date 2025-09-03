@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, Users } from 'lucide-react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
-import api, { API_BASE } from '../utils/api';
+import api from '../utils/api';
+import Loading from '../components/ui/Loading';
 
 const SubscriptionsPage = () => {
   const [providedServices, setProvidedServices] = useState([]);
@@ -13,7 +14,6 @@ const SubscriptionsPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
       try {
         // Fetch services provided by the user
         const responseProvided = await api.get(`/services/my-services`);
@@ -37,16 +37,7 @@ const SubscriptionsPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading your subscriptions...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading your subscriptions..." />;
   }
 
   if (error) {
@@ -90,7 +81,7 @@ const SubscriptionsPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Services I've Joined</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Services I&apos;ve Joined</p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
                 {joinedSubscriptions.length}
               </p>

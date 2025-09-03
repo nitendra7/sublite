@@ -17,4 +17,16 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    {
+      files: ['*.config.js', 'tailwind.config.js', 'postcss.config.js', 'vite.config.js'],
+      env: {
+        node: true,
+        browser: false,
+      },
+      rules: {
+        'no-undef': 'off', // Allow Node.js globals in config files
+      },
+    },
+  ],
 }

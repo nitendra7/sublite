@@ -1,5 +1,4 @@
 // App.jsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
@@ -49,7 +48,7 @@ const PrivateRoute = () => {
 
 // ProtectedLayout component: A layout component for protected routes.
 // It receives theme state from the top-level App component and passes it down.
-const ProtectedLayout = ({ darkMode, toggleDarkMode }) => {
+const ProtectedLayout = () => {
   return <Outlet />;
 };
 

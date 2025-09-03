@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  CreditCard, 
-  Wallet, 
-  TrendingUp, 
-  DollarSign,
+import {
+  CreditCard,
+  Wallet,
+  LayoutGrid,
   CheckCircle
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
+import Loading from '../ui/Loading';
 
 import api, { API_BASE } from '../../utils/api';
 
@@ -134,16 +134,7 @@ const DashboardOverview = () => {
   }, [token, user]);
 
   if (loading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading dashboard..." />;
   }
 
   if (error) {
@@ -157,70 +148,85 @@ const DashboardOverview = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 min-h-full animate-fade-in">
+    <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-h-full animate-fade-in">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           Welcome back, {user?.name?.split(' ')[0] || 'User'}!
         </h1>
         <p className="text-gray-500 dark:text-gray-300">
-          Here's what's happening with your subscriptions today.
+          Here&apos;s what&apos;s happening with your subscriptions today.
         </p>
       </div>
 
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Wallet Balance */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <Link
+          to="/dashboard/wallet"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border-2 border-[#b6effa] dark:border-[#263238] relative transition-all duration-200 hover:shadow-xl hover:scale-[1.04] focus-within:shadow-xl cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Wallet Balance</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+              <p className="text-base font-semibold text-gray-600 dark:text-gray-100 tracking-wide mb-2">Wallet Balance</p>
+              <p className="text-4xl font-extrabold text-[#2bb6c4] dark:text-gray-100 drop-shadow-md mb-2">
                 ₹{dashboardData.wallet.balance.toFixed(2)}
               </p>
             </div>
-            <Wallet className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            <div className="relative">
+              <span className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-[#e0f7fa] dark:bg-[#263238] opacity-90 z-0"></span>
+              <Wallet className="w-12 h-12 z-10 relative text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow-lg" aria-label="Wallet Icon"/>
+            </div>
           </div>
-        </div>
+        </Link>
 
         {/* Active Subscriptions */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <Link
+          to="/dashboard/subscriptions"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#263238] transition-all duration-200 hover:shadow-xl hover:scale-[1.03] focus-within:shadow-xl cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Subscriptions</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Active Subscriptions</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
                 {dashboardData.subscriptions.active}
               </p>
             </div>
             <CreditCard className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
           </div>
-        </div>
+        </Link>
 
         {/* Completed Subscriptions */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <Link
+          to="/dashboard/subscriptions"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#263238] transition-all duration-200 hover:shadow-xl hover:scale-[1.03] focus-within:shadow-xl cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed Subscriptions</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Completed Subscriptions</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
                 {dashboardData.subscriptions.completed}
               </p>
             </div>
             <CheckCircle className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
           </div>
-        </div>
+        </Link>
 
         {/* Available Plans */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <Link
+          to="/dashboard/available-plans"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#263238] transition-all duration-200 hover:shadow-xl hover:scale-[1.03] focus-within:shadow-xl cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Available Plans</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Available Plans</p>
+              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
                 {dashboardData.availablePlans}
               </p>
             </div>
-            <TrendingUp className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            <LayoutGrid className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" aria-label="Available Plans Icon"/>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Main Cards Grid */}
@@ -228,48 +234,28 @@ const DashboardOverview = () => {
         {/* My Subscriptions Card */}
         <Link
           to="/dashboard/subscriptions"
-          className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:scale-105 transform transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2bb6c4] focus-visible:ring-offset-2 active:scale-98 border border-gray-200 dark:border-gray-700"
+          className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-center hover:scale-105 transform transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2bb6c4] focus-visible:ring-offset-2 active:scale-98 border border-gray-200 dark:border-gray-700 hover:shadow-xl"
         >
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">My Subscriptions</h2>
-              <CreditCard size={32} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+          <div className="text-center">
+            <div className="flex justify-center items-center mb-4">
+              <CreditCard size={48} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </div>
-            <p className="text-gray-700 dark:text-gray-200 mb-6">
-              Manage your owned and borrowed subscriptions.
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-3">My Subscriptions</h2>
+            <p className="text-gray-700 dark:text-gray-200 text-sm">
+              Manage your owned and borrowed subscriptions
             </p>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.subscriptions.active}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Active</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.subscriptions.provided}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Provided</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {dashboardData.subscriptions.completed}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Completed</p>
-            </div>
           </div>
         </Link>
 
         {/* Available Plans Card */}
         <Link
           to="/dashboard/available-plans"
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:scale-105 transform transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2bb6c4] focus-visible:ring-offset-2 active:scale-98 border border-gray-200 dark:border-gray-700"
+          className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:scale-105 transform transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2bb6c4] focus-visible:ring-offset-2 active:scale-98 border border-gray-200 dark:border-[#263238] hover:shadow-xl"
         >
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Available Plans</h2>
-              <TrendingUp size={32} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+              <LayoutGrid size={32} className="text-[#2bb6c4] dark:text-[#5ed1dc]" aria-label="Available Plans Icon"/>
             </div>
             <p className="text-gray-700 dark:text-gray-200 mb-6">
               Discover and join shared subscriptions from other users.
@@ -283,39 +269,6 @@ const DashboardOverview = () => {
           </div>
         </Link>
       </div>
-
-      {/* Recent Activity Section */}
-      {dashboardData.recentActivity.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Recent Activity</h3>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div className="space-y-4">
-              {dashboardData.recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <DollarSign className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-100">
-                        {activity.type === 'credit' ? 'Added' : 'Spent'} ₹{activity.amount.toFixed(2)}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(activity.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-medium ${
-                    activity.type === 'credit' 
-                      ? 'text-[#2bb6c4] dark:text-[#5ed1dc]' 
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {activity.type === 'credit' ? '+' : '-'}₹{activity.amount.toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

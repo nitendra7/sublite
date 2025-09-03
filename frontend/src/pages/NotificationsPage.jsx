@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Bell, CheckCircle, Info, Gift, Loader2, MessageSquare, Clock } from "lucide-react";
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext';
+import Loading from '../components/ui/Loading';
 
-import api, { API_BASE } from '../utils/api';
+import api from '../utils/api';
 
 const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   const [bookingStatus, setBookingStatus] = useState(null);
@@ -13,7 +14,6 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
-        const token = localStorage.getItem("token");
         const bookingRes = await api.get(`/bookings/${bookingId}`);
         const booking = bookingRes.data;
         setBookingStatus(booking.bookingStatus);
@@ -66,6 +66,11 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   );
 };
 
+SendCredentialsButton.propTypes = {
+  bookingId: PropTypes.string.isRequired,
+  onOpenModal: PropTypes.func.isRequired,
+};
+
 const typeIcon = {
   booking: <CheckCircle className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
   payment: <Info className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
@@ -73,11 +78,9 @@ const typeIcon = {
   promotion: <Gift className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
 };
 
-export default function NotificationsPage() {
-  const { loading: loadingUser } = useUser();
-  const { darkMode } = useTheme();
-
-  const [notifications, setNotifications] = useState([]);
+ export default function NotificationsPage() {
+   const { loading: loadingUser } = useUser();
+   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
@@ -168,16 +171,7 @@ export default function NotificationsPage() {
   }, [loadingUser]);
 
   if (loading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading notifications..." />;
   }
 
   return (
@@ -265,7 +259,7 @@ export default function NotificationsPage() {
               No notifications yet
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              You'll see notifications here when you have new activities.
+              You&apos;ll see notifications here when you have new activities.
             </p>
           </div>
         ) : (

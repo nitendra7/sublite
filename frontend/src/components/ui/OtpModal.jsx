@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import { Button } from "./button";
 import { Input } from "./input";
 
@@ -29,6 +30,19 @@ const OtpModal = ({ isOpen, onVerify, onCancel, loading, error }) => {
       </div>
     </div>
   );
+};
+
+OtpModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onVerify: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
+  error: PropTypes.string
+};
+
+OtpModal.defaultProps = {
+  loading: false,
+  error: null
 };
 
 export default OtpModal;

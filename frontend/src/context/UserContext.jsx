@@ -1,5 +1,6 @@
 // src/context/UserContext.jsx
-import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import api, { setSessionExpiredHandler } from '../utils/api';
 
 // Create the Context with default values.
@@ -67,7 +68,7 @@ export const UserProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [clearAuthData]);
+  }, []);
 
   // Effect to trigger fetching the user profile when the component mounts.
   useEffect(() => {
@@ -161,4 +162,9 @@ export const UserProvider = ({ children }) => {
       )}
     </UserContext.Provider>
   );
+};
+
+// PropTypes validation for UserProvider
+UserProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

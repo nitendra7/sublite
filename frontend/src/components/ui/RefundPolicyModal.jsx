@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { X, Clock, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 
 const RefundPolicyModal = ({ isOpen, onClose }) => {
@@ -27,7 +27,7 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
               <div>
                 <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Your Money is Protected</h3>
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
-                  We ensure you get your money back if services aren't delivered as promised. All refunds are processed automatically.
+                  We ensure you get your money back if services aren&apos;t delivered as promised. All refunds are processed automatically.
                 </p>
               </div>
             </div>
@@ -45,7 +45,7 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
                 <div>
                   <p className="font-medium text-orange-800 dark:text-orange-200">Provider Timeout (15 minutes)</p>
                   <p className="text-sm text-orange-700 dark:text-orange-300">
-                    If the service provider doesn't respond with access details within 15 minutes of your booking, 
+                    If the service provider doesn&apos;t respond with access details within 15 minutes of your booking,
                     your booking is automatically cancelled and you receive a full refund.
                   </p>
                 </div>
@@ -89,7 +89,7 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
                 <div>
                   <p className="font-medium text-gray-800 dark:text-gray-200">Notification</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    You'll receive a notification confirming your refund has been processed.
+                    You&apos;ll receive a notification confirming your refund has been processed.
                   </p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 dark:text-gray-500">•</span>
-                <span>Refunds are only processed for bookings that haven't received access details.</span>
+                <span>Refunds are only processed for bookings that haven&apos;t received access details.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 dark:text-gray-500">•</span>
@@ -145,4 +145,9 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default RefundPolicyModal; 
+RefundPolicyModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired
+};
+
+export default RefundPolicyModal;

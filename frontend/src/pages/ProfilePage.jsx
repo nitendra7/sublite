@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext';
 import { Loader2 } from 'lucide-react';
+import Loading from '../components/ui/Loading';
 import OtpModal from "../components/ui/OtpModal";
 
 import api, { API_BASE } from '../utils/api';
@@ -14,7 +14,6 @@ console.log('Environment variables:', {
 
 export default function ProfilePage() {
   const { user, loading, error, updateUserContext } = useUser();
-  const { darkMode } = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
   const [changePasswordMode, setChangePasswordMode] = useState(false);
@@ -129,7 +128,7 @@ export default function ProfilePage() {
     setOtpLoading(true);
     setOtpError("");
     try {
-      const res = await api.post(`/auth/verify-profile-change-otp`, { otp });
+      await api.post(`/auth/verify-profile-change-otp`, { otp });
       setOtpVerified(true);
       setChangePasswordMode(true);
       setShowOtpModal(false);
@@ -184,16 +183,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading profile..." />;
   }
 
   if (error) {
@@ -450,14 +440,15 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+
+      {/* OTP Modal for Password Change */}
+      <OtpModal
+        isOpen={showOtpModal}
+        onVerify={handleOtpVerify}
+        onCancel={() => setShowOtpModal(false)}
+        loading={otpLoading}
+        error={otpError}
+      />
     </div>
   );
-     {/* OTP Modal for Password Change */}
-     <OtpModal
-       isOpen={showOtpModal}
-       onVerify={handleOtpVerify}
-       onCancel={() => setShowOtpModal(false)}
-       loading={otpLoading}
-       error={otpError}
-     />
 }

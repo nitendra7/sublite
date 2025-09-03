@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { X, Calendar, CreditCard, Wallet, DollarSign, Plus } from 'lucide-react';
-import api, { API_BASE } from '../../utils/api';
+import api from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -217,7 +218,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                             </svg>
                             <div className="text-sm text-blue-700 dark:text-blue-300">
                                 <p className="font-medium mb-1">Refund Policy:</p>
-                                <p>If the provider doesn't respond within 15 minutes, you'll be automatically refunded to your wallet. No action needed!</p>
+                                <p>If the provider doesn&apos;t respond within 15 minutes, you&apos;ll be automatically refunded to your wallet. No action needed!</p>
                             </div>
                         </div>
                     </div>
@@ -273,6 +274,27 @@ const BookingModal = ({ isOpen, onClose, service }) => {
             </div>
         </div>
     );
+};
+
+BookingModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  service: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    serviceName: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    rentalPrice: PropTypes.number.isRequired,
+    providerId: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        name: PropTypes.string,
+        username: PropTypes.string
+      })
+    ]),
+    availableSlots: PropTypes.number,
+    maxUsers: PropTypes.number,
+    features: PropTypes.arrayOf(PropTypes.string)
+  }).isRequired
 };
 
 export default BookingModal;

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BadgeIndianRupee, Clock, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react";
 import { useUser } from '../context/UserContext';
+import Loading from '../components/ui/Loading';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
-import api, { API_BASE } from '../utils/api';
+import api from '../utils/api';
 
 export default function WalletPage() {
   const { user, token, fetchUserProfile, loading: userContextLoading, error: userContextError } = useUser();
@@ -128,16 +129,7 @@ export default function WalletPage() {
   };
 
   if (userContextLoading) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading wallet...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading wallet..." />;
   }
 
   if (userContextError) {
@@ -246,10 +238,7 @@ export default function WalletPage() {
         </div>
         
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2bb6c4] mr-3" />
-            <span className="text-gray-600 dark:text-gray-400">Loading transactions...</span>
-          </div>
+          <Loading message="Loading transactions..." />
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 dark:text-red-400">{error}</p>

@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { User, Calendar, Circle, Clock } from 'lucide-react';
 
 const JoinedSubscriptionsList = ({ subscriptions }) => {
@@ -33,7 +33,7 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
     
     return (
         <div>
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Services I've Joined</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Services I&apos;ve Joined</h2>
             {subscriptions.length > 0 ? (
                 <div className="space-y-4">
                     {subscriptions.map(booking => (
@@ -76,11 +76,28 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
                 </div>
             ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-                    <p className="text-gray-500 dark:text-gray-400">You haven't joined any services yet.</p>
+                    <p className="text-gray-500 dark:text-gray-400">You haven&apos;t joined any services yet.</p>
                 </div>
             )}
         </div>
     );
+};
+
+JoinedSubscriptionsList.propTypes = {
+  subscriptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      bookingStatus: PropTypes.string.isRequired,
+      bookingDetails: PropTypes.shape({
+        serviceName: PropTypes.string.isRequired,
+        startDate: PropTypes.string,
+        endDate: PropTypes.string
+      }).isRequired,
+      providerId: PropTypes.shape({
+        name: PropTypes.string
+      })
+    })
+  ).isRequired
 };
 
 export default JoinedSubscriptionsList;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HelpCircle, MessageSquare, Mail } from 'lucide-react';
 import { CreditCard, Shield, Bell, Wallet, Star } from 'lucide-react';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
@@ -184,7 +184,7 @@ const HelpPage = () => {
         </div>
         <h2 className="text-2xl font-bold mb-4">Still Need Help?</h2>
         <p className="text-lg mb-6 opacity-90">
-          Can't find what you're looking for? Our support team is here to help.
+          Can&apos;t find what you&apos;re looking for? Our support team is here to help.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button className="px-6 py-3 bg-white text-[#2bb6c4] rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2">

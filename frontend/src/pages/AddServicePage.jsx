@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Clock, Users, Shield, Tag, FileText, Camera, MapPin } from 'lucide-react';
-import api, { API_BASE } from '../utils/api';
+import { DollarSign, Shield, Tag, FileText, MapPin } from 'lucide-react';
+import api from '../utils/api';
 
 const AddServicePage = () => {
     const navigate = useNavigate();
@@ -57,8 +57,6 @@ const AddServicePage = () => {
         setError(null);
         setSuccess(null);
 
-        const token = localStorage.getItem('token');
-        
         // Basic frontend validation
         if (!formData.serviceName || !formData.originalPrice || !formData.maxUsers) {
             setError("Service Name, Original Price, and Max Users are required.");
