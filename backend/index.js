@@ -19,7 +19,6 @@ const swaggerDocument = {
 };
 
 
-
 // Import custom modules
 const connectDB = require('./lib/db');
 const { start: initializeScheduler } = require('./jobs/bookingScheduler');
@@ -41,10 +40,6 @@ const adminRoutes = require('./routes/admin');
 
 
 const app = express();
-// --- Debug: Print all environment variables on server startup ---
-if (process.env.NODE_ENV !== 'production') {
-  console.log('[DEBUG] ENV VARIABLES:', JSON.stringify(process.env, null, 2));
-}
 
 // Core Middleware
 app.use(cors({
@@ -60,9 +55,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
-// CORS preflight handler -- place immediately after above CORS middleware
-app.options('*', cors());
 
 // Prefer JSON body limit config in future (see other todos)
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '1mb' }));
