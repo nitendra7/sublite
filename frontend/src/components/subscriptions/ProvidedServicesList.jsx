@@ -34,7 +34,7 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
             });
 
             // First, let's verify the service exists and belongs to the user
-            const getResponse = await fetch(`${API_BASE}/api/services/${deleteModal.serviceId}`, {
+            const getResponse = await fetch(`${API_BASE}/services/${deleteModal.serviceId}`, {
                 headers: { 
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
                 console.log('Service data:', serviceData);
             }
 
-            const response = await fetch(`${API_BASE}/api/services/${deleteModal.serviceId}`, {
+            const response = await fetch(`${API_BASE}/services/${deleteModal.serviceId}`, {
                 method: 'DELETE',
                 headers: { 
                     'Authorization': `Bearer ${token}`,

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../../utils/api';
 
 // DashboardOverview component displays a comprehensive summary of the user's dashboard.
 const DashboardOverview = () => {
@@ -38,69 +38,59 @@ const DashboardOverview = () => {
         
         const results = await Promise.allSettled([
           // Fetch user's bookings/subscriptions
-          fetch(`${API_BASE}/api/bookings/my-bookings`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          
+          api.get('/bookings/my-bookings'),
+
           // Fetch services provided by the user
-          fetch(`${API_BASE}/api/services/my-services`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          
+          api.get('/services/my-services'),
+
           // Fetch wallet data
-          fetch(`${API_BASE}/api/wallettransactions`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          
+          api.get('/wallettransactions'),
+
           // Fetch reviews data
-          fetch(`${API_BASE}/api/reviews/my/reviews`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          
+          api.get('/reviews/my/reviews'),
+
           // Fetch notifications
-          fetch(`${API_BASE}/api/notifications`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          
+          api.get('/notifications'),
+
           // Fetch available services
-          fetch(`${API_BASE}/api/services`)
+          api.get('/services')
         ]);
         
         // Process results
         const [bookingsRes, providedServicesRes, walletRes, reviewsRes, notificationsRes, servicesRes] = results;
-        
+
         // Log results for debugging
         console.log('API Results:', {
-          bookings: { status: bookingsRes.status, ok: bookingsRes.status === 'fulfilled' ? bookingsRes.value.ok : false },
-          providedServices: { status: providedServicesRes.status, ok: providedServicesRes.status === 'fulfilled' ? providedServicesRes.value.ok : false },
-          wallet: { status: walletRes.status, ok: walletRes.status === 'fulfilled' ? walletRes.value.ok : false },
-          reviews: { status: reviewsRes.status, ok: reviewsRes.status === 'fulfilled' ? reviewsRes.value.ok : false },
-          notifications: { status: notificationsRes.status, ok: notificationsRes.status === 'fulfilled' ? notificationsRes.value.ok : false },
-          services: { status: servicesRes.status, ok: servicesRes.status === 'fulfilled' ? servicesRes.value.ok : false }
+          bookings: bookingsRes.status,
+          providedServices: providedServicesRes.status,
+          wallet: walletRes.status,
+          reviews: reviewsRes.status,
+          notifications: notificationsRes.status,
+          services: servicesRes.status
         });
-        
-        const bookings = bookingsRes.status === 'fulfilled' && bookingsRes.value.ok 
-          ? await bookingsRes.value.json() 
+
+        const bookings = bookingsRes.status === 'fulfilled'
+          ? bookingsRes.value.data
           : [];
-        
-        const providedServices = providedServicesRes.status === 'fulfilled' && providedServicesRes.value.ok 
-          ? await providedServicesRes.value.json() 
+
+        const providedServices = providedServicesRes.status === 'fulfilled'
+          ? providedServicesRes.value.data
           : [];
-        
-        const walletTransactions = walletRes.status === 'fulfilled' && walletRes.value.ok 
-          ? await walletRes.value.json() 
+
+        const walletTransactions = walletRes.status === 'fulfilled'
+          ? walletRes.value.data
           : [];
-        
-        const reviews = reviewsRes.status === 'fulfilled' && reviewsRes.value.ok 
-          ? await reviewsRes.value.json() 
+
+        const reviews = reviewsRes.status === 'fulfilled'
+          ? reviewsRes.value.data
           : [];
-        
-        const notifications = notificationsRes.status === 'fulfilled' && notificationsRes.value.ok 
-          ? await notificationsRes.value.json() 
+
+        const notifications = notificationsRes.status === 'fulfilled'
+          ? notificationsRes.value.data
           : [];
-        
-        const services = servicesRes.status === 'fulfilled' && servicesRes.value.ok 
-          ? await servicesRes.value.json() 
+
+        const services = servicesRes.status === 'fulfilled'
+          ? servicesRes.value.data
           : [];
         
         // Process data

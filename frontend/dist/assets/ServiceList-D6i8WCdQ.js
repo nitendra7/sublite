@@ -1,2 +1,0 @@
-import{r as s,d as n,j as r,A as l}from"./index-BkqAQ4uy.js";function h(){const[c,a]=s.useState([]),[t,i]=s.useState("");return s.useEffect(()=>{n(`${l}/api/services`).then(e=>e.json()).then(e=>{Array.isArray(e)?a(e):i(e.error||"Failed to fetch services")}).catch(()=>i("Failed to fetch services"))},[]),t?r.jsx("div",{className:"alert alert-danger",children:t}):r.jsxs("div",{children:[r.jsx("h3",{children:"Services"}),r.jsx("ul",{children:c.map(e=>r.jsx("li",{children:e.name},e._id))})]})}export{h as default};
-//# sourceMappingURL=ServiceList-D6i8WCdQ.js.map

@@ -3,7 +3,7 @@ import { BadgeIndianRupee, Clock, Plus, ArrowUpRight, ArrowDownLeft, Loader2 } f
 import { useUser } from '../context/UserContext';
 import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 export default function WalletPage() {
   const { user, token, fetchUserProfile, loading: userContextLoading, error: userContextError } = useUser();
@@ -25,13 +25,8 @@ export default function WalletPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/wallettransactions`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to fetch transactions (Status: ${res.status})`);
-      }
-      const data = await res.json();
+      const res = await api.get(`/wallettransactions`);
+      const data = res.data;
       setTransactions(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (err) {
       setError(err.message);
@@ -60,20 +55,8 @@ export default function WalletPage() {
     setPaymentProcessing(true);
 
     try {
-      const orderRes = await fetch(`${API_BASE}/api/payments/create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount: amount })
-      });
-
-      if (!orderRes.ok) {
-        throw new Error("Failed to create payment order.");
-      }
-
-      const orderData = await orderRes.json();
+      const orderRes = await api.post(`/payments/create-order`, { amount });
+      const orderData = orderRes.data;
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_here',
@@ -84,25 +67,17 @@ export default function WalletPage() {
         order_id: orderData.id,
         handler: async function (response) {
           try {
-            const verificationRes = await fetch(`${API_BASE}/api/payments/verify`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
+            try {
+              await api.post(`/payments/verify`, {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-              }),
-            });
-
-            if (verificationRes.ok) {
+              });
               await fetchUserProfile();
               await fetchTransactions();
               setTopUpAmount("");
               alert("Payment successful! Your wallet has been topped up.");
-            } else {
+            } catch {
               throw new Error("Payment verification failed.");
             }
           } catch (error) {

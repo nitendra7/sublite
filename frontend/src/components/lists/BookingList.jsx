@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../../utils/api';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -11,12 +11,8 @@ function BookingList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/bookings`)
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
-      })
-      .then(data => setBookings(data))
+    api.get(`/bookings`)
+      .then(res => setBookings(res.data))
       .catch(err => setError(err.message));
   }, []);
 

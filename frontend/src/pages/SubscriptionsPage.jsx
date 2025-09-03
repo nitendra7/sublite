@@ -3,7 +3,7 @@ import { BookOpen, Users } from 'lucide-react';
 import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
 import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 const SubscriptionsPage = () => {
   const [providedServices, setProvidedServices] = useState([]);
@@ -16,32 +16,11 @@ const SubscriptionsPage = () => {
       const token = localStorage.getItem('token');
       try {
         // Fetch services provided by the user
-        const responseProvided = await fetch(`${API_BASE}/api/services/my-services`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const responseProvided = await api.get(`/services/my-services`);
+        const responseJoined = await api.get(`/bookings/my-joined`);
 
-        // Fetch subscriptions joined by the user (bookings made by the user)
-        const responseJoined = await fetch(`${API_BASE}/api/bookings/my-joined`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!responseProvided.ok || !responseJoined.ok) {
-          throw new Error('Failed to fetch data');
-        }
-
-        const dataProvided = await responseProvided.json();
-        const dataJoined = await responseJoined.json();
-
-        setProvidedServices(dataProvided);
-        setJoinedSubscriptions(dataJoined);
+        setProvidedServices(responseProvided.data);
+        setJoinedSubscriptions(responseJoined.data);
 
       } catch (err) {
         setError(err.message);

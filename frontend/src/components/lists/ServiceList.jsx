@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE, apiFetch } from '../../utils/api';
+import api, { API_BASE } from '../../utils/api';
 
 export default function ServiceList() {
   const [services, setServices] = useState([]);
   const [error, setError] = useState('');
   useEffect(() => {
-    apiFetch(`${API_BASE}/api/services`)
-      .then(res => res.json())
-      .then(data => {
+    api.get(`/services`)
+      .then(res => {
+        const data = res.data;
         if (Array.isArray(data)) setServices(data);
         else setError(data.error || 'Failed to fetch services');
       })

@@ -12,7 +12,7 @@ const UserManagement = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/admin/users`, {
+        const res = await fetch(`${API_BASE}/admin/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch users');
@@ -30,10 +30,10 @@ const UserManagement = () => {
   const handleDelete = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
-              const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+              const res = await fetch(`${API_BASE}/users/${userId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+              });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete user');
       setUsers(users.filter(u => u._id !== userId));

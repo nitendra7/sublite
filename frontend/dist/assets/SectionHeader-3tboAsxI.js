@@ -1,2 +1,0 @@
-import{j as e}from"./index-BkqAQ4uy.js";const x=({icon:t,title:a,actions:s,className:i="",...l})=>e.jsxs("header",{className:`flex items-center gap-2 mb-6 ${i}`,...l,children:[t&&e.jsx(t,{className:"text-blue-500",size:28,"aria-hidden":"true"}),e.jsx("h2",{className:"text-2xl font-bold tracking-tight text-blue-700 flex items-center gap-2",children:a}),s&&e.jsx("div",{className:"ml-auto",children:s})]});export{x as S};
-//# sourceMappingURL=SectionHeader-3tboAsxI.js.map

@@ -1,138 +1,115 @@
-// API utility with automatic token refresh
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// api.js - Centralized API utility with token refresh
 
-// Function to get fresh token using refresh token
-const refreshAccessToken = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-        throw new Error('No refresh token available');
-    }
+import axios from 'axios';
 
-    try {
-        const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to refresh token');
-        }
-
-        const data = await response.json();
-        
-        // Update tokens in localStorage
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        
-        return data.accessToken;
-    } catch (error) {
-        // Clear all auth data if refresh fails
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userName');
-        
-        // Redirect to login
-        window.location.href = '/login';
-        throw error;
-    }
-};
+// Ensure /api/v1 is included only once
+let base = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') || 'http://localhost:5000';
+if (!base.endsWith('/api/v1')) {
+  base += '/api/v1';
+}
+export const API_BASE = base;
 
 let onSessionExpired = null;
 export function setSessionExpiredHandler(handler) {
   onSessionExpired = handler;
 }
 
-// Enhanced fetch function with automatic token refresh
-export const apiFetch = async (url, options = {}) => {
-    let token = localStorage.getItem('token');
-    
-    // Add authorization header if token exists
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-    };
-    
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: { 'Content-Type': 'application/json' },
+  responseType: 'json',
+});
 
-    const requestOptions = {
-        ...options,
-        headers,
-    };
+// Request Interceptor: Attach token
+api.interceptors.request.use(
+  (config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    try {
-        let response = await fetch(url, requestOptions);
-
-        // If request fails with 401/403 (token expired), trigger session expired handler
-        if ((response.status === 401 || response.status === 403)) {
-            if (onSessionExpired) onSessionExpired();
-            throw new Error('Session expired. Please log in again.');
-        }
-
-        // If request fails with 401/403 (token expired), try to refresh token
-        if ((response.status === 401 || response.status === 403) && token) {
-            console.log('Token expired, attempting to refresh...');
-            
-            try {
-                // Get new token
-                const newToken = await refreshAccessToken();
-                
-                // Retry the original request with new token
-                requestOptions.headers['Authorization'] = `Bearer ${newToken}`;
-                response = await fetch(url, requestOptions);
-                
-                console.log('Token refreshed successfully, request retried');
-            } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                throw refreshError;
-            }
-        }
-
-        return response;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-};
-
-// Helper function to check if user is authenticated
-export const isAuthenticated = () => {
-    const token = localStorage.getItem('token');
-    const refreshToken = localStorage.getItem('refreshToken');
-    return !!(token || refreshToken);
-};
-
-// Helper function to logout user
-export const logout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    
-    if (refreshToken) {
-        try {
-            await fetch(`${API_BASE}/api/auth/logout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-        } catch (error) {
-            console.error('Logout API call failed:', error);
-        }
-    }
-    
-    // Clear all auth data
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    
-    // Redirect to login
+// Helper: Refresh token
+async function refreshAccessToken() {
+  const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+  if (!refreshToken) throw new Error('No refresh token available');
+  try {
+    const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+    const { accessToken, refreshToken: newRefreshToken } = data;
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('refreshToken', newRefreshToken);
+    return accessToken;
+  } catch (error) {
+    localStorage.clear();
+    if (onSessionExpired) onSessionExpired();
     window.location.href = '/login';
+    throw error;
+  }
+}
+
+// Response Interceptor: Handle 401/403 + token refresh
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => (error ? prom.reject(error) : prom.resolve(token)));
+  failedQueue = [];
 };
 
-export default apiFetch;
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response &&
+      [401, 403].includes(error.response.status) &&
+      !originalRequest._retry
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+      originalRequest._retry = true;
+      isRefreshing = true;
+      try {
+        const newToken = await refreshAccessToken();
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth helpers
+export const isAuthenticated = () => {
+  return !!(localStorage.getItem('token') || localStorage.getItem('refreshToken'));
+};
+
+export const logout = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (refreshToken) {
+    try {
+      await api.post('/auth/logout', { refreshToken });
+    } catch (err) {
+      console.error('Logout API failed:', err);
+    }
+  }
+  localStorage.clear();
+  window.location.href = '/login';
+};
+
+export default api;

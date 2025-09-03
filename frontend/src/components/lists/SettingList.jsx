@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE, apiFetch } from '../../App';
+import api, { API_BASE } from '../../utils/api';
 
 export default function SettingList() {
   const [settings, setSettings] = useState([]);
   const [error, setError] = useState('');
   useEffect(() => {
-    apiFetch(`${API_BASE}/api/settings`)
-      .then(res => res.json())
-      .then(data => {
+    api.get(`/settings`)
+      .then(res => {
+        const data = res.data;
         if (Array.isArray(data)) setSettings(data);
         else setError(data.error || 'Failed to fetch settings');
       })

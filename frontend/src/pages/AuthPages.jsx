@@ -4,8 +4,8 @@ import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react'; // For password visibility icons
 
-// Assuming API_BASE is correctly set in your environment variables
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
+// API_BASE comes from api.js and always includes /api/v1, so append /auth/login only
 
 import { useUser } from '../context/UserContext';
 export default function AuthPage({ isLogin = true }) {
@@ -74,29 +74,13 @@ export default function AuthPage({ isLogin = true }) {
 
     try {
       if (isLogin) {
+        // Debug: check what API_BASE and env is before sending login
+        console.log('Login REQUEST — API_BASE:', API_BASE, 'VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
         // Login API call
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ emailOrUsername: formData.email, password: formData.password })
-        });
-        let data;
-        try { data = await res.json(); } catch { setError('Unexpected server response.'); setLoading(false); return; }
+        const res = await api.post(`/auth/login`, { emailOrUsername: formData.email, password: formData.password });
+        const data = res.data;
 
-        if (!res.ok) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userId');
-          localStorage.removeItem('userName');
-          if (data.message && data.message.toLowerCase().includes('user not found')) {
-            setShowAccountNotFoundModal(true);
-          } else if (data.message && data.message.toLowerCase().includes('invalid credentials')) {
-            setError('Invalid password. Please try again.');
-          } else {
-            setError(data.message || 'Login failed');
-          }
-          setLoading(false);
-          return;
-        }
+        // If there's an error, axios throws; catch will handle
 
         // Store token and user info upon successful login
         localStorage.setItem('token', data.accessToken);
@@ -123,22 +107,14 @@ export default function AuthPage({ isLogin = true }) {
           return;
         }
         // Signup API call
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: formData.name, username: formData.username, email: formData.email, password: formData.password })
+        const res = await api.post(`/auth/register`, {
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
         });
-        let data;
-        try { data = await res.json(); } catch { setError('Unexpected server response.'); setLoading(false); return; }
+        const data = res.data;
 
-        if (!res.ok) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userId');
-          localStorage.removeItem('userName');
-          setError(data.message || 'Registration failed');
-          setLoading(false);
-          return;
-        }
         // If registration is successful, show OTP modal
         setShowOtpModal(true);
         setSuccess(''); // Clear main success message for OTP flow
@@ -157,24 +133,13 @@ export default function AuthPage({ isLogin = true }) {
     setOtpError('');
     setOtpSuccess('');
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, otp })
+      const res = await api.post(`/auth/verify-otp`, {
+        email: formData.email,
+        otp
       });
-      let data;
-      try { data = await res.json(); } catch { setOtpError('Unexpected server response.'); setOtpLoading(false); return; }
+      const data = res.data;
 
-      if (!res.ok) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userName');
-        setOtpError(data.message || 'OTP verification failed');
-        setOtpLoading(false);
-        return;
-      }
-
-      // IMPORTANT: If backend returns token after OTP verification, store it and navigate
+      // If backend returns token after OTP verification, store it and navigate
       if (data.accessToken) {
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('userName', data.user?.name || '');
@@ -200,19 +165,12 @@ export default function AuthPage({ isLogin = true }) {
     setResendSuccess('');
     try {
       // Re-trigger the registration endpoint to send a new OTP
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, username: formData.username, email: formData.email, password: formData.password })
+      const res = await api.post(`/auth/register`, {
+        name: formData.name,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
       });
-      let data;
-      try { data = await res.json(); } catch { setResendError('Unexpected server response.'); setResendLoading(false); return; }
-
-      if (!res.ok) {
-        setResendError(data.message || 'Failed to resend OTP');
-        setResendLoading(false);
-        return;
-      }
       setResendSuccess('OTP resent! Check your email.');
       setOtpTimer(30); // Reset timer
     } catch (err) {
@@ -229,14 +187,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotError("");
     setForgotSuccess("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail })
-      });
-      let data;
-      try { data = await res.json(); } catch { setForgotError('Unexpected server response.'); setForgotLoading(false); return; }
-      if (!res.ok) throw new Error(data.message || 'Failed to send OTP.');
+      await api.post(`/auth/forgot-password`, { email: forgotEmail });
       setForgotSuccess('OTP sent! Check your email.');
       setForgotStep(2);
     } catch (err) {
@@ -253,14 +204,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotOtpError("");
     setForgotOtpSuccess("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify-reset-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp })
-      });
-      let data;
-      try { data = await res.json(); } catch { setForgotOtpError('Unexpected server response.'); setForgotOtpLoading(false); return; }
-      if (!res.ok) throw new Error(data.message || 'OTP verification failed.');
+      await api.post(`/auth/verify-reset-otp`, { email: forgotEmail, otp: forgotOtp });
       setForgotOtpSuccess('OTP verified!');
       setTimeout(() => setForgotStep(3), 500);
     } catch (err) {
@@ -276,18 +220,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotResendError("");
     setForgotResendSuccess("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail })
-      });
-      let data;
-      try { data = await res.json(); } catch { setForgotResendError('Unexpected server response.'); setForgotResendLoading(false); return; }
-      if (!res.ok) {
-        setForgotResendError(data.message || 'Failed to resend OTP');
-        setForgotResendLoading(false);
-        return;
-      }
+      await api.post(`/auth/forgot-password`, { email: forgotEmail });
       setForgotResendSuccess('OTP resent! Check your email.');
       setForgotOtpTimer(30);
     } catch (err) {
@@ -309,14 +242,11 @@ export default function AuthPage({ isLogin = true }) {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp, newPassword: forgotNewPassword })
+      await api.post(`/auth/reset-password`, {
+        email: forgotEmail,
+        otp: forgotOtp,
+        newPassword: forgotNewPassword
       });
-      let data;
-      try { data = await res.json(); } catch { setForgotResetError('Unexpected server response.'); setForgotResetLoading(false); return; }
-      if (!res.ok) throw new Error(data.message || 'Failed to reset password.');
       setForgotResetSuccess('Password reset successful! You can now log in.');
       setTimeout(() => {
         setShowForgotModal(false);

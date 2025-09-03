@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DollarSign, Shield, Tag, FileText, MapPin } from 'lucide-react';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 const EditServicePage = () => {
     const navigate = useNavigate();
@@ -44,22 +44,8 @@ const EditServicePage = () => {
             }
             
             try {
-                const response = await fetch(`${API_BASE}/api/services/${serviceId}`, {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.status === 401) {
-                    throw new Error('Authentication failed. Please log in again.');
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch service data');
-                }
-
-                const serviceData = await response.json();
+                const response = await api.get(`/services/${serviceId}`);
+                const serviceData = response.data;
                 
                 // Format the data for the form
                 setFormData({
@@ -139,30 +125,12 @@ const EditServicePage = () => {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/api/services/${serviceId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    features: formData.features.split(',').map(f => f.trim()).filter(f => f), // Convert comma-separated string to array
-                })
+            const response = await api.put(`/services/${serviceId}`, {
+                ...formData,
+                features: formData.features.split(',').map(f => f.trim()).filter(f => f),
             });
-
-            if (response.status === 401) {
-                throw new Error('Authentication failed. Please log in again.');
-            }
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || 'Failed to update service.');
-            }
-            
+            const result = response.data;
             setSuccess(`Service "${result.serviceName}" updated successfully!`);
-            // Navigate back to subscriptions page after a short delay
             setTimeout(() => {
                 navigate('/dashboard/subscriptions');
             }, 2000);

@@ -1,6 +1,6 @@
 // src/context/UserContext.jsx
 import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
-import { setSessionExpiredHandler } from '../utils/api';
+import api, { setSessionExpiredHandler } from '../utils/api';
 
 // Create the Context with default values.
 const UserContext = createContext({
@@ -31,7 +31,7 @@ export const UserProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  // API_BASE now handled by utils/api singleton
 
   // Clears all authentication-related data from localStorage and context.
   const clearAuthData = useCallback(() => {
@@ -59,21 +59,8 @@ export const UserProvider = ({ children }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        headers: { Authorization: `Bearer ${tokenToFetch}` }
-      });
-
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          clearAuthData();
-          throw new Error("Authentication failed. Please log in again.");
-        }
-        const errorData = await res.json();
-        throw new Error(errorData.message || `HTTP error! Status: ${res.status}`);
-      }
-
-      const data = await res.json();
-      setUser(data);
+      const res = await api.get(`/users/me`);
+      setUser(res.data);
     } catch (err) {
       setError(`Failed to load user profile: ${err.message}`);
       setUser(null);

@@ -42,14 +42,14 @@ const AppIcon = ({ name, size = 48 }) => {
 
 
 const services = [
-  { name: "Netflix", price: "₹80", duration: "3 days", color: "#E50914", savings: "Save ₹119" },
-  { name: "Spotify", price: "₹40", duration: "1 week", color: "#1DB954", savings: "Save ₹89" },
-  { name: "Prime Video", price: "₹75", duration: "1 week", color: "#00A8E1", savings: "Save ₹224" },
+  { name: "Netflix", price: "₹18", duration: "3 days", color: "#E50914", savings: "Save ₹119" },
+  { name: "Spotify", price: "₹38", duration: "1 week", color: "#1DB954", savings: "Save ₹89" },
+  { name: "Prime Video", price: "₹18", duration: "1 week", color: "#00A8E1", savings: "Save ₹224" },
   { name: "JioHotstar", price: "₹25", duration: "1 week", color: "#113CCF", savings: "Save ₹4" },
-  { name: "YouTube Premium", price: "₹40", duration: "1 week", color: "#FF0000", savings: "Save ₹109" },
+  { name: "YouTube Premium", price: "₹20", duration: "1 week", color: "#FF0000", savings: "Save ₹109" },
   { name: "OpenAI", price: "₹100", duration: "1 week", color: "#6E6E6E", savings: "Save ₹399" },
-  { name: "GitHub Copilot", price: "₹90", duration: "1 week", color: "#24292F", savings: "Save ₹309" },
-  { name: "Adobe CC", price: "₹120", duration: "3 days", color: "#FF0000", savings: "Save ₹480" }
+  { name: "GitHub Copilot", price: "₹30", duration: "1 week", color: "#24292F", savings: "Save ₹309" },
+  { name: "Adobe CC", price: "₹20", duration: "3 days", color: "#FF0000", savings: "Save ₹480" }
 ];
 
 const steps = [

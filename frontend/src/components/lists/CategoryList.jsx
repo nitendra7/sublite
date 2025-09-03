@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE, apiFetch } from '../../App';
+import api, { API_BASE } from '../../utils/api';
 
 export default function CategoryList() {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
   useEffect(() => {
-    apiFetch(`${API_BASE}/api/categories`)
-      .then(res => res.json())
-      .then(data => {
+    api.get(`/categories`)
+      .then(res => {
+        const data = res.data;
         if (Array.isArray(data)) setCategories(data);
         else setError(data.error || 'Failed to fetch categories');
       })

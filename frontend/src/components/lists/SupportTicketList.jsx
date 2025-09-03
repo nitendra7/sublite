@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE, apiFetch } from '../../App';
+import api, { API_BASE } from '../../utils/api';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -11,9 +11,9 @@ export default function SupportTicketList() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiFetch(`${API_BASE}/api/support-tickets`)
-      .then(res => res.json())
-      .then(data => {
+    api.get(`/support-tickets`)
+      .then(res => {
+        const data = res.data;
         if (Array.isArray(data)) setTickets(data);
         else setError(data.error || 'Failed to fetch support tickets');
       })

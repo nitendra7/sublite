@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, PlusCircle, Edit, Trash2, Loader2, MessageSquare } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { apiFetch, API_BASE } from '../utils/api';
+import api, { API_BASE } from '../utils/api';
 
 const ReviewPage = () => {
   const { user, token } = useUser();
@@ -30,17 +30,11 @@ const ReviewPage = () => {
       setError(null);
 
       try {
-        const reviewsResponse = await apiFetch(`${API_BASE}/api/reviews/my/reviews`);
-        if (!reviewsResponse.ok) {
-          throw new Error('Failed to fetch reviews');
-        }
-        const reviewsData = await reviewsResponse.json();
+        const reviewsResponse = await api.get(`/reviews/my/reviews`);
+        const reviewsData = reviewsResponse.data;
 
-        const bookingsResponse = await apiFetch(`${API_BASE}/api/reviews/my/reviewable-bookings`);
-        if (!bookingsResponse.ok) {
-          throw new Error('Failed to fetch reviewable bookings');
-        }
-        const bookingsData = await bookingsResponse.json();
+        const bookingsResponse = await api.get(`/reviews/my/reviewable-bookings`);
+        const bookingsData = bookingsResponse.data;
 
         setReviews(reviewsData);
         setReviewableBookings(bookingsData);
@@ -57,18 +51,13 @@ const ReviewPage = () => {
 
   const handleHelpful = async (reviewId) => {
     try {
-      const response = await apiFetch(`${API_BASE}/api/reviews/${reviewId}/helpful`, {
-        method: 'PATCH'
-      });
-
-      if (response.ok) {
-        const { helpfulCount } = await response.json();
-        setReviews(prevReviews =>
-          prevReviews.map(review =>
-            review._id === reviewId ? { ...review, helpfulCount } : review
-          )
-        );
-      }
+      const response = await api.patch(`/reviews/${reviewId}/helpful`);
+      const { helpfulCount } = response.data;
+      setReviews(prevReviews =>
+        prevReviews.map(review =>
+          review._id === reviewId ? { ...review, helpfulCount } : review
+        )
+      );
     } catch (err) {
       console.error('Error marking review as helpful:', err);
     }
@@ -103,35 +92,23 @@ const ReviewPage = () => {
     try {
       let response;
       if (modalType === 'add') {
-        response = await apiFetch(`${API_BASE}/api/reviews`, {
-          method: 'POST',
-          body: JSON.stringify(reviewData)
-        });
+        response = await api.post(`/reviews`, reviewData);
       } else {
-        response = await apiFetch(`${API_BASE}/api/reviews/${currentReview._id}`, {
-          method: 'PUT',
-          body: JSON.stringify(reviewData)
-        });
+        response = await api.put(`/reviews/${currentReview._id}`, reviewData);
       }
 
-      if (response.ok) {
-        const savedReview = await response.json();
-        
-        if (modalType === 'add') {
-          setReviews(prev => [savedReview, ...prev]);
-          setReviewableBookings(prev => prev.filter(booking => booking._id !== selectedBookingToReview));
-        } else {
-          setReviews(prev => prev.map(review => 
-            review._id === currentReview._id ? savedReview : review
-          ));
-        }
-        
-        closeReviewModal();
-        alert(modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!');
+      const savedReview = response.data;
+
+      if (modalType === 'add') {
+        setReviews(prev => [savedReview, ...prev]);
+        setReviewableBookings(prev => prev.filter(booking => booking._id !== selectedBookingToReview));
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save review');
+        setReviews(prev => prev.map(review =>
+          review._id === currentReview._id ? savedReview : review
+        ));
       }
+      closeReviewModal();
+      alert(modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!');
     } catch (err) {
       console.error('Error saving review:', err);
       alert(err.message || 'Failed to save review');
@@ -146,16 +123,9 @@ const ReviewPage = () => {
     }
 
     try {
-      const response = await apiFetch(`${API_BASE}/api/reviews/${reviewId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        setReviews(prev => prev.filter(review => review._id !== reviewId));
-        alert('Review deleted successfully!');
-      } else {
-        throw new Error('Failed to delete review');
-      }
+      await api.delete(`/reviews/${reviewId}`);
+      setReviews(prev => prev.filter(review => review._id !== reviewId));
+      alert('Review deleted successfully!');
     } catch (err) {
       console.error('Error deleting review:', err);
       alert(err.message || 'Failed to delete review');

@@ -3,7 +3,7 @@ import { Bell, CheckCircle, Info, Gift, Loader2, MessageSquare, Clock } from "lu
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   const [bookingStatus, setBookingStatus] = useState(null);
@@ -14,10 +14,8 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
     const fetchBookingDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        const bookingRes = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const booking = await bookingRes.json();
+        const bookingRes = await api.get(`/bookings/${bookingId}`);
+        const booking = bookingRes.data;
         setBookingStatus(booking.bookingStatus);
         setBookingCreatedAt(booking.createdAt);
       } catch (err) {
@@ -93,12 +91,8 @@ export default function NotificationsPage() {
 
   const markRead = async (notifId) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/notifications/${notifId}/read`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.ok;
+      await api.patch(`/notifications/${notifId}/read`);
+      return true;
     } catch (err) {
       console.error('Failed to mark notification as read:', err);
       return false;
@@ -107,11 +101,7 @@ export default function NotificationsPage() {
 
   const confirmBooking = async (bookingId) => {
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`${API_BASE}/api/bookings/${bookingId}/confirm`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`/bookings/${bookingId}/confirm`);
     } catch (err) {
       console.error('Failed to confirm booking:', err);
     }
@@ -119,13 +109,8 @@ export default function NotificationsPage() {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-      const data = await response.json();
-      setNotifications(data);
+      const response = await api.get(`/notifications`);
+      setNotifications(response.data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,11 +120,8 @@ export default function NotificationsPage() {
 
   const openCredModal = async (bookingId) => {
     try {
-      const token = localStorage.getItem("token");
-      const bookingRes = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const booking = await bookingRes.json();
+      const bookingRes = await api.get(`/bookings/${bookingId}`);
+      const booking = bookingRes.data;
       setCredBookingCreatedAt(booking.createdAt);
       setCredBookingId(bookingId);
       setShowCredModal(true);
@@ -160,21 +142,7 @@ export default function NotificationsPage() {
     setCredError('');
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/bookings/${credBookingId}/send-message`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(credValues)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send credentials');
-      }
-
+      await api.post(`/bookings/${credBookingId}/send-message`, credValues);
       setShowCredModal(false);
       setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
       await fetchNotifications();

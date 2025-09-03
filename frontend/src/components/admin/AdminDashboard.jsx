@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import apiFetch, { API_BASE } from "../../utils/api";
+import api, { API_BASE } from "../../utils/api";
 import SectionHeader from "./SectionHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 
@@ -19,12 +19,8 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const res = await apiFetch(`${API_BASE}/api/admin/stats`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch dashboard stats");
-        }
-        const data = await res.json();
-        setStats(data);
+        const res = await api.get(`/admin/stats`);
+        setStats(res.data);
       } catch (err) {
         setError(err.message || "Something went wrong");
       } finally {

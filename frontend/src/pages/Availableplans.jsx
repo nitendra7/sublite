@@ -3,7 +3,7 @@ import { Users, Star, LayoutGrid, List, Search, Loader2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import BookingModal from '../components/modals/BookingModal';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 const Availableplans = () => {
   const { token } = useUser();
@@ -18,18 +18,12 @@ const Availableplans = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        
         const [plansRes, bookingsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/services`, { headers }),
-          token ? fetch(`${API_BASE}/api/bookings/my-bookings`, { headers }) : Promise.resolve(null)
+          api.get('/services'),
+          token ? api.get('/bookings/my-bookings') : Promise.resolve({ data: null })
         ]);
 
-        const plansData = await plansRes.json();
-
+        const plansData = plansRes.data;
         if (Array.isArray(plansData)) {
           const availablePlans = plansData.filter(plan => plan.availableSlots > 0);
           setPlans(availablePlans);
@@ -37,9 +31,8 @@ const Availableplans = () => {
           console.error("API did not return an array of plans:", plansData);
           setPlans([]);
         }
-
-        if (token && bookingsRes) {
-          const bookingsData = await bookingsRes.json();
+        if (token && bookingsRes.data) {
+          const bookingsData = bookingsRes.data;
           if (Array.isArray(bookingsData)) {
             setUserBookings(bookingsData);
           } else {
@@ -49,7 +42,6 @@ const Availableplans = () => {
         } else {
           setUserBookings([]);
         }
-
       } catch (error) {
         console.error("Failed to fetch data:", error);
         setPlans([]);
@@ -68,21 +60,16 @@ const Availableplans = () => {
     }
     
     try {
-      const response = await fetch(`${API_BASE}/api/bookings/my-bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const userBookings = await response.json();
-        const existingBooking = Array.isArray(userBookings) ? userBookings.find(booking => 
-          booking.serviceId === service._id && 
-          ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
-        ) : null;
-        
-        if (existingBooking) {
-          alert('You have already booked this service. You cannot book the same service twice.');
-          return;
-        }
+      const response = await api.get(`/bookings/my-bookings`);
+      const userBookingsCheck = response.data;
+      const existingBooking = Array.isArray(userBookingsCheck) ? userBookingsCheck.find(booking =>
+        booking.serviceId === service._id &&
+        ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
+      ) : null;
+
+      if (existingBooking) {
+        alert('You have already booked this service. You cannot book the same service twice.');
+        return;
       }
     } catch (error) {
       console.error('Error checking existing bookings:', error);

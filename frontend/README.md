@@ -37,6 +37,25 @@ npm run build
 
 Builds the app for production in the `dist` folder.
 
+### Build Output & Code Splitting
+
+This project uses Vite's advanced code splitting to improve performance and reduce the size of initially loaded bundles. Heavy dependencies and rarely-used admin features are split into their own JavaScript chunks using [Rollup's manualChunks option](https://rollupjs.org/configuration-options/#output-manualchunks).
+
+#### How it works
+
+- **vendor**: All core dependencies (`react`, `react-dom`, `react-router-dom`) are bundled separately in a `vendor` chunk.
+- **admin**: Large admin-related components are grouped into an `admin` chunk and only loaded when needed.
+- **main/index**: The main application code is kept as small as possible for faster startup.
+
+You can adjust these splits in [`vite.config.js`](frontend/vite.config.js:1) under the `manualChunks` configuration. This helps keep the initial JS download as small as practical and reduces time-to-interactive, especially for users who never visit admin routes.
+
+See the build output after running:
+
+```bash
+npm run build
+```
+
+for evidence of distinct, smaller JS bundles.
 ### Features
 
 - React 19

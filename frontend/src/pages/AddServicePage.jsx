@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, Clock, Users, Shield, Tag, FileText, Camera, MapPin } from 'lucide-react';
-import { apiFetch, API_BASE } from '../utils/api';
+import api, { API_BASE } from '../utils/api';
 
 const AddServicePage = () => {
     const navigate = useNavigate();
@@ -67,24 +67,16 @@ const AddServicePage = () => {
         }
 
         try {
-            const response = await apiFetch(`${API_BASE}/api/services`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    ...formData,
-                    features: formData.features.split(',').map(f => f.trim()), // Convert comma-separated string to array
-                })
+            const response = await api.post(`/services`, {
+                ...formData,
+                features: formData.features.split(',').map(f => f.trim()),
             });
 
-            const result = await response.json();
+            const result = response.data;
 
-            if (!response.ok) {
-                throw new Error(result.message || 'Failed to add service.');
-            }
-            
             setSuccess(`Service "${result.serviceName}" added successfully! The fair rental price is calculated to be ₹${result.rentalPrice}.`);
-            // Optionally, navigate away after a short delay
             setTimeout(() => {
-                navigate('/dashboard/subscriptions'); // Navigate to a relevant page
+                navigate('/dashboard/subscriptions');
             }, 3000);
 
         } catch (err) {

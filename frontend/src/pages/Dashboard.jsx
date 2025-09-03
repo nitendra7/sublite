@@ -8,6 +8,7 @@ import DashboardOverview from '../components/dashboard/DashboardOverview';
 import Sidebar from '../components/dashboard/Sidebar';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
+import api, { API_BASE } from '../utils/api';
 
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
@@ -88,15 +89,10 @@ function Dashboard() {
         const token = localStorage.getItem('token');
         if (!token) return;
         
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/notifications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-          const notifications = await response.json();
-          const unreadCount = notifications.filter(n => !n.isRead).length;
-          setUnreadNotifications(unreadCount);
-        }
+        const response = await api.get(`/notifications`);
+        const notifications = response.data;
+        const unreadCount = notifications.filter(n => !n.isRead).length;
+        setUnreadNotifications(unreadCount);
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
       }

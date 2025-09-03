@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, CreditCard, Wallet, DollarSign, Plus } from 'lucide-react';
-import { apiFetch, API_BASE } from '../../utils/api';
+import api, { API_BASE } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,20 +35,13 @@ const BookingModal = ({ isOpen, onClose, service }) => {
         setError(null);
 
         try {
-            const response = await apiFetch(`${API_BASE}/api/bookings`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    serviceId: service._id,
-                    rentalDuration: rentalDuration,
-                    paymentMethod: 'wallet'
-                })
+            const response = await api.post(`/bookings`, {
+                serviceId: service._id,
+                rentalDuration: rentalDuration,
+                paymentMethod: 'wallet'
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Booking failed.');
-            }
+            const data = response.data;
 
             alert(data.message || 'Booking successful! Check "My Subscriptions" for details.');
             onClose();

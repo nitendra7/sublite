@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Loader2 } from 'lucide-react';
 import OtpModal from "../components/ui/OtpModal";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import api, { API_BASE } from '../utils/api';
 
 // Debug logging
 console.log('Environment variables:', {
@@ -129,14 +129,7 @@ export default function ProfilePage() {
     setOtpLoading(true);
     setOtpError("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify-profile-change-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ otp }),
-      });
-      if (!res.ok) {
-        throw new Error((await res.json()).message || "Failed to verify OTP.");
-      }
+      const res = await api.post(`/auth/verify-profile-change-otp`, { otp });
       setOtpVerified(true);
       setChangePasswordMode(true);
       setShowOtpModal(false);
@@ -175,22 +168,11 @@ export default function ProfilePage() {
         formData.append('profilePicture', profile.profilePicture);
       }
 
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Do NOT set Content-Type; browser will set it to multipart/form-data with boundary
-        },
-        body: formData
+      const res = await api.put(`/users/me`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to update profile: ${res.status} ${res.statusText}\n${errorText}`);
-      }
-
-      const data = await res.json();
-      updateUserContext(data);
+      updateUserContext(res.data);
       setSaveSuccess(true);
       setIsEditing(false);
       setInitialProfile(profile);
