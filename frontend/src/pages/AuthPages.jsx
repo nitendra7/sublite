@@ -323,8 +323,8 @@ export default function AuthPage({ isLogin = true }) {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4 font-inter">
-      <div className="w-full max-w-md sm:max-w-md md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 font-inter">
+      <div className="w-full max-w-md sm:max-w-md md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6">
           <img
             src="/logos/logo.png"
@@ -337,16 +337,16 @@ export default function AuthPage({ isLogin = true }) {
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-sm">{isLogin ? 'Please enter your details' : 'Sign up to get started'}</p>
 
-        <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
           <Button
             asChild
-            className={`flex-1 py-2 font-semibold text-center rounded-none ${isLogin ? 'bg-[#2bb6c4] text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'} shadow-none border-none`}
+            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${isLogin ? 'bg-[#2bb6c4] text-white shadow-md' : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} shadow-none border-none`}
           >
             <Link to="/login">Sign In</Link>
           </Button>
           <Button
             asChild
-            className={`flex-1 py-2 font-semibold text-center rounded-none ${!isLogin ? 'bg-[#2bb6c4] text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'} shadow-none border-none`}
+            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${!isLogin ? 'bg-[#2bb6c4] text-white shadow-md' : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} shadow-none border-none`}
           >
             <Link to="/register">Sign up</Link>
           </Button>
@@ -448,9 +448,9 @@ export default function AuthPage({ isLogin = true }) {
 
       {/* Account Not Found Modal */}
       {showAccountNotFoundModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">No Account Found</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">No Account Found</h2>
             <p className="mb-4 text-gray-600 dark:text-gray-300">Would you like to sign up instead?</p>
             <div className="flex justify-center gap-4">
               <Button
@@ -458,14 +458,14 @@ export default function AuthPage({ isLogin = true }) {
                   setShowAccountNotFoundModal(false);
                   navigate('/register');
                 }}
-                className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2"
+                className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2 shadow-md hover:shadow-lg transition-all duration-200"
               >
                 Sign Up
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowAccountNotFoundModal(false)}
-                className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl px-4 py-2"
+                className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl px-4 py-2 transition-all duration-200"
               >
                 Cancel
               </Button>
@@ -476,8 +476,8 @@ export default function AuthPage({ isLogin = true }) {
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm">
             {forgotStep === 1 && (
               <>
                 <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Forgot Password</h2>
@@ -559,10 +559,10 @@ export default function AuthPage({ isLogin = true }) {
 
       {/* Signup OTP Verification Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50" aria-modal="true" role="dialog">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Verify Email</h2>
-            <p className="mb-4 text-gray-600 dark:text-gray-300">Enter the OTP sent to your email address: <span className="font-semibold">{formData.email}</span></p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50" aria-modal="true" role="dialog">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">Verify Email</h2>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">Enter the OTP sent to your email address: <span className="font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">{formData.email}</span></p>
             <form onSubmit={handleOtpVerification}>
               <div className="mb-4">
                 <label htmlFor="signupOtp" className="block mb-1 text-gray-600 dark:text-gray-300">OTP</label>

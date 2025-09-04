@@ -4,6 +4,7 @@ import {
   FaBook, FaMoon, FaStar, FaSun, FaHome,
   FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus, FaQuestionCircle
 } from 'react-icons/fa';
+import { FaBars } from 'react-icons/fa';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import Sidebar from '../components/dashboard/Sidebar';
 import { useUser } from '../context/UserContext';
@@ -12,16 +13,21 @@ import api from '../utils/api';
 
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
-const sidebarItems = [
+const coreNavigationItems = [
   { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
   { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
   { name: 'Available Plans', icon: <FaListAlt />, route: '/dashboard/available-plans' },
   { name: 'Add Service', icon: <FaPlus />, route: '/dashboard/add-service' },
   { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
+];
+
+const secondaryNavigationItems = [
   { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
   { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
-  { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' },
 ];
+
+// Keep original for desktop compatibility
+const sidebarItems = [...coreNavigationItems, ...secondaryNavigationItems, { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' }];
 
 function getInitials(name) {
   if (!name) return '?';
@@ -32,6 +38,7 @@ function getInitials(name) {
 
 function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -130,18 +137,30 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden" style={{ fontFamily }}>
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        active={active}
-        onSidebarClick={handleSidebarClick}
-        handleSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Desktop/Tablet Sidebar - Hidden on Mobile */}
+      <div className="hidden md:flex">
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          active={active}
+          onSidebarClick={handleSidebarClick}
+          handleSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      </div>
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header
           className="relative z-10 flex items-center justify-between px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-sm -ml-px"
         >
-          {/* Left Section - Logo and Brand */}
+          {/* Left Section - Mobile Menu Button + Logo and Brand */}
           <div className="flex items-center gap-3">
+            {/* Mobile hamburger menu button - Only visible on mobile */}
+            <button
+              className="md:hidden p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+              onClick={() => setMobileMenuOpen(true)}
+              title="Open Navigation Menu"
+            >
+              <FaBars className="text-lg" />
+            </button>
+
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
                 <img src="/logos/logo.png" alt="logo" className="w-10 h-10 rounded-full object-cover" />
@@ -271,6 +290,170 @@ function Dashboard() {
           {isBaseDashboard ? <DashboardOverview /> : <Outlet />}
         </main>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end md:hidden">
+          {/* Mobile Sidebar Drawer */}
+          <div className="w-72 sm:w-80 bg-white dark:bg-gray-800 h-full shadow-2xl flex flex-col">
+            {/* Header - Logo + Close */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              {/* Logo Section */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#2bb6c4]">
+                  <img src="/logos/logo.png" alt="logo" className="w-6 h-6 rounded-full object-cover" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg text-[#2bb6c4] dark:text-[#5ed1dc]">Sublite</h2>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable Navigation Section */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Core Navigation Links */}
+              <div className="px-4 py-6">
+                <ul className="space-y-2">
+                  {coreNavigationItems.map((item, idx) => {
+                    const itemIndex = idx; // Core items: 0-4
+                    return (
+                      <li key={item.name}>
+                        <button
+                          className={`flex items-center w-full py-2 px-4 rounded-xl text-left transition-all duration-200 group min-h-[44px]
+                            ${active === itemIndex
+                              ? 'bg-[#2bb6c4] text-white shadow-lg'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
+                            }
+                          `}
+                          onClick={() => {
+                            handleSidebarClick(itemIndex, item.route);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center mr-3">
+                            {item.icon}
+                          </div>
+                          <span className={`text-base ${active === itemIndex ? 'font-semibold' : 'font-medium'}`}>
+                            {item.name}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {/* Secondary Navigation with Divider */}
+              <div className="px-4">
+                <div className="border-t border-gray- TypeScript200 dark:border-gray-700 pt-6">
+                  <ul className="space-y-2">
+                    {secondaryNavigationItems.map((item, idx) => {
+                      const secondaryIndex = coreNavigationItems.length + idx; // Secondary items: 5-6
+                      return (
+                        <li key={item.name}>
+                          <button
+                            className={`flex items-center w-full py-2 px-4 rounded-xl text-left transition-all duration-200 group min-h-[44px]
+                              ${active === secondaryIndex
+                                ? 'bg-[#2bb6c4] text-white shadow-lg'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
+                              }
+                            `}
+                            onClick={() => {
+                              handleSidebarClick(secondaryIndex, item.route);
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className="w-5 h-5 flex items-center justify-center mr-3">
+                              {item.icon}
+                            </div>
+                            <span className={`text-base ${active === secondaryIndex ? 'font-semibold' : 'font-medium'}`}>
+                              {item.name}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* User Section - Above Footer */}
+            <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4">
+              <div className="flex items-center justify-between">
+                {/* User Avatar + Info */}
+                <div className="flex items-center space-x-3">
+                  {user?.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center text-white font-bold text-sm">
+                      {getInitials(userName)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{firstName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
+                  </div>
+                </div>
+
+                {/* View Profile Button */}
+                <button
+                  className="px-3 py-1.5 text-[#2bb6c4] hover:bg-[#2bb6c4]/10 rounded-lg transition-colors duration-200 text-sm font-medium min-h-[32px]"
+                  onClick={() => {
+                    navigate('/dashboard/profile');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  View Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Sticky Footer */}
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3">
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to log out?")) {
+                    clearAuthData();
+                    navigate('/login');
+                  }
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center w-full py-2 px-4 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-colors duration-200 font-medium min-h-[44px]"
+              >
+                <FaSignOutAlt className="w-5 h-5 mr-3" />
+                <span className="text-base">Logout</span>
+              </button>
+
+              {/* Help Link */}
+              <button
+                className="flex items-center w-full py-2 px-4 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 min-h-[44px]"
+                onClick={() => {
+                  window.location.href = 'mailto:sublite.app@gmail.com?subject=Help and Support Request';
+                }}
+              >
+                <FaQuestionCircle className="w-5 h-5 mr-3" />
+                <span className="text-base font-medium">Help & Support</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
