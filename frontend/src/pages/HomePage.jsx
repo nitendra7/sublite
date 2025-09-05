@@ -87,7 +87,7 @@ export default function HomePage() {
         <Header />
 
         {/* Hero Section */}
-        <section className="container mx-auto px-4 pt-24 pb-12 text-center" role="main" aria-labelledby="hero-title">
+        <section className="container mx-auto px-4 pt-12 md:pt-24 pb-8 md:pb-12 text-center" role="main" aria-labelledby="hero-title">
           <div className="max-w-5xl mx-auto">
             <h1 id="hero-title" className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
               Rent Premium Subscriptions

@@ -24,7 +24,7 @@ const Header = () => {
       </Link>
       {!hideAuthLinks && (
         <nav>
-          <ul className="flex items-center gap-2 sm:gap-4">
+          <ul className="flex flex-row flex-wrap items-center gap-2 sm:gap-4">
             <li>
               <button
                 onClick={toggleDarkMode}
