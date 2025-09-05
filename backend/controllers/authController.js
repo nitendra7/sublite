@@ -112,7 +112,7 @@ exports.login = async (req, res, next) => {
       isAdmin: user.isAdmin,
       tokenType: 'custom_jwt'
     };
-    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
 
     res.json({
       accessToken,
