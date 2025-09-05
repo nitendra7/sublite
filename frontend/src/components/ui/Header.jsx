@@ -1,12 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
-const Header = () => {
-  // Consume dark mode state if needed for header logic/styling.
+import { useTheme } from '../../context/ThemeContext';
+import { FaMoon, FaSun } from 'react-icons/fa';
 
+const Header = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const hideAuthLinks = location.pathname === '/login' || location.pathname === '/register';
 
   return (
-    <header className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500/90 backdrop-blur-sm shadow-lg fixed top-0 left-0 right-0 z-50 py-3 px-4 sm:px-8 flex items-center justify-between">
+    <header className="relative z-10 flex items-center justify-between px-4 py-3 shadow-lg bg-white/95 dark:bg-gray-800/95 border-b-2 border-gray-300 dark:border-gray-600 min-h-[60px] backdrop-blur-md w-full">
       <Link to="/" className="flex items-center gap-3 group">
         <div className="relative">
           <img
@@ -14,9 +16,9 @@ const Header = () => {
             alt="Sublite Logo"
             className="block w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover m-0"
           />
-        
+
         </div>
-        <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200">
+        <span className="text-2xl sm:text-3xl font-extrabold text-[#2bb6c4] tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200">
           Sublite
         </span>
       </Link>
@@ -24,9 +26,18 @@ const Header = () => {
         <nav>
           <ul className="flex items-center gap-2 sm:gap-4">
             <li>
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-white/80 dark:bg-gray-700 text-[var(--color-primary-dark)] dark:text-gray-300 hover:bg-[var(--color-primary-light)]/10 hover:text-[var(--color-primary-dark)] dark:hover:bg-gray-600 dark:hover:text-gray-100 transition-all duration-200 text-sm sm:text-base"
+                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {darkMode ? <FaSun className="w-4 h-4" /> : <FaMoon className="w-4 h-4" />}
+              </button>
+            </li>
+            <li>
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-lg bg-white/80 text-cyan-700 font-semibold hover:bg-cyan-100 hover:text-cyan-900 transition text-sm sm:text-base shadow"
+                className="px-4 py-2 rounded-lg bg-white/80 dark:bg-gray-700 text-[var(--color-primary-dark)] dark:text-gray-300 font-semibold hover:bg-[var(--color-primary-light)]/10 hover:text-[var(--color-primary-dark)] dark:hover:bg-gray-600 dark:hover:text-gray-100 transition-all duration-200 text-sm sm:text-base shadow"
               >
                 Sign In
               </Link>
@@ -34,7 +45,7 @@ const Header = () => {
             <li>
               <Link
                 to="/register"
-                className="px-4 py-2 rounded-lg bg-cyan-600 text-white font-semibold shadow-md hover:bg-cyan-700 transition-colors text-sm sm:text-base"
+                className="px-4 py-2 rounded-lg bg-[#2bb6c4] text-white font-semibold shadow-md hover:bg-[#1ea1b0] transition-colors duration-200 text-sm sm:text-base"
               >
                 Get Started
               </Link>

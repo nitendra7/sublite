@@ -3,33 +3,34 @@ import PropTypes from "prop-types"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority"
 import { cn } from "../../lib/utils"
+import { TRANSITIONS } from "../../lib/animation"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-all duration-250 ease-in-out hover:scale-[1.02] active:scale-[0.98]",
   {
     variants: {
       variant: {
-        // Default button styling with teal color and dark mode variants.
-        default: "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#2bb6c4] dark:text-gray-100 dark:hover:bg-[#1ea1b0]",
-        // Destructive button styling with dark mode variants.
+        // Default button styling using CSS variables
+        default: "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] dark:bg-[var(--color-primary)] dark:text-[var(--color-card-foreground)] dark:hover:bg-[var(--color-primary-hover)]",
+        // Destructive button styling using CSS variables
         destructive:
-          "bg-red-500 text-white hover:bg-red-600 dark:bg-red-700 dark:text-gray-100 dark:hover:bg-red-800",
-        // Outline button styling with dark mode variants.
+          "bg-[var(--color-error)] text-white hover:bg-[var(--color-error-hover)] dark:bg-[var(--color-error)] dark:text-[var(--color-card-foreground)] dark:hover:bg-[var(--color-error-hover)]",
+        // Outline button styling using CSS variables
         outline:
-          "border border-gray-300 bg-white hover:bg-gray-100 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 dark:hover:text-gray-100",
-        // Secondary button styling with dark mode variants.
+          "border border-[var(--color-border)] bg-[var(--color-background)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] dark:border-[var(--color-border)] dark:bg-[var(--color-card)] dark:hover:bg-[var(--color-muted)] dark:text-[var(--color-card-foreground)] dark:hover:text-[var(--color-card-foreground)]",
+        // Secondary button styling using CSS variables
         secondary:
-          "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
-        // Ghost button styling with dark mode variants.
-        ghost: "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-        // Link button styling with dark mode variants.
-        link: "text-[#2bb6c4] underline-offset-4 hover:underline dark:text-[#2bb6c4] dark:hover:text-[#1ea1b0]",
+          "bg-[var(--color-muted)] text-[var(--color-foreground)] hover:bg-[var(--color-muted-foreground)] dark:bg-[var(--color-muted)] dark:text-[var(--color-card-foreground)] dark:hover:bg-[var(--color-muted-foreground)]",
+        // Ghost button styling using CSS variables
+        ghost: "hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] dark:hover:bg-[var(--color-muted)] dark:hover:text-[var(--color-card-foreground)]",
+        // Link button styling using CSS variables
+        link: "text-[var(--color-primary)] underline-offset-4 hover:underline dark:text-[var(--color-primary)] dark:hover:text-[var(--color-primary-hover)]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-9 sm:h-10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm",
+        sm: "h-8 sm:h-9 rounded-md px-2 sm:px-3 text-xs sm:text-sm",
+        lg: "h-10 sm:h-11 rounded-md px-6 sm:px-8 text-sm",
+        icon: "h-9 w-9 sm:h-10 sm:w-10",
       },
     },
     defaultVariants: {
@@ -64,13 +65,28 @@ Button.propTypes = {
   className: PropTypes.string,
   variant: PropTypes.oneOf(['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']),
   size: PropTypes.oneOf(['default', 'sm', 'lg', 'icon']),
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
+  children: PropTypes.node,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+  type: PropTypes.oneOf(['button', 'submit', 'reset']),
+  onFocus: PropTypes.func,
+  onBlur: PropTypes.func,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  form: PropTypes.string,
+  value: PropTypes.string,
+  tabIndex: PropTypes.number,
+  'aria-label': PropTypes.string,
+  'aria-describedby': PropTypes.string,
+  'aria-pressed': PropTypes.bool
 };
 
 Button.defaultProps = {
   variant: 'default',
   size: 'default',
-  asChild: false
+  asChild: false,
+  type: 'button'
 };
 
 export { Button, buttonVariants }

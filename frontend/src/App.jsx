@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
+import { Toaster } from './components/ui/toaster.jsx';
 
 // Page components
 import HomePage from './pages/HomePage.jsx';
@@ -75,6 +76,8 @@ function App() {
     <Router>
       {/* UserProvider wraps the application to provide user authentication context. */}
       <UserProvider>
+        {/* Toaster component for displaying toast notifications */}
+        <Toaster />
         {/* Routes define the different paths and their corresponding components. */}
         <Routes>
           {/* Public routes: Accessible without authentication. */}

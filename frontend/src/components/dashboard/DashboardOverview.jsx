@@ -168,78 +168,85 @@ const DashboardOverview = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-teal-600" />
+                <div className="w-10 h-10 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-[#2bb6c4]" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Subscriptions</h2>
               </div>
               <Link
                 to="/dashboard/subscriptions"
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all duration-150 font-medium min-w-[120px] text-center"
+                className="px-6 py-3 bg-[#2bb6c4] text-white rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold min-h-[48px] shadow-md hover:shadow-lg text-lg text-center"
               >
                 Manage All
               </Link>
             </div>
 
             {/* KPI Strip - 3 Equal Items */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{activeCount}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Active</div>
+            <div className="grid grid-cols-3 gap-6 mb-6">
+              <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{activeCount}</div>
+                <div className="text-sm text-green-700 dark:text-green-300">Active</div>
+                {activeCount > 0 && <div className="h-2 w-2 bg-green-500 rounded-full mx-auto mt-2"></div>}
               </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="text-center p-4 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
                 <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {dueThisWeek}
                   {dueThisWeek > 0 && <div className="h-2 w-2 bg-amber-500 rounded-full mx-auto mt-1"></div>}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Due This Week</div>
+                <div className="text-sm text-amber-700 dark:text-amber-300">Due This Week</div>
               </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="text-center p-4 bg-red-100 dark:bg-red-900/20 rounded-lg">
                 <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                   {expired}
                   {expired > 0 && <div className="h-2 w-2 bg-red-500 rounded-full mx-auto mt-1"></div>}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Expired</div>
+                <div className="text-sm text-red-700 dark:text-red-300">Expired</div>
               </div>
             </div>
 
             {/* Empty State or Mini-List */}
             {totalSubscriptions === 0 ? (
-              <div className="space-y-3">
-                {/* Skeleton rows for empty state */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              <div className="text-center py-8">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-full flex items-center justify-center">
+                    <CreditCard className="w-8 h-8 text-[#2bb6c4]" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Welcome to Subscriptions!</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                  Start saving money on your favorite services by joining shared subscriptions. No subscriptions added yet.
+                </p>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                     <div>
-                      <div className="w-24 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-1"></div>
-                      <div className="w-32 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Explore Available Plans</span>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Browse and join shared subscriptions</p>
                     </div>
                   </div>
-                  <div className="w-16 h-6 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                    <div className="w-5 h-5 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-3 h-3 text-orange-500" />
+                    </div>
                     <div>
-                      <div className="w-28 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-1"></div>
-                      <div className="w-24 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Top Up Your Wallet</span>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Add funds to start subscribing</p>
                     </div>
                   </div>
-                  <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
-                </div>
-                <div className="text-center mt-4">
-                  <div className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded-full">
-                    <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-                    Next billing due in 30 days
+                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                    <LayoutGrid className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Manage Subscriptions</span>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Track renewals and payments</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-4">No subscriptions yet</p>
-                  <Link
-                    to="/dashboard/available-plans"
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all duration-150 font-medium"
-                  >
-                    Explore Plans
-                  </Link>
                 </div>
+                <Link
+                  to="/dashboard/available-plans"
+                  className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
+                >
+                  Get Started
+                </Link>
               </div>
             ) : (
               <div className="space-y-3">
@@ -259,7 +266,7 @@ const DashboardOverview = () => {
                       </div>
                     </div>
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      i === 0 ? 'bg-teal-100 text-teal-800' :
+                      i === 0 ? 'bg-[#2bb6c406] text-[#2bb6c4]' :
                       i === 1 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
                     }`}>
                       {i === 0 ? 'Active' : i === 1 ? 'Due Soon' : 'Expired'}
@@ -275,71 +282,57 @@ const DashboardOverview = () => {
                 )}
               </div>
             )}
-
-            {/* Footer Actions */}
-            <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <Link
-                to="/dashboard/add-service"
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-center rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-150 font-medium"
-              >
-                Add Subscription
-              </Link>
-              <Link
-                to="/dashboard/subscriptions"
-                className="flex-1 px-4 py-2 bg-teal-600 text-white text-center rounded-lg hover:bg-teal-700 transition-all duration-150 font-medium"
-              >
-                Manage All
-              </Link>
-            </div>
           </div>
         </div>
 
         {/* Right Column - Wallet + Plans */}
         <div className="col-span-12 xl:col-span-4 xl:min-h-[400px] space-y-6">
           {/* Wallet Card */}
-          <div className="bg-teal-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden">
             {dashboardData.wallet.balance < 100 && (
               <div className="absolute top-3 right-3 bg-orange-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
                 Low Balance
               </div>
             )}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <WalletIcon className="w-6 h-6 text-teal-100" />
-                <p className="text-sm font-medium text-teal-100">Wallet Balance</p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
+                <WalletIcon className="w-6 h-6 text-[#2bb6c4]" />
               </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h3>
             </div>
-            <div className="mb-4">
-              <div className="text-3xl font-bold text-white mb-1">
+            <div className="mb-6">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 ₹{dashboardData.wallet.balance.toLocaleString('en-IN')}
               </div>
+            </div>
+            <div className="space-y-3">
               <Link
                 to="/dashboard/wallet"
-                className="text-xs text-teal-200 hover:text-teal-100 transition-colors underline"
+                className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
+              >
+                Top Up
+              </Link>
+              <Link
+                to="/dashboard/wallet"
+                className="block w-full px-6 py-3 border border-[#2bb6c4] text-[#2bb6c4] hover:bg-[#2bb6c406] hover:text-[#1ea1b0] text-center rounded-lg transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
               >
                 View Transactions
               </Link>
             </div>
-            <Link
-              to="/dashboard/wallet"
-              className="block w-full px-4 py-2 bg-white text-teal-600 text-center rounded-lg hover:bg-gray-100 transition-all duration-150 font-medium min-h-[40px]"
-            >
-              Top Up
-            </Link>
           </div>
 
           {/* Available Plans Card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
-                <LayoutGrid className="w-4 h-4 text-teal-600" />
+              <div className="w-8 h-8 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
+                <LayoutGrid className="w-4 h-4 text-[#2bb6c4]" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available Plans</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-2 mb-4">
-              <span className="px-3 py-2 bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-200 text-sm font-medium rounded-lg text-center block">
+              <span className="px-3 py-2 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 text-[#2bb6c4] dark:text-[#5ed1dc] text-sm font-medium rounded-lg text-center block">
                 {dashboardData.availablePlans} Plans
               </span>
               <span className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg text-center block">
@@ -353,7 +346,7 @@ const DashboardOverview = () => {
 
             <Link
               to="/dashboard/available-plans"
-              className="block w-full px-6 py-3 bg-teal-600 text-white text-center rounded-lg hover:bg-teal-700 transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
+              className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
             >
               Explore Plans
             </Link>

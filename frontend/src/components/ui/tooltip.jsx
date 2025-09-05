@@ -15,7 +15,7 @@ const TooltipContent = React.forwardRef(({ className, sideOffset = 4, ...props }
     sideOffset={sideOffset}
     className={cn(
       // Default: light background, dark text. Dark Mode: dark background, light text.
-      "z-50 overflow-hidden rounded-md border bg-white px-3 py-1.5 text-gray-900 shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      "z-50 overflow-hidden rounded-md border bg-white px-3 py-1.5 text-gray-900 shadow-md transition-all duration-200 ease-in-out data-[state=open]:animate-fadeIn data-[state=closed]:animate-fadeOut data-[state=open]:animate-zoomIn data-[state=closed]:animate-zoomOut",
       "dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600", // Added dark mode styling
       className
     )}
@@ -31,6 +31,27 @@ TooltipContent.propTypes = {
 
 TooltipContent.defaultProps = {
   sideOffset: 4
+};
+
+Tooltip.propTypes = {
+  children: PropTypes.node.isRequired,
+  defaultOpen: PropTypes.bool,
+  open: PropTypes.bool,
+  onOpenChange: PropTypes.func,
+  delayDuration: PropTypes.number
+};
+
+TooltipTrigger.propTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  asChild: PropTypes.bool
+};
+
+TooltipProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+  delayDuration: PropTypes.number,
+  skipDelayDuration: PropTypes.number,
+  disableHoverableContent: PropTypes.bool
 };
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

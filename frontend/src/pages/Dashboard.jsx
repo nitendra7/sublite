@@ -161,7 +161,7 @@ function Dashboard() {
               <FaBars className="text-lg" />
             </button>
 
-            <div className="flex items-center space-x-2">
+            <Link to="/dashboard" className="flex items-center space-x-2 cursor-pointer">
               <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
                 <img src="/logos/logo.png" alt="logo" className="w-10 h-10 rounded-full object-cover" />
               </div>
@@ -169,7 +169,7 @@ function Dashboard() {
                   <h2 className="font-bold text-xl text-[#2bb6c4] dark:text-[#5ed1dc] tracking-wide">Sublite</h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Management</p>
                 </div>
-            </div>
+            </Link>
           </div>
 
           {/* Right Section - Actions and User */}
@@ -211,15 +211,6 @@ function Dashboard() {
                 {unreadNotifications > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
-              </button>
-              
-              {/* New Help Button */}
-              <button
-                className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
-                title="Open Help Center"
-                onClick={() => window.open('https://sublite.app/help', '_blank')}
-              >
-                <FaQuestionCircle className="text-lg group-hover:scale-105 transition-transform duration-200" />
               </button>
             </div>
 

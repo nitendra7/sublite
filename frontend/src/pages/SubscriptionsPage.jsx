@@ -55,11 +55,8 @@ const SubscriptionsPage = () => {
     <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
       {/* Enhanced Header Section */}
       <div className="mb-10 anim-fade-in-up">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-gradient-to-br from-[#2bb6c4] to-[#5ed1dc] rounded-xl anim-float">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold gradient-text">
+        <div className="mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
             My Subscriptions
           </h1>
         </div>

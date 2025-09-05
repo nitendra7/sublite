@@ -112,10 +112,11 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
         <div className="p-4">
           {sidebarOpen ? (
             <div className="text-center">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Need Help?</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                Contact us at<br />
-                <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium">sublite.app@gmail.com</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Need Help? {' '}
+                <a href="mailto:sublite.app@gmail.com" className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium hover:underline">
+                  Contact us
+                </a>
               </p>
             </div>
           ) : (
@@ -123,6 +124,7 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
               <button
                 className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 title="Contact us: sublite.app@gmail.com"
+                onClick={() => window.location.href = 'mailto:sublite.app@gmail.com'}
               >
                 <FaEnvelope className="text-lg" />
               </button>
