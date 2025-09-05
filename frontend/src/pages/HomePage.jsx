@@ -121,7 +121,7 @@ export default function HomePage() {
 
 
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-8 mb-2">
-              <Button asChild size="lg" className="shadow-lg hover:shadow-xl text-lg px-16 py-4 bg-[#2bb6c4] text-white hover:bg-[#1ea1b0]">
+              <Button asChild size="lg" className="shadow-lg hover:shadow-xl text-base sm:text-lg px-8 sm:px-16 py-3 sm:py-4 bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] w-full sm:w-auto max-w-xs sm:max-w-none">
                 <Link to="/login" aria-describedby="hero-description">Start Saving Now</Link>
               </Button>
             </div>
@@ -134,14 +134,14 @@ export default function HomePage() {
           <h2 id="services-title" className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12">Most Popular Services</h2>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-8 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg" role="tablist" aria-label="Service categories">
-              <TabsTrigger value="popular" className={`${activeTab === "popular" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-4 py-2 text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "popular"} aria-controls="popular-panel">
+            <TabsList className="grid w-full grid-cols-3 max-w-xs sm:max-w-md mx-auto mb-8 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg" role="tablist" aria-label="Service categories">
+              <TabsTrigger value="popular" className={`${activeTab === "popular" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "popular"} aria-controls="popular-panel">
                 Popular
               </TabsTrigger>
-              <TabsTrigger value="streaming" className={`${activeTab === "streaming" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-4 py-2 text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "streaming"} aria-controls="streaming-panel">
+              <TabsTrigger value="streaming" className={`${activeTab === "streaming" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "streaming"} aria-controls="streaming-panel">
                 Streaming
               </TabsTrigger>
-              <TabsTrigger value="ai" className={`${activeTab === "ai" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-4 py-2 text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "ai"} aria-controls="ai-panel">
+              <TabsTrigger value="ai" className={`${activeTab === "ai" ? "bg-white dark:bg-gray-600 shadow text-[#2bb6c4] font-semibold" : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"} flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm text-center rounded-md transition-colors duration-200`} role="tab" aria-selected={activeTab === "ai"} aria-controls="ai-panel">
                 AI Tools
               </TabsTrigger>
             </TabsList>
