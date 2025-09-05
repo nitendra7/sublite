@@ -34,6 +34,7 @@ api.interceptors.request.use(
 async function refreshAccessToken() {
   const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
   if (!refreshToken) throw new Error('No refresh token available');
+  console.log('Attempting to refresh token with refreshToken:', refreshToken ? 'present' : 'null');
   try {
     const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
     const { accessToken, refreshToken: newRefreshToken } = data;
@@ -41,6 +42,7 @@ async function refreshAccessToken() {
     localStorage.setItem('refreshToken', newRefreshToken);
     return accessToken;
   } catch (error) {
+    console.log('Refresh token failed:', error.response?.data || error.message);
     localStorage.clear();
     if (onSessionExpired) onSessionExpired();
     window.location.href = '/login';
@@ -51,6 +53,7 @@ async function refreshAccessToken() {
 // Response Interceptor: Handle 401/403 + token refresh
 let isRefreshing = false;
 let failedQueue = [];
+console.log('API interceptor initialized');
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => (error ? prom.reject(error) : prom.resolve(token)));
@@ -60,13 +63,16 @@ const processQueue = (error, token = null) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
+    console.log('API Error:', error.response?.status, error.config.url);
     const originalRequest = error.config;
     if (
       error.response &&
       [401, 403].includes(error.response.status) &&
       !originalRequest._retry
     ) {
+      console.log('Attempting token refresh for', originalRequest.url);
       if (isRefreshing) {
+        console.log('Refresh already in progress, queuing request');
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })

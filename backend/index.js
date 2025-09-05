@@ -355,11 +355,16 @@ const app = express();
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('CORS Origin:', origin);
     // Allow all origins for debugging, but in production you should be more specific
     const allowed = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:3002,https://sublite.vercel.app')
       .split(',')
       .map(s => s.trim());
-    if (!origin || allowed.includes(origin)) return callback(null, true);
+    if (!origin || allowed.includes(origin)) {
+      console.log('CORS Allowed');
+      return callback(null, true);
+    }
+    console.log('CORS Rejected');
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
