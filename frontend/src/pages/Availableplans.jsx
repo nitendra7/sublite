@@ -8,7 +8,8 @@ import api from '../utils/api';
 
 const Availableplans = () => {
   const { token } = useUser();
-  const [isGridView, setIsGridView] = useState(true);
+  // MOBILE: expandedServiceId tracks which service is in "grid" (expanded) mode
+  const [expandedServiceId, setExpandedServiceId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,8 +86,10 @@ const Availableplans = () => {
     setSelectedService(null);
   };
 
-  const toggleView = () => {
-    setIsGridView(!isGridView);
+  // Remove grid/list toggle logic
+  // Only for mobile: tap to expand/collapse card
+  const handleExpandService = (serviceId) => {
+    setExpandedServiceId((prev) => (prev === serviceId ? null : serviceId));
   };
 
   const filteredPlans = plans.filter(service =>
@@ -112,9 +115,9 @@ const Availableplans = () => {
       </div>
 
       {/* Search and Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="relative flex-1 max-w-xl">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-8 w-full">
+        <div className="relative w-full sm:flex-1 max-w-xl">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
           <input
             type="text"
             placeholder="Search plans by name, owner, or description..."
@@ -123,119 +126,268 @@ const Availableplans = () => {
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
           />
         </div>
-        
-        <button
-          onClick={toggleView}
-          className="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all duration-200 group"
-          title={isGridView ? "Switch to List View" : "Switch to Grid View"}
-        >
-          {isGridView ? (
-            <List size={20} className="group-hover:scale-110 transition-transform duration-200" />
-          ) : (
-            <LayoutGrid size={20} className="group-hover:scale-110 transition-transform duration-200" />
-          )}
-        </button>
+        {/* No grid/list toggle button */}
       </div>
 
       {/* Plans Grid/List */}
       {filteredPlans.length > 0 ? (
-        <div className={isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-          {filteredPlans.map((service, index) => (
-            <div 
-              key={service._id}
-              className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Service Header */}
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100">
-                  {service.serviceName}
-                </h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  service.serviceStatus === 'active' 
-                    ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' 
-                    : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                }`}>
-                  {service.serviceStatus}
-                </span>
-              </div>
-              
-              {/* Description */}
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                {service.description || 'No description available'}
-              </p>
-              
-              {/* Service Details */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Users size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
-                  <span>{service.availableSlots}/{service.maxUsers} slots available</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Star size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
-                  <span>By {service.providerId?.name || service.providerId?.username || 'Unknown'}</span>
-                </div>
-              </div>
-              
-              {/* Features */}
-              {service.features && service.features.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {service.features.map((feature, idx) => (
-                    <span 
-                      key={idx} 
-                      className="px-3 py-1 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-full text-xs font-medium"
-                    >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
-              )}
-              
-              {/* Price and Action */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                    ₹{((service.rentalPrice / 28) * 1.10).toFixed(2)}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    per day (incl. commission)
-                  </p>
-                </div>
-                
-                {(() => {
-                  const existingBooking = Array.isArray(userBookings) ? userBookings.find(booking => 
-                    booking.serviceId === service._id && 
-                    ['pending', 'confirmed', 'active'].includes(booking.bookingStatus)
-                  ) : null;
+        <div className="space-y-4 sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+          {filteredPlans.map((service, index) => {
+            const existingBooking = Array.isArray(userBookings)
+              ? userBookings.find(
+                  (booking) =>
+                    booking.serviceId === service._id &&
+                    ["pending", "confirmed", "active"].includes(booking.bookingStatus)
+                )
+              : null;
 
-                  if (existingBooking && existingBooking.bookingStatus === 'pending') {
-                    return (
-                      <button
-                        disabled
-                        className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
+            // MOBILE: condensed by default, expand on tap
+            return (
+              <div
+                key={service._id}
+                className="block sm:hidden"
+                onClick={() => handleExpandService(service._id)}
+                tabIndex={0}
+                role="button"
+                aria-pressed={expandedServiceId === service._id}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {expandedServiceId === service._id ? (
+                  // Expanded "grid" view for this service
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in">
+                    {/* Service Header */}
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100">
+                        {service.serviceName}
+                      </h3>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          service.serviceStatus === "active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                            : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                        }`}
                       >
-                        Already Booked
-                      </button>
-                    );
-                  }
+                        {service.serviceStatus}
+                      </span>
+                    </div>
+                    {/* Description */}
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                      {service.description || "No description available"}
+                    </p>
+                    {/* Service Details */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Users size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                        <span>
+                          {service.availableSlots}/{service.maxUsers} slots available
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Star size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                        <span>
+                          By {service.providerId?.name || service.providerId?.username || "Unknown"}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Features */}
+                    {service.features && service.features.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {service.features.map((feature, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-full text-xs font-medium"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Price and Action */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                          ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          per day (incl. commission)
+                        </p>
+                      </div>
+                      {existingBooking && existingBooking.bookingStatus === "pending" ? (
+                        <button
+                          disabled
+                          className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
+                        >
+                          Already Booked
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleBookService(service); }}
+                          disabled={service.availableSlots <= 0}
+                          className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
+                            service.availableSlots > 0
+                              ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          }`}
+                        >
+                          {service.availableSlots > 0 ? "Book Now" : "Sold Out"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  // Condensed card for mobile list view
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2 animate-fade-in">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-base text-gray-800 dark:text-gray-100">
+                        {service.serviceName}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          service.serviceStatus === "active"
+                            ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                            : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                        }`}
+                      >
+                        {service.serviceStatus}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {service.availableSlots}/{service.maxUsers} slots
+                        </span>
+                      </div>
+                      <div className="text-[#2bb6c4] dark:text-[#5ed1dc] font-semibold text-lg">
+                        ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {service.providerId?.name || service.providerId?.username || "Unknown"}
+                      </span>
+                      {existingBooking && existingBooking.bookingStatus === "pending" ? (
+                        <button
+                          disabled
+                          className="px-3 py-2 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-xs"
+                        >
+                          Already Booked
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleBookService(service); }}
+                          disabled={service.availableSlots <= 0}
+                          className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 ${
+                            service.availableSlots > 0
+                              ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          }`}
+                        >
+                          {service.availableSlots > 0 ? "Book Now" : "Sold Out"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {/* Desktop & tablet view: always expanded cards */}
+          {filteredPlans.map((service, index) => {
+            const existingBooking = Array.isArray(userBookings)
+              ? userBookings.find(
+                  (booking) =>
+                    booking.serviceId === service._id &&
+                    ["pending", "confirmed", "active"].includes(booking.bookingStatus)
+                )
+              : null;
 
-                  return (
+            return (
+              <div
+                key={service._id + "-desktop"}
+                className="hidden sm:block bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Service Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100">
+                    {service.serviceName}
+                  </h3>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      service.serviceStatus === "active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                        : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                    }`}
+                  >
+                    {service.serviceStatus}
+                  </span>
+                </div>
+                {/* Description */}
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                  {service.description || "No description available"}
+                </p>
+                {/* Service Details */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Users size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                    <span>
+                      {service.availableSlots}/{service.maxUsers} slots available
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Star size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                    <span>
+                      By {service.providerId?.name || service.providerId?.username || "Unknown"}
+                    </span>
+                  </div>
+                </div>
+                {/* Features */}
+                {service.features && service.features.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {service.features.map((feature, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-full text-xs font-medium"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* Price and Action */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                      ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      per day (incl. commission)
+                    </p>
+                  </div>
+                  {existingBooking && existingBooking.bookingStatus === "pending" ? (
+                    <button
+                      disabled
+                      className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
+                    >
+                      Already Booked
+                    </button>
+                  ) : (
                     <button
                       onClick={() => handleBookService(service)}
                       disabled={service.availableSlots <= 0}
                       className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
-                        service.availableSlots > 0 
-                          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                        service.availableSlots > 0
+                          ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                       }`}
                     >
-                      {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
+                      {service.availableSlots > 0 ? "Book Now" : "Sold Out"}
                     </button>
-                  );
-                })()}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-16">

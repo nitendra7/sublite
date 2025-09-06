@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   Wallet as WalletIcon,
@@ -21,6 +21,7 @@ import api, { API_BASE } from '../../utils/api';
 // DashboardOverview component displays a comprehensive summary of the user's dashboard.
 const DashboardOverview = () => {
   const { user, token } = useUser();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     subscriptions: { active: 0, completed: 0, provided: 0, paused: 0 },
     wallet: { balance: 0, transactions: 0 },
@@ -248,14 +249,16 @@ const DashboardOverview = () => {
             </div>
 
             <div className="space-y-3">
-              <Link
-                to="/dashboard/wallet#add-money"
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/dashboard/wallet#add-money');
+                }}
                 className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm"
-                onClick={(e) => e.stopPropagation()}
               >
                 <span className="text-lg">+</span>
                 Top Up
-              </Link>
+              </button>
               <div className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2">
                 <WalletIcon className="w-4 h-4" />
                 View Wallet

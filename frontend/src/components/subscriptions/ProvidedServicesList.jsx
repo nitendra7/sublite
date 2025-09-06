@@ -2,6 +2,7 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, Users, Tag, X, AlertTriangle, Rocket, Target, TrendingUp, Plus, Star } from 'lucide-react';
+import api from '../../utils/api';
 
 const ProvidedServicesList = ({ services, onServiceDeleted }) => {
     const navigate = useNavigate();
@@ -21,50 +22,49 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
     };
 
     const handleDelete = async () => {
-        if (!deleteModal.serviceId) return;
-
-        setIsDeleting(true);
-        const token = localStorage.getItem('token');
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
-        try {
-            console.log('Attempting to delete service:', {
-                serviceId: deleteModal.serviceId,
-                apiBase: API_BASE,
-                hasToken: !!token
-            });
-
-            // First, let's verify the service exists and belongs to the user
-            const getResponse = await fetch(`${API_BASE}/services/${deleteModal.serviceId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            if (!deleteModal.serviceId) return;
+    
+            setIsDeleting(true);
+    
+            try {
+                console.log('Attempting to delete service:', {
+                    serviceId: deleteModal.serviceId
+                });
+    
+                // First, verify the service exists
+                try {
+                    const serviceData = await api.get(`/services/${deleteModal.serviceId}`);
+                    // If we get here, service exists
+                    console.log('Service exists:', serviceData.data);
+                } catch (getError) {
+                    // If GET fails with 404
+                    if (getError.response?.status === 404) {
+                        console.log('Service not found, treating as already deleted');
+                        onServiceDeleted(deleteModal.serviceId);
+                        closeDeleteModal();
+                        alert('Service deleted successfully! (Already removed)');
+                        return;
+                    }
+                    throw getError; // Re-throw other errors
                 }
-            });
 
-            if (getResponse.ok) {
-                const serviceData = await getResponse.json();
-                console.log('Service data:', serviceData);
-            }
+            try {
+                await api.delete(`/services/${deleteModal.serviceId}`);
+                console.log('Delete successful');
 
-            const response = await fetch(`${API_BASE}/services/${deleteModal.serviceId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                // Update UI
+                onServiceDeleted(deleteModal.serviceId);
+                closeDeleteModal();
+                alert('Service deleted successfully!');
+            } catch (deleteError) {
+                if (deleteError.response?.status === 404) {
+                    console.log('Service not found during delete, treating as already deleted');
+                    onServiceDeleted(deleteModal.serviceId);
+                    closeDeleteModal();
+                    alert('Service deleted successfully!');
+                    return;
                 }
-            });
-
-            console.log('Delete response:', {
-                status: response.status,
-                statusText: response.statusText,
-                ok: response.ok
-            });
-
-            if (!response.ok) {
-                const result = await response.json();
-                console.error('Delete service error response:', result);
-                throw new Error(result.message || `Failed to delete service. Status: ${response.status}`);
+                throw deleteError; // Re-throw other delete errors
             }
 
             onServiceDeleted(deleteModal.serviceId);
@@ -74,7 +74,20 @@ const ProvidedServicesList = ({ services, onServiceDeleted }) => {
 
         } catch (err) {
             console.error('Delete service error:', err);
-            alert(`Error: ${err.message}`);
+            console.error('Error details:', {
+                message: err.message,
+                response: err.response,
+                status: err.response?.status
+            });
+            if (err.response?.status === 404) {
+                // Service already deleted, treat as success
+                onServiceDeleted(deleteModal.serviceId);
+                closeDeleteModal();
+                alert('Service deleted successfully! (Already removed)');
+            } else {
+                const errorMessage = err.message || 'Unknown error occurred';
+                alert(`Error deleting service: ${errorMessage}`);
+            }
         } finally {
             setIsDeleting(false);
         }
