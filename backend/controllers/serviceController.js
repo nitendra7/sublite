@@ -79,8 +79,9 @@ const getMyServices = async (req, res) => {
         const userId = req.user._id;
 
         const services = await Service.find({ providerId: userId })
-                                    .populate('categoryId')
-                                    .select('-credentials');
+                                     .populate('categoryId')
+                                     .select('-credentials');
+        console.log('getMyServices result:', services.map(s => ({ _id: s._id, serviceName: s.serviceName, providerId: s.providerId })));
         res.status(200).json(services);
     } catch (error) {
         console.error('Error fetching services offered by user:', error);
@@ -91,7 +92,13 @@ const getMyServices = async (req, res) => {
 const getServiceById = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id).populate('providerId', 'username name rating providerSettings');
+    console.log('Service findById result:', {
+        requestedId: req.params.id,
+        foundService: service ? service._id : null,
+        serviceProviderId: service ? service.providerId : null
+    });
     if (!service) {
+        console.log('Service not found for ID:', req.params.id);
         return res.status(404).json({ message: 'Service not found.' });
     }
     res.json(service);
@@ -118,6 +125,7 @@ const updateService = async (req, res) => {
 
 const deleteService = async (req, res) => {
     try {
+        console.log('=== DELETE SERVICE STARTED ===');
         console.log('Delete service request:', {
             serviceId: req.params.id,
             userId: req.user._id,
@@ -125,8 +133,14 @@ const deleteService = async (req, res) => {
         });
 
         const service = await Service.findById(req.params.id);
+        console.log('DeleteService findById result:', {
+            requestedId: req.params.id,
+            foundService: service ? service._id : null,
+            serviceProviderId: service ? service.providerId : null
+        });
 
         if (!service) {
+            console.log('DeleteService: Service not found for ID:', req.params.id);
             return res.status(404).json({ message: 'Service not found' });
         }
 
