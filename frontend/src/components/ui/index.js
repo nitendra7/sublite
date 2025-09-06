@@ -1,9 +1,5 @@
 // Export all UI components for easier imports
 
-export { Alert, AlertTitle, AlertDescription } from "./alert";
-export { ResponsiveContainer } from "./responsive-container";
-export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
-export { Badge } from "./badge";
 export { Button, buttonVariants } from "./button";
 export {
   Card,
@@ -43,7 +39,6 @@ export {
   DropdownMenuRadioGroup,
 } from "./dropdown-menu";
 export { Input } from "./input";
-export { Progress } from "./progress";
 export {
   Select,
   SelectGroup,
@@ -54,18 +49,7 @@ export {
   SelectItem,
   SelectSeparator,
 } from "./select";
-export { Skeleton } from "./skeleton";
 export { Switch } from "./switch";
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-} from "./table";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export {
   Toast,

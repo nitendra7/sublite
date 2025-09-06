@@ -7,7 +7,7 @@ const Card = React.forwardRef(({ className, ...props }, ref) => (
     ref={ref}
     // Using CSS variables for consistent styling
     className={cn(
-      "rounded-xl border bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow border-[var(--color-border)] transition-all duration-250 ease-in-out hover:shadow-md",
+      "rounded-3xl border-2 bg-white/80 dark:bg-gray-800/70 backdrop-blur-sm text-[var(--color-card-foreground)] shadow-xl border-gray-200 dark:border-gray-700 transition-all duration-250 ease-in-out hover:shadow-2xl",
       className
     )}
     {...props}

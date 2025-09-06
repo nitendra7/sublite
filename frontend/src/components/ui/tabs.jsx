@@ -9,7 +9,7 @@ const TabsList = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-[var(--color-muted)] p-1 text-[var(--color-foreground)] dark:bg-[var(--color-muted)] dark:text-[var(--color-card-foreground)]",
+      "inline-flex h-10 items-center justify-center bg-transparent text-[var(--color-foreground)] dark:bg-transparent dark:text-[var(--color-card-foreground)]",
       className
     )}
     {...props}
@@ -22,8 +22,8 @@ const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
     ref={ref}
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all duration-250 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]",
-      "data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[var(--color-primary)] dark:data-[state=active]:bg-[var(--color-card)] dark:data-[state=active]:text-[var(--color-primary-light)]",
-      "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted-hover)] dark:text-[var(--color-muted-foreground)] dark:hover:bg-[var(--color-muted-hover)]",
+      "data-[state=active]:bg-[#2bb6c4] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:rounded-lg dark:data-[state=active]:bg-[#0891b2]",
+      "text-[var(--color-muted-foreground)] hover:bg-[#5ed1dc] hover:text-white hover:shadow-md dark:text-[var(--color-muted-foreground)] dark:hover:bg-[#5ed1dc] dark:hover:text-white",
       className
     )}
     {...props}

@@ -284,16 +284,14 @@ function Dashboard() {
 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end md:hidden">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-start md:hidden">
           {/* Mobile Sidebar Drawer */}
           <div className="w-72 sm:w-80 bg-white dark:bg-gray-800 h-full shadow-2xl flex flex-col">
             {/* Header - Logo + Close */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               {/* Logo Section */}
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#2bb6c4]">
-                  <img src="/logos/logo.png" alt="logo" className="w-6 h-6 rounded-full object-cover" />
-                </div>
+              <div className="flex items-center space-x-3 -ml-2">
+                <img src="/logos/logo.png" alt="logo" className="w-10 h-10 object-cover rounded-full" />
                 <div>
                   <h2 className="font-bold text-lg text-[#2bb6c4] dark:text-[#5ed1dc]">Sublite</h2>
                 </div>
@@ -310,9 +308,33 @@ function Dashboard() {
               </button>
             </div>
 
+            {/* User Section - At Top */}
+            <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                {/* User Avatar + Info */}
+                <div className="flex items-center space-x-3">
+                  {user?.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center text-white font-bold text-sm">
+                      {getInitials(userName)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{userName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Scrollable Navigation Section */}
             <div className="flex-1 overflow-y-auto">
-              {/* Core Navigation Links */}
+              {/* Navigation Links */}
               <div className="px-4 py-6">
                 <ul className="space-y-2">
                   {coreNavigationItems.map((item, idx) => {
@@ -341,81 +363,41 @@ function Dashboard() {
                       </li>
                     );
                   })}
+                  {secondaryNavigationItems.map((item, idx) => {
+                    const secondaryIndex = coreNavigationItems.length + idx; // Secondary items: 5-6
+                    return (
+                      <li key={item.name}>
+                        <button
+                          className={`flex items-center w-full py-2 px-4 rounded-xl text-left transition-all duration-200 group min-h-[44px]
+                            ${active === secondaryIndex
+                              ? 'bg-[#2bb6c4] text-white shadow-lg'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
+                            }
+                          `}
+                          onClick={() => {
+                            handleSidebarClick(secondaryIndex, item.route);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center mr-3">
+                            {item.icon}
+                          </div>
+                          <span className={`text-base ${active === secondaryIndex ? 'font-semibold' : 'font-medium'}`}>
+                            {item.name}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
-
-              {/* Secondary Navigation with Divider */}
-              <div className="px-4">
-                <div className="border-t border-gray- TypeScript200 dark:border-gray-700 pt-6">
-                  <ul className="space-y-2">
-                    {secondaryNavigationItems.map((item, idx) => {
-                      const secondaryIndex = coreNavigationItems.length + idx; // Secondary items: 5-6
-                      return (
-                        <li key={item.name}>
-                          <button
-                            className={`flex items-center w-full py-2 px-4 rounded-xl text-left transition-all duration-200 group min-h-[44px]
-                              ${active === secondaryIndex
-                                ? 'bg-[#2bb6c4] text-white shadow-lg'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
-                              }
-                            `}
-                            onClick={() => {
-                              handleSidebarClick(secondaryIndex, item.route);
-                              setMobileMenuOpen(false);
-                            }}
-                          >
-                            <div className="w-5 h-5 flex items-center justify-center mr-3">
-                              {item.icon}
-                            </div>
-                            <span className={`text-base ${active === secondaryIndex ? 'font-semibold' : 'font-medium'}`}>
-                              {item.name}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
             </div>
 
-            {/* User Section - Above Footer */}
-            <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4">
-              <div className="flex items-center justify-between">
-                {/* User Avatar + Info */}
-                <div className="flex items-center space-x-3">
-                  {user?.profilePicture ? (
-                    <img
-                      src={user.profilePicture}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center text-white font-bold text-sm">
-                      {getInitials(userName)}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{firstName}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
-                  </div>
-                </div>
-
-                {/* View Profile Button */}
-                <button
-                  className="px-3 py-1.5 text-[#2bb6c4] hover:bg-[#2bb6c4]/10 rounded-lg transition-colors duration-200 text-sm font-medium min-h-[32px]"
-                  onClick={() => {
-                    navigate('/dashboard/profile');
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  View Profile
-                </button>
-              </div>
-            </div>
+            {/* Separator Divider */}
+            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700"></div>
 
             {/* Sticky Footer */}
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3">
+            <div className="p-4 space-y-3">
               {/* Logout Button */}
               <button
                 onClick={() => {
@@ -450,3 +432,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

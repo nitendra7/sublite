@@ -6,7 +6,12 @@ import {
   LayoutGrid,
   CheckCircle,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Star,
+  Bell,
+  Plus,
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import Loading from '../ui/Loading';
@@ -17,7 +22,7 @@ import api, { API_BASE } from '../../utils/api';
 const DashboardOverview = () => {
   const { user, token } = useUser();
   const [dashboardData, setDashboardData] = useState({
-    subscriptions: { active: 0, completed: 0, provided: 0 },
+    subscriptions: { active: 0, completed: 0, provided: 0, paused: 0 },
     wallet: { balance: 0, transactions: 0 },
     reviews: { given: 0, received: 0 },
     notifications: { unread: 0, total: 0 },
@@ -88,6 +93,7 @@ const DashboardOverview = () => {
         // Process data
         const activeBookings = bookings.filter(b => b.bookingStatus === 'active' || b.bookingStatus === 'confirmed' || b.bookingStatus === 'pending');
         const completedBookings = bookings.filter(b => b.bookingStatus === 'completed');
+        const pausedBookings = bookings.filter(b => b.bookingStatus === 'paused');
 
         const walletBalance = user?.walletBalance || 0;
         const unreadNotifications = notifications.filter(n => !n.isRead).length;
@@ -96,7 +102,8 @@ const DashboardOverview = () => {
           subscriptions: {
             active: activeBookings.length,
             completed: completedBookings.length,
-            provided: providedServices.length
+            provided: providedServices.length,
+            paused: pausedBookings.length
           },
           wallet: {
             balance: walletBalance,
@@ -139,220 +146,261 @@ const DashboardOverview = () => {
     );
   }
 
-  // Calculate metrics for KPIs
-  const activeCount = dashboardData.subscriptions.active;
-  const completedCount = dashboardData.subscriptions.completed;
-  const totalSubscriptions = activeCount + completedCount;
-
-  // Mock data for due this week and expired (you may need to implement real logic)
-  const dueThisWeek = Math.floor(Math.random() * 3); // Mock data
-  const expired = Math.floor(Math.random() * 2); // Mock data
-
   return (
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-h-full animate-fade-in">
+    <div className="p-4 md:p-6 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
       {/* Welcome Section */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">
-          Welcome back, {user?.name?.split(' ')[0] || 'User'}!
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+          Welcome back, {user?.name?.split(' ')[0] || 'Nitendra'}!
         </h1>
-        <p className="text-gray-500 dark:text-gray-300 text-sm">
+        <p className="text-gray-600 dark:text-gray-300">
           Here's what's happening with your subscriptions today.
         </p>
       </div>
 
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Subscriptions Hero Card - col-span-8 */}
-        <div className="col-span-12 xl:col-span-8 xl:min-h-[400px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-[#2bb6c4]" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Subscriptions</h2>
-              </div>
-              <Link
-                to="/dashboard/subscriptions"
-                className="px-6 py-3 bg-[#2bb6c4] text-white rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold min-h-[48px] shadow-md hover:shadow-lg text-lg text-center"
-              >
-                Manage All
-              </Link>
-            </div>
-
-            {/* KPI Strip - 3 Equal Items */}
-            <div className="grid grid-cols-3 gap-6 mb-6">
-              <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{activeCount}</div>
-                <div className="text-sm text-green-700 dark:text-green-300">Active</div>
-                {activeCount > 0 && <div className="h-2 w-2 bg-green-500 rounded-full mx-auto mt-2"></div>}
-              </div>
-              <div className="text-center p-4 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {dueThisWeek}
-                  {dueThisWeek > 0 && <div className="h-2 w-2 bg-amber-500 rounded-full mx-auto mt-1"></div>}
-                </div>
-                <div className="text-sm text-amber-700 dark:text-amber-300">Due This Week</div>
-              </div>
-              <div className="text-center p-4 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {expired}
-                  {expired > 0 && <div className="h-2 w-2 bg-red-500 rounded-full mx-auto mt-1"></div>}
-                </div>
-                <div className="text-sm text-red-700 dark:text-red-300">Expired</div>
-              </div>
-            </div>
-
-            {/* Empty State or Mini-List */}
-            {totalSubscriptions === 0 ? (
-              <div className="text-center py-8">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-8 h-8 text-[#2bb6c4]" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Welcome to Subscriptions!</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-                  Start saving money on your favorite services by joining shared subscriptions. No subscriptions added yet.
-                </p>
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <div>
-                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Explore Available Plans</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Browse and join shared subscriptions</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                    <div className="w-5 h-5 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
-                      <TrendingUp className="w-3 h-3 text-orange-500" />
-                    </div>
-                    <div>
-                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Top Up Your Wallet</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Add funds to start subscribing</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                    <LayoutGrid className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    <div>
-                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Manage Subscriptions</span>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Track renewals and payments</p>
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  to="/dashboard/available-plans"
-                  className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
-                >
-                  Get Started
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Mock subscription items - replace with real data */}
-                {Array.from({ length: Math.min(totalSubscriptions, 3) }, (_, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {/* Service icon placeholder */}
-                      <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div>
-                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
-                          {"Mock Service " + (i + 1)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Next billing: {"Feb " + (15 + i)} • ₹{(299 + i * 50).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      i === 0 ? 'bg-[#2bb6c406] text-[#2bb6c4]' :
-                      i === 1 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {i === 0 ? 'Active' : i === 1 ? 'Due Soon' : 'Expired'}
-                    </span>
-                  </div>
-                ))}
-                {totalSubscriptions > 3 && (
-                  <div className="text-center mt-3">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      +{totalSubscriptions - 3} more subscriptions
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+          <div className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-1">
+            {dashboardData.subscriptions.active}
           </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">Active</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+          <div className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-1">
+            ₹{dashboardData.wallet.balance.toLocaleString('en-IN')}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">Balance</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+          <div className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-1">
+            {dashboardData.availablePlans}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">Plans</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+          <div className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-1">
+            {dashboardData.notifications.unread}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">Alerts</div>
+        </div>
+      </div>
+
+      {/* Main Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column - My Subscriptions */}
+        <div className="lg:col-span-1">
+          <Link
+            to="/dashboard/subscriptions"
+            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 h-full flex flex-col card-hover hover:shadow-xl transition-all duration-200"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Subscriptions</h2>
+              <Users className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+            </div>
+            
+            <div className="space-y-4 flex-1">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-300">Active</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{dashboardData.subscriptions.active}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-300">Paused</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{dashboardData.subscriptions.paused || 3}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-300">Completed</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{dashboardData.subscriptions.completed}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2">
+              <LayoutGrid className="w-4 h-4" />
+              Manage Subscriptions
+            </div>
+          </Link>
         </div>
 
-        {/* Right Column - Wallet + Plans */}
-        <div className="col-span-12 xl:col-span-4 xl:min-h-[400px] space-y-6">
-          {/* Wallet Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden">
-            {dashboardData.wallet.balance < 100 && (
-              <div className="absolute top-3 right-3 bg-orange-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Low Balance
-              </div>
-            )}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
-                <WalletIcon className="w-6 h-6 text-[#2bb6c4]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h3>
+        {/* Middle Column - Wallet Balance */}
+        <div className="lg:col-span-1">
+          <Link
+            to="/dashboard/wallet"
+            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 h-full flex flex-col card-hover hover:shadow-xl transition-all duration-200"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Wallet Balance</h2>
+              <DollarSign className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </div>
-            <div className="mb-6">
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+
+            <div className="text-center mb-6 flex-1 flex flex-col justify-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">
                 ₹{dashboardData.wallet.balance.toLocaleString('en-IN')}
               </div>
+              {dashboardData.wallet.balance < 100 && (
+                <div className="flex items-center justify-center gap-1 text-orange-600 dark:text-orange-400 text-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Low Balance
+                </div>
+              )}
             </div>
+
             <div className="space-y-3">
               <Link
-                to="/dashboard/wallet"
-                className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
+                to="/dashboard/wallet#add-money"
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+                onClick={(e) => e.stopPropagation()}
               >
+                <span className="text-lg">+</span>
                 Top Up
               </Link>
-              <Link
-                to="/dashboard/wallet"
-                className="block w-full px-6 py-3 border border-[#2bb6c4] text-[#2bb6c4] hover:bg-[#2bb6c406] hover:text-[#1ea1b0] text-center rounded-lg transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
-              >
-                View Transactions
-              </Link>
-            </div>
-          </div>
-
-          {/* Available Plans Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 rounded-lg flex items-center justify-center">
-                <LayoutGrid className="w-4 h-4 text-[#2bb6c4]" />
+              <div className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2">
+                <WalletIcon className="w-4 h-4" />
+                View Wallet
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available Plans</h3>
+            </div>
+          </Link>
+        </div>
+
+        {/* Right Column - Available Plans */}
+        <div className="lg:col-span-1">
+          <Link
+            to="/dashboard/available-plans"
+            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 h-full flex flex-col card-hover hover:shadow-xl transition-all duration-200"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Available Plans</h2>
+              <LayoutGrid className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <span className="px-3 py-2 bg-[#2bb6c406] dark:bg-[#2bb6c4]/20 text-[#2bb6c4] dark:text-[#5ed1dc] text-sm font-medium rounded-lg text-center block">
-                {dashboardData.availablePlans} Plans
-              </span>
-              <span className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg text-center block">
-                Group Savings
-              </span>
+            <div className="text-center mb-6 flex-1 flex flex-col justify-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+                {dashboardData.availablePlans}
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                Discover and join shared subscriptions
+              </p>
             </div>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-              Join shared subscriptions and save money with group pricing on popular services.
-            </p>
-
-            <Link
-              to="/dashboard/available-plans"
-              className="block w-full px-6 py-3 bg-[#2bb6c4] text-white text-center rounded-lg hover:bg-[#1ea1b0] transition-all duration-150 font-semibold text-lg min-h-[48px] shadow-md hover:shadow-lg"
-            >
+            <div className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2">
+              <LayoutGrid className="w-4 h-4" />
               Explore Plans
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mt-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Quick Actions</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link
+              to="/dashboard/add-service"
+              className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group border border-gray-200 dark:border-gray-600"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                </div>
+                <div>
+                  <div className="font-semibold">Add Service</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Create new subscription</div>
+                </div>
+              </div>
+            </Link>
+            
+            <Link
+              to="/dashboard/reviews"
+              className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group border border-gray-200 dark:border-gray-600"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                  <Star className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                </div>
+                <div>
+                  <div className="font-semibold">Reviews</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Rate services</div>
+                </div>
+              </div>
+            </Link>
+            
+            <Link
+              to="/dashboard/notifications"
+              className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group border border-gray-200 dark:border-gray-600"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                </div>
+                <div>
+                  <div className="font-semibold">Notifications</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">View alerts</div>
+                </div>
+              </div>
             </Link>
           </div>
         </div>
       </div>
+
+      {/* Recent Activity Section */}
+      {dashboardData.recentActivity.length > 0 && (
+        <div className="mt-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Recent Activity</h2>
+              <Link
+                to="/dashboard/wallet"
+                className="text-[#2bb6c4] dark:text-[#5ed1dc] hover:underline text-sm font-medium"
+              >
+                View All
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {dashboardData.recentActivity.map((transaction, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      transaction.type === 'credit' 
+                        ? 'bg-green-100 dark:bg-green-900/20' 
+                        : 'bg-red-100 dark:bg-red-900/20'
+                    }`}>
+                      <span className={`text-sm font-bold ${
+                        transaction.type === 'credit' 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {transaction.type === 'credit' ? '+' : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {transaction.description || 'Wallet Transaction'}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(transaction.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`text-sm font-bold ${
+                    transaction.type === 'credit' 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 };
