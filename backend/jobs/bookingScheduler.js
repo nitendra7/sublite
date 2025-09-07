@@ -68,6 +68,11 @@ const completeExpiredBookings = async () => {
 
     // Process expired pending bookings (cancel and refund)
     for (const booking of expiredPendingBookings) {
+      if (!booking.clientId || !booking.serviceId) {
+        console.log(`Skipping booking ${booking._id}: missing clientId or serviceId`);
+        continue;
+      }
+
       // Update booking status to cancelled
       booking.bookingStatus = 'cancelled';
       booking.cancelledAt = now;

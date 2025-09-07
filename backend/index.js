@@ -49,8 +49,10 @@ app.use(
 
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "1mb" }));
 
-// HTTP request logging
-app.use(httpLogger);
+ // HTTP request logging (disabled in production)
+if (process.env.NODE_ENV !== "production") {
+  app.use(httpLogger);
+}
 
 const helmetConfig = {
   contentSecurityPolicy:
