@@ -26,17 +26,14 @@ const cleanupOrphanedServices = async () => {
     // Get IDs of orphaned services
     const orphanedIds = orphanedServices.map((service) => service._id);
 
-    // Suspend orphaned services instead of deleting them
-    const result = await Service.updateMany(
-      { _id: { $in: orphanedIds } },
-      { serviceStatus: "suspended" },
-    );
+    // DELETE orphaned services instead of suspending them
+    const result = await Service.deleteMany({ _id: { $in: orphanedIds } });
 
     console.log(
-      `🗑️  Suspended ${result.modifiedCount} services with inactive/deleted providers`,
+      `🗑️  Deleted ${result.deletedCount} orphaned services with inactive/deleted providers`,
     );
     console.log(
-      "📋 Orphaned services removed:",
+      "📋 Orphaned services deleted:",
       orphanedServices.map((s) => ({
         id: s._id,
         name: s.serviceName,
@@ -46,7 +43,7 @@ const cleanupOrphanedServices = async () => {
       })),
     );
 
-    return { cleaned: result.modifiedCount, services: orphanedServices };
+    return { cleaned: result.deletedCount, services: orphanedServices };
   } catch (error) {
     console.error("❌ Error during orphaned services cleanup:", error);
     return { error: error.message, cleaned: 0 };
