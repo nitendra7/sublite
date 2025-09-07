@@ -89,10 +89,12 @@ export default function AuthPage({ isLogin = true }) {
 
         // Store token and user info upon successful login
         localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('userName', data.user?.name || '');
         localStorage.setItem('userId', data.user?.id || data.user?._id || '');
         console.log('Login successful. Stored:', {
           token: localStorage.getItem('token'),
+          refreshToken: localStorage.getItem('refreshToken'),
           userId: localStorage.getItem('userId'),
           userName: localStorage.getItem('userName')
         });

@@ -90,7 +90,7 @@ exports.login = async (req, res, next) => {
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
     }
     let passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
-    if (!passwordMatch && trimmedPassword !== password) {
+    if (!passwordMatch) {
       // Fallback for backward compatibility with passwords that may have spaces
       passwordMatch = await bcrypt.compare(password, user.password);
     }

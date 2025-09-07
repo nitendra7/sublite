@@ -18,9 +18,10 @@ const registerSchema = Joi.object({
     'string.empty': 'Email is required',
     'string.email': 'Please provide a valid email address'
   }),
-  password: Joi.string().min(6).required().messages({
+  password: Joi.string().min(6).pattern(/^\S*$/).required().messages({
     'string.empty': 'Password is required',
-    'string.min': 'Password must be at least 6 characters long'
+    'string.min': 'Password must be at least 6 characters long',
+    'string.pattern.base': 'Password cannot contain spaces or whitespace characters'
   })
 });
 
@@ -68,9 +69,10 @@ const resetPasswordSchema = Joi.object({
     'string.length': 'OTP must be 6 digits',
     'string.pattern.base': 'OTP must contain only numbers'
   }),
-  newPassword: Joi.string().min(6).required().messages({
+  newPassword: Joi.string().min(6).pattern(/^\S*$/).required().messages({
     'string.empty': 'New password is required',
-    'string.min': 'Password must be at least 6 characters long'
+    'string.min': 'Password must be at least 6 characters long',
+    'string.pattern.base': 'Password cannot contain spaces or whitespace characters'
   })
 });
 
