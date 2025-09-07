@@ -33,10 +33,11 @@ const completeExpiredBookings = async () => {
       booking.completedAt = now;
       await booking.save();
 
-      // 2. Restore available slots to the service
-      await Service.findByIdAndUpdate(booking.serviceId._id, {
-        $inc: { availableSlots: 1 }
-      });
+      // 2. Decrement currentUsers when booking completes (frees up a slot)
+      const serviceDoc = await Service.findById(booking.serviceId._id);
+      serviceDoc.currentUsers -= 1;
+      // availableSlots will be recalculated by pre-save hook
+      await serviceDoc.save();
 
       // 3. Create a notification for the Client
       await Notification.create({
@@ -109,10 +110,8 @@ const scheduleBookingCancellation = (bookingId) => {
           relatedType: 'booking'
         });
         
-        // Restore available slots to the service
-        await Service.findByIdAndUpdate(booking.serviceId._id, {
-          $inc: { availableSlots: 1 }
-        });
+        // Note: No need to restore slots since booking was cancelled before becoming active
+        // (currentUsers was never incremented for this booking)
         
         // Notify the client about the cancellation and refund
         await Notification.create({

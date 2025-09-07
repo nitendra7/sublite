@@ -95,7 +95,8 @@ const createBooking = async (req, res) => {
     booking.paymentId = payment._id;
     await booking.save();
 
-    service.availableSlots -= 1;
+    // Note: currentUsers will be incremented when booking becomes 'active'
+    // availableSlots is calculated as maxUsers - currentUsers
     await service.save();
 
     scheduleBookingCancellation(booking._id.toString());
@@ -158,16 +159,24 @@ const sendMessageToBooking = async (req, res) => {
             return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
         }
 
-        const credentials = booking.serviceId.credentials || {};
+        // Use sent credentials from req.body, with service stored credentials as fallback
+        const sentCredentials = req.body || {};
+        const storedCredentials = booking.serviceId.credentials || {};
         booking.sharedCredentials = {
-            username: credentials.username || '',
-            password: credentials.password || '',
-            profileName: credentials.profileName || '',
-            accessInstructions: booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
+            username: sentCredentials.username || storedCredentials.username || '',
+            password: sentCredentials.password || storedCredentials.password || '',
+            profileName: sentCredentials.profileName || storedCredentials.profileName || '',
+            accessInstructions: sentCredentials.accessInstructions || booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
         };
 
         booking.bookingStatus = 'active';
         await booking.save();
+
+        // Increment currentUsers when booking becomes active
+        const serviceDoc = await Service.findById(booking.serviceId);
+        serviceDoc.currentUsers += 1;
+        // availableSlots will be recalculated by pre-save hook
+        await serviceDoc.save();
 
         await User.findByIdAndUpdate(providerId, { $inc: { walletBalance: booking.bookingDetails.rentalPrice } });
 
@@ -215,13 +224,13 @@ const getMyJoinedBookings = async (req, res) => {
 };
 
 const getBookingById = async (req, res) => {
-    try {
-        const booking = await Booking.findOne({ _id: req.params.id, $or: [{ clientId: req.user._id }, { providerId: req.user._id }] });
-        if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
-        res.json(booking);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, $or: [{ clientId: req.user._id }, { providerId: req.user._id }] }).populate('serviceId');
+    if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const confirmBooking = async (req, res) => {

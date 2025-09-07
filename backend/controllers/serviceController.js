@@ -1,5 +1,6 @@
 const Service = require("../models/service");
 const { User } = require("../models/user");
+const Booking = require("../models/booking");
 
 const createService = async (req, res) => {
   try {
@@ -228,9 +229,41 @@ const cleanupOrphanedServices = async () => {
       return result.modifiedCount;
     }
 
+    // Also fix slot calculations for existing services
+    await fixSlotCalculations();
+    console.log("Slot calculations fixed for existing services");
+
     return 0;
   } catch (err) {
     console.error("Error cleaning up orphaned services:", err);
+    return 0;
+  }
+};
+
+// Fix slot calculations for existing services
+const fixSlotCalculations = async () => {
+  try {
+    // Get all active services
+    const services = await Service.find({ serviceStatus: "active" });
+
+    for (const service of services) {
+      // Count active bookings (current users)
+      const activeBookings = await Booking.find({
+        serviceId: service._id,
+        bookingStatus: "active"
+      });
+
+      // Reset currentUsers and availableSlots
+      service.currentUsers = activeBookings.length;
+      service.availableSlots = Math.max(0, service.maxUsers - service.currentUsers);
+
+      await service.save();
+    }
+
+    console.log(`Fixed slot calculations for ${services.length} services`);
+    return services.length;
+  } catch (err) {
+    console.error("Error fixing slot calculations:", err);
     return 0;
   }
 };
@@ -243,4 +276,5 @@ module.exports = {
   updateService,
   deleteService,
   cleanupOrphanedServices,
+  fixSlotCalculations,
 };
