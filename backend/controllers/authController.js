@@ -1,22 +1,21 @@
-
 // controllers/authController.js
 
-const { User, PendingUser } = require('../models/user');
-const RefreshToken = require('../models/refreshtoken');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const { User, PendingUser } = require("../models/user");
+const RefreshToken = require("../models/refreshtoken");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 const {
   ValidationError,
   AuthenticationError,
   AuthorizationError,
   NotFoundError,
   ConflictError,
-  DatabaseError
-} = require('../utils/errors');
-const logger = require('../utils/logger');
+  DatabaseError,
+} = require("../utils/errors");
+const logger = require("../utils/logger");
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -29,14 +28,26 @@ exports.register = async (req, res, next) => {
     name = name.trim();
     username = username.toLowerCase().trim();
     email = email.toLowerCase().trim();
-    password = typeof password === 'string' ? password.trim() : password;
+    // Password should not be trimmed since validation already ensures no whitespace
     const trimmedPassword = password;
 
-    const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
+    const existingUser = await User.findOne({
+      $or: [
+        { email: email.toLowerCase() },
+        { username: username.toLowerCase() },
+      ],
+    });
     if (existingUser) {
-      throw new ConflictError('A user with this email or username already exists.');
+      throw new ConflictError(
+        "A user with this email or username already exists.",
+      );
     }
-    const existingPending = await PendingUser.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
+    const existingPending = await PendingUser.findOne({
+      $or: [
+        { email: email.toLowerCase() },
+        { username: username.toLowerCase() },
+      ],
+    });
     if (existingPending) {
       await PendingUser.deleteOne({ _id: existingPending._id }); // Remove old pending signup for this email/username
     }
@@ -47,12 +58,19 @@ exports.register = async (req, res, next) => {
 
     // Hash password before storing in PendingUser
     const hashedPassword = await bcrypt.hash(password, 12);
-    const pendingUser = new PendingUser({ name, username, email, password: hashedPassword, signupOtp: otp, signupOtpExpires: otpExpires });
+    const pendingUser = new PendingUser({
+      name,
+      username,
+      email,
+      password: hashedPassword,
+      signupOtp: otp,
+      signupOtpExpires: otpExpires,
+    });
     await pendingUser.save();
 
     // Send OTP email
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // or your email provider
+      service: "gmail", // or your email provider
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -62,14 +80,18 @@ exports.register = async (req, res, next) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Your Signup OTP',
+      subject: "Your Signup OTP",
       text: `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`,
     };
 
     await transporter.sendMail(mailOptions);
 
-    res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
-
+    res
+      .status(201)
+      .json({
+        message:
+          "OTP sent to your email. Please verify to complete registration.",
+      });
   } catch (err) {
     next(err);
   }
@@ -77,43 +99,55 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const emailOrUsername = (req.body.emailOrUsername || req.body.email || req.body.username)?.trim() || '';
+    const emailOrUsername =
+      (
+        req.body.emailOrUsername ||
+        req.body.email ||
+        req.body.username
+      )?.trim() || "";
     const { password } = req.body;
-    const trimmedPassword = password.trim();
     const user = await User.findOne({
       $or: [
         { email: emailOrUsername.toLowerCase() },
-        { username: emailOrUsername.toLowerCase() }
-      ]
+        { username: emailOrUsername.toLowerCase() },
+      ],
     });
     if (!user) {
       logger.warn(`Login failed: User not found for ${emailOrUsername}`);
-      throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
+      throw new AuthenticationError(
+        "Invalid credentials. If you recently reset your password, please check your email and try again.",
+      );
     }
-    // Always trim the password for comparison
-    let passwordMatch = await bcrypt.compare(password.trim(), user.password);
+    // Compare password directly without trimming since validation ensures no whitespace
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      // Fallback: try original (untrimmed) for backward compatibility (for old users)
-      passwordMatch = await bcrypt.compare(password, user.password);
-    }
-    if (!passwordMatch) {
-      logger.warn(`Login failed: Password mismatch for ${user.email || user.username}, trimmed length: ${trimmedPassword.length}, original length: ${password.length}`);
-      throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
+      logger.warn(
+        `Login failed: Password mismatch for ${user.email || user.username}`,
+      );
+      throw new AuthenticationError(
+        "Invalid credentials. If you recently reset your password, please check your email and try again.",
+      );
     }
 
     if (!user.isVerified) {
-      throw new AuthorizationError('Account not verified. Please verify your email before logging in.');
+      throw new AuthorizationError(
+        "Account not verified. Please verify your email before logging in.",
+      );
     }
 
     if (!user.isActive) {
-      throw new AuthorizationError('Your account has been deactivated.');
+      throw new AuthorizationError("Your account has been deactivated.");
     }
 
     const newRefreshToken = uuidv4();
-    const refreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    const refreshTokenExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
     await RefreshToken.deleteOne({ userId: user._id });
-    await RefreshToken.create({ token: newRefreshToken, userId: user._id, expiresAt: new Date(refreshTokenExpiry) });
+    await RefreshToken.create({
+      token: newRefreshToken,
+      userId: user._id,
+      expiresAt: new Date(refreshTokenExpiry),
+    });
 
     const accessTokenPayload = {
       userId: user._id,
@@ -121,9 +155,11 @@ exports.login = async (req, res, next) => {
       username: user.username,
       isProvider: user.isProvider,
       isAdmin: user.isAdmin,
-      tokenType: 'custom_jwt'
+      tokenType: "custom_jwt",
     };
-    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
+    const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, {
+      expiresIn: "8h",
+    });
 
     res.json({
       accessToken,
@@ -135,9 +171,8 @@ exports.login = async (req, res, next) => {
         email: user.email,
         isProvider: user.isProvider,
         isAdmin: user.isAdmin,
-      }
+      },
     });
-
   } catch (err) {
     next(err);
   }
@@ -149,27 +184,33 @@ exports.refreshToken = async (req, res, next) => {
 
     const storedToken = await RefreshToken.findOne({ token: refreshToken });
     if (!storedToken) {
-      throw new AuthenticationError('Invalid or expired refresh token. Please log in again.');
+      throw new AuthenticationError(
+        "Invalid or expired refresh token. Please log in again.",
+      );
     }
 
     if (storedToken.expiresAt && storedToken.expiresAt < new Date()) {
-        await RefreshToken.deleteOne({ token: refreshToken });
-        throw new AuthenticationError('Refresh token expired. Please log in again.');
+      await RefreshToken.deleteOne({ token: refreshToken });
+      throw new AuthenticationError(
+        "Refresh token expired. Please log in again.",
+      );
     }
 
     const user = await User.findById(storedToken.userId);
     if (!user) {
-        await RefreshToken.deleteOne({ token: refreshToken });
-        throw new AuthenticationError('User not found for this refresh token. Please log in again.');
+      await RefreshToken.deleteOne({ token: refreshToken });
+      throw new AuthenticationError(
+        "User not found for this refresh token. Please log in again.",
+      );
     }
 
     await RefreshToken.deleteOne({ token: refreshToken });
     const newRefreshToken = uuidv4();
-    const newRefreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    const newRefreshTokenExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000;
     await RefreshToken.create({
-        token: newRefreshToken,
-        userId: user._id,
-        expiresAt: new Date(newRefreshTokenExpiry)
+      token: newRefreshToken,
+      userId: user._id,
+      expiresAt: new Date(newRefreshTokenExpiry),
     });
 
     const newAccessTokenPayload = {
@@ -178,12 +219,15 @@ exports.refreshToken = async (req, res, next) => {
       username: user.username,
       isProvider: user.isProvider,
       isAdmin: user.isAdmin,
-      tokenType: 'custom_jwt'
+      tokenType: "custom_jwt",
     };
-    const newAccessToken = jwt.sign(newAccessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
+    const newAccessToken = jwt.sign(
+      newAccessTokenPayload,
+      ACCESS_TOKEN_SECRET,
+      { expiresIn: "8h" },
+    );
 
     res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
-
   } catch (err) {
     next(err);
   }
@@ -194,7 +238,7 @@ exports.logout = async (req, res, next) => {
     const { refreshToken } = req.body;
 
     await RefreshToken.deleteOne({ token: refreshToken });
-    res.status(200).json({ message: 'Logged out successfully.' });
+    res.status(200).json({ message: "Logged out successfully." });
   } catch (err) {
     next(err);
   }
@@ -206,14 +250,16 @@ exports.forgotPassword = async (req, res, next) => {
     const user = await User.findOne({
       $or: [
         { email: emailOrUsername.toLowerCase() },
-        { username: emailOrUsername.toLowerCase() }
-      ]
+        { username: emailOrUsername.toLowerCase() },
+      ],
     });
     if (!user) {
-      throw new NotFoundError('No user found with this email or username.');
+      throw new NotFoundError("No user found with this email or username.");
     }
     if (!user.isVerified) {
-      throw new ValidationError('Account not verified. Please complete signup verification first.');
+      throw new ValidationError(
+        "Account not verified. Please complete signup verification first.",
+      );
     }
 
     // Generate OTP
@@ -224,20 +270,20 @@ exports.forgotPassword = async (req, res, next) => {
 
     // Send OTP email
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: 'Sublite Password Reset OTP',
-      text: `Your OTP for password reset is: ${otp}`
+      subject: "Sublite Password Reset OTP",
+      text: `Your OTP for password reset is: ${otp}`,
     });
 
-    res.json({ message: 'OTP sent to your email.' });
+    res.json({ message: "OTP sent to your email." });
   } catch (err) {
     next(err);
   }
@@ -246,16 +292,18 @@ exports.forgotPassword = async (req, res, next) => {
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    const pendingUser = await PendingUser.findOne({ email: email.toLowerCase() });
+    const pendingUser = await PendingUser.findOne({
+      email: email.toLowerCase(),
+    });
     if (!pendingUser) {
-      throw new NotFoundError('No pending registration found for this email.');
+      throw new NotFoundError("No pending registration found for this email.");
     }
     if (pendingUser.signupOtp !== otp) {
-      throw new ValidationError('Invalid OTP.');
+      throw new ValidationError("Invalid OTP.");
     }
     if (pendingUser.signupOtpExpires < new Date()) {
       await PendingUser.deleteOne({ _id: pendingUser._id });
-      throw new ValidationError('OTP expired. Please register again.');
+      throw new ValidationError("OTP expired. Please register again.");
     }
     // Create real user
     const newUser = new User({
@@ -263,24 +311,28 @@ exports.verifyOtp = async (req, res, next) => {
       username: pendingUser.username,
       email: pendingUser.email,
       password: pendingUser.password,
-      isVerified: true
+      isVerified: true,
     });
     await newUser.save();
     await PendingUser.deleteOne({ _id: pendingUser._id });
 
     // Instant login support
     if (req.body.instantLogin === true) {
-      const { v4: uuidv4 } = require('uuid');
-      const jwt = require('jsonwebtoken');
-      const RefreshToken = require('../models/refreshtoken');
+      const { v4: uuidv4 } = require("uuid");
+      const jwt = require("jsonwebtoken");
+      const RefreshToken = require("../models/refreshtoken");
       const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
       const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
       const newRefreshToken = uuidv4();
-      const refreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+      const refreshTokenExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
       await RefreshToken.deleteOne({ userId: newUser._id });
-      await RefreshToken.create({ token: newRefreshToken, userId: newUser._id, expiresAt: new Date(refreshTokenExpiry) });
+      await RefreshToken.create({
+        token: newRefreshToken,
+        userId: newUser._id,
+        expiresAt: new Date(refreshTokenExpiry),
+      });
 
       const accessTokenPayload = {
         userId: newUser._id,
@@ -288,9 +340,11 @@ exports.verifyOtp = async (req, res, next) => {
         username: newUser.username,
         isProvider: newUser.isProvider,
         isAdmin: newUser.isAdmin,
-        tokenType: 'custom_jwt'
+        tokenType: "custom_jwt",
       };
-      const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
+      const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, {
+        expiresIn: "8h",
+      });
 
       return res.status(200).json({
         accessToken,
@@ -302,11 +356,13 @@ exports.verifyOtp = async (req, res, next) => {
           email: newUser.email,
           isProvider: newUser.isProvider,
           isAdmin: newUser.isAdmin,
-        }
+        },
       });
     }
 
-    res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+    res
+      .status(200)
+      .json({ message: "Email verified successfully. You can now log in." });
   } catch (err) {
     next(err);
   }
@@ -315,30 +371,32 @@ exports.verifyOtp = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     const { email, otp, newPassword } = req.body;
-    // Always trim the new password before hashing
-    const passwordToHash = typeof newPassword === 'string' ? newPassword.trim() : newPassword;
+    // Password should not be trimmed since validation already ensures no whitespace
+    const passwordToHash = newPassword;
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      throw new NotFoundError('No user found with this email.');
+      throw new NotFoundError("No user found with this email.");
     }
     if (!user.isVerified) {
-      throw new ValidationError('Account not verified. Please complete signup verification first.');
+      throw new ValidationError(
+        "Account not verified. Please complete signup verification first.",
+      );
     }
     if (!user.resetOtp || !user.resetOtpExpires) {
-      throw new ValidationError('OTP not requested.');
+      throw new ValidationError("OTP not requested.");
     }
     if (user.resetOtp !== otp) {
-      throw new ValidationError('Invalid OTP.');
+      throw new ValidationError("Invalid OTP.");
     }
     if (user.resetOtpExpires < Date.now()) {
-      throw new ValidationError('OTP expired.');
+      throw new ValidationError("OTP expired.");
     }
     const hashedPassword = await bcrypt.hash(passwordToHash, 12);
     user.password = hashedPassword;
     user.resetOtp = null;
     user.resetOtpExpires = null;
     await user.save();
-    res.json({ message: 'Password reset successful.' });
+    res.json({ message: "Password reset successful." });
   } catch (err) {
     next(err);
   }
@@ -349,21 +407,23 @@ exports.verifyResetOtp = async (req, res, next) => {
     const { email, otp } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      throw new NotFoundError('No user found with this email.');
+      throw new NotFoundError("No user found with this email.");
     }
     if (!user.isVerified) {
-      throw new ValidationError('Account not verified. Please complete signup verification first.');
+      throw new ValidationError(
+        "Account not verified. Please complete signup verification first.",
+      );
     }
     if (!user.resetOtp || !user.resetOtpExpires) {
-      throw new ValidationError('OTP not requested.');
+      throw new ValidationError("OTP not requested.");
     }
     if (user.resetOtp !== otp) {
-      throw new ValidationError('Invalid OTP.');
+      throw new ValidationError("Invalid OTP.");
     }
     if (user.resetOtpExpires < Date.now()) {
-      throw new ValidationError('OTP expired.');
+      throw new ValidationError("OTP expired.");
     }
-    res.json({ message: 'OTP verified. You can now reset your password.' });
+    res.json({ message: "OTP verified. You can now reset your password." });
   } catch (err) {
     next(err);
   }
