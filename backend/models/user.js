@@ -1,31 +1,34 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     name: { type: String, required: true },
-    
+
     username: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-        minlength: 3,
-        sparse: true, // Allow null values to be non-unique (for users without usernames)
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      minlength: 3,
+      sparse: true, // Allow null values to be non-unique (for users without usernames)
     },
-    
-    email: { 
-        type: String, 
-        required: true, 
-        trim: true, 
-        lowercase: true
+
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
     },
-    
+
     phone: String,
 
     // Password required only if NOT a social login
     password: {
-        type: String,
-        required: function() { return !this.isSocialLogin; }
+      type: String,
+      required: function () {
+        return !this.isSocialLogin;
+      },
     },
 
     isProvider: { type: Boolean, default: false },
@@ -40,11 +43,11 @@ const userSchema = new mongoose.Schema({
     walletBalance: { type: Number, default: 0 },
 
     providerSettings: {
-        activeHours: {
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '12:00' },
-        },
-        timezone: { type: String, default: 'UTC' }
+      activeHours: {
+        start: { type: String, default: "09:00" },
+        end: { type: String, default: "12:00" },
+      },
+      timezone: { type: String, default: "UTC" },
     },
     providerSettingsCompleted: { type: Boolean, default: false },
 
@@ -53,43 +56,44 @@ const userSchema = new mongoose.Schema({
 
     // Social login flag
     isSocialLogin: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
 
     // Firebase UID for social login users (nullable for manual users)
     firebaseUid: {
-        type: String,
-        sparse: true,
+      type: String,
+      sparse: true,
     },
 
     // Refresh token fields (optional, based on your auth strategy)
     refreshToken: {
-        type: String,
+      type: String,
     },
     refreshTokenExpiry: {
-        type: Date,
+      type: Date,
     },
 
     resetOtp: {
       type: String,
-      default: null
+      default: null,
     },
     resetOtpExpires: {
       type: Date,
-      default: null
+      default: null,
     },
 
     signupOtp: {
       type: String,
-      default: null
+      default: null,
     },
     signupOtpExpires: {
       type: Date,
-      default: null
+      default: null,
     },
-
-}, { timestamps: true });
+  },
+  { timestamps: true },
+);
 
 // Create compound and specialized indexes
 // Note: These indexes might already exist in the database from previous runs
@@ -100,25 +104,32 @@ userSchema.index({ email: 1 }, { unique: true }); // Unique email constraint
 userSchema.index({ isProvider: 1 }); // Provider lookup index
 
 // Password hashing hook
-userSchema.pre('save', async function (next) {
-    if (this.isModified('password') && this.password && !this.isSocialLogin) {
-        this.password = await bcrypt.hash(this.password, 12);
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password") && this.password && !this.isSocialLogin) {
+    // Check if password is already a bcrypt hash to prevent double-hashing
+    const isBcryptHash = /^\$2[abyab]\$\d{1,2}\$/.test(this.password);
+    if (!isBcryptHash) {
+      this.password = await bcrypt.hash(this.password, 12);
     }
-    next();
+  }
+  next();
 });
 
 const User = mongoose.model("User", userSchema);
 
 // PendingUser model for signup OTP verification
-const pendingUserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  username: { type: String, required: true, trim: true, lowercase: true },
-  email: { type: String, required: true, trim: true, lowercase: true },
-  password: { type: String, required: true },
-  signupOtp: { type: String, required: true },
-  signupOtpExpires: { type: Date, required: true },
-}, { timestamps: true });
+const pendingUserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    username: { type: String, required: true, trim: true, lowercase: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    password: { type: String, required: true },
+    signupOtp: { type: String, required: true },
+    signupOtpExpires: { type: Date, required: true },
+  },
+  { timestamps: true },
+);
 
-const PendingUser = mongoose.model('PendingUser', pendingUserSchema);
+const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
 
 module.exports = { User, PendingUser };

@@ -325,7 +325,7 @@ exports.verifyOtp = async (req, res, next) => {
       name: pendingUser.name,
       username: pendingUser.username,
       email: pendingUser.email,
-      password: pendingUser.password,
+      password: pendingUser.password, // Already hashed, pre-save hook will detect this
       isVerified: true,
     });
     await newUser.save();
