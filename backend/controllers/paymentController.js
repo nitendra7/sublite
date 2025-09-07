@@ -36,7 +36,12 @@ exports.verifyRazorpayPayment = async (req, res) => {
     const userId = req.user?._id; // Uses req.user._id
 
     try {
-        console.log("[VerifyPayment] userId:", userId, "order_id:", razorpay_order_id, "payment_id:", razorpay_payment_id);
+        console.log("[VerifyPayment] Starting verification - req.user details:", {
+            userId,
+            userExists: !!req.user,
+            fullUser: req.user
+        });
+        console.log("[VerifyPayment] Request body:", req.body, "order_id:", razorpay_order_id, "payment_id:", razorpay_payment_id);
 
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSign = crypto
@@ -44,7 +49,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
             .update(sign.toString())
             .digest("hex");
 
-        console.log("[VerifyPayment] Expected signature:", expectedSign, "Provided signature:", razorpay_signature);
+        console.log("[VerifyPayment] Signature verification - Expected:", expectedSign, "Provided:", razorpay_signature);
 
         if (razorpay_signature !== expectedSign) {
             console.warn("[VerifyPayment] Invalid signature for user", userId);
@@ -67,35 +72,58 @@ exports.verifyRazorpayPayment = async (req, res) => {
         }
 
         const amountInRupees = orderDetails.amount / 100;
+        console.log("[VerifyPayment] Calculated amount:", amountInRupees, "from order.amount:", orderDetails.amount);
 
         // Simplified: Single try block for DB operations, let errors bubble to outer catch
-        await Payment.create({
-            userId: userId,
-            razorpay_order_id,
-            razorpay_payment_id,
+        console.log("[VerifyPayment] Attempting Payment.create with data:", {
+            userId,
+            type: 'wallet-topup',
+            transactionId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
             amount: amountInRupees,
-            currency: 'INR',
+            paymentMethod: 'razorpay',
             status: 'success'
         });
-        console.log("[VerifyPayment] Payment record created.");
+        const newPayment = await Payment.create({
+            userId: userId,
+            type: 'wallet-topup',
+            transactionId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            amount: amountInRupees,
+            paymentMethod: 'razorpay',
+            status: 'success'
+        });
+        console.log("[VerifyPayment] Payment record created successfully:", newPayment._id);
 
-        await WalletTransaction.create({
+        console.log("[VerifyPayment] Attempting WalletTransaction.create with data:", {
+            userId,
+            amount: amountInRupees,
+            type: 'credit',
+            description: `Wallet Top-Up via Razorpay (Order: ${razorpay_order_id})`,
+            relatedId: newPayment._id,
+            relatedType: 'payment'
+        });
+        const newWalletTransaction = await WalletTransaction.create({
             userId: userId,
             amount: amountInRupees,
             type: 'credit',
-            description: `Wallet Top-Up via Razorpay`
+            description: `Wallet Top-Up via Razorpay (Order: ${razorpay_order_id})`,
+            relatedId: newPayment._id,
+            relatedType: 'payment'
         });
-        console.log("[VerifyPayment] WalletTransaction record created.");
+        console.log("[VerifyPayment] WalletTransaction record created successfully:", newWalletTransaction._id);
 
-        await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } });
-        console.log("[VerifyPayment] User wallet balance updated.");
+        console.log("[VerifyPayment] Attempting User.update - Current wallet balance before increment.");
+        const updateResult = await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } }, { new: true });
+        console.log("[VerifyPayment] User wallet balance updated successfully. New balance:", updateResult?.walletBalance);
 
-        return res.status(200).json({ message: "Payment verified and wallet updated successfully" });
+        return res.status(200).json({ message: "Payment verified and wallet updated successfully", newBalance: updateResult?.walletBalance });
 
     } catch (error) {
-        console.error("[VerifyPayment] Error verifying payment:", {
+        console.error("[VerifyPayment] Unexpected error during verification:", {
             errorMessage: error.message,
             errorStack: error.stack,
+            errorCode: error.code,
             requestBody: req.body,
             userId: userId,
             step: "See previous logs for step context"

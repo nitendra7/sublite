@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const paymentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
   providerId: { type: mongoose.Schema.ObjectId, ref: 'User' }, // Only for service payments
-  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking', required: true }, // Only for service payments
+  bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking', required: function() { return this.type === 'service-payment'; } }, // Required only for service payments
   paymentId: { type: String },
   type: {
     type: String,
