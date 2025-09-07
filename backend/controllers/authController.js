@@ -29,7 +29,8 @@ exports.register = async (req, res, next) => {
     name = name.trim();
     username = username.toLowerCase().trim();
     email = email.toLowerCase().trim();
-    const trimmedPassword = password.trim();
+    password = typeof password === 'string' ? password.trim() : password;
+    const trimmedPassword = password;
 
     const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
     if (existingUser) {
@@ -45,7 +46,7 @@ exports.register = async (req, res, next) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
     // Hash password before storing in PendingUser
-    const hashedPassword = await bcrypt.hash(trimmedPassword, 12);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const pendingUser = new PendingUser({ name, username, email, password: hashedPassword, signupOtp: otp, signupOtpExpires: otpExpires });
     await pendingUser.save();
 
@@ -89,9 +90,10 @@ exports.login = async (req, res, next) => {
       logger.warn(`Login failed: User not found for ${emailOrUsername}`);
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
     }
-    let passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
+    // Always trim the password for comparison
+    let passwordMatch = await bcrypt.compare(password.trim(), user.password);
     if (!passwordMatch) {
-      // Fallback for backward compatibility with passwords that may have spaces
+      // Fallback: try original (untrimmed) for backward compatibility (for old users)
       passwordMatch = await bcrypt.compare(password, user.password);
     }
     if (!passwordMatch) {
@@ -313,7 +315,8 @@ exports.verifyOtp = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     const { email, otp, newPassword } = req.body;
-    const trimmedNewPassword = newPassword.trim();
+    // Always trim the new password before hashing
+    const passwordToHash = typeof newPassword === 'string' ? newPassword.trim() : newPassword;
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       throw new NotFoundError('No user found with this email.');
@@ -330,8 +333,7 @@ exports.resetPassword = async (req, res, next) => {
     if (user.resetOtpExpires < Date.now()) {
       throw new ValidationError('OTP expired.');
     }
-    // SECURITY FIX: Hash new password before saving!
-    const hashedPassword = await bcrypt.hash(trimmedNewPassword, 12);
+    const hashedPassword = await bcrypt.hash(passwordToHash, 12);
     user.password = hashedPassword;
     user.resetOtp = null;
     user.resetOtpExpires = null;
