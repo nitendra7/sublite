@@ -56,8 +56,13 @@ exports.verifyRazorpayPayment = async (req, res) => {
             orderDetails = await razorpayInstance.orders.fetch(razorpay_order_id);
             console.log("[VerifyPayment] Fetched order details:", orderDetails);
         } catch (err) {
-            console.error("[VerifyPayment] Error fetching order details:", err);
-            throw err;
+            console.error("[VerifyPayment] Error fetching order details from Razorpay:", {
+                errorMessage: err.message,
+                errorStack: err.stack,
+                razorpay_order_id,
+                step: "Razorpay order fetch"
+            });
+            return res.status(502).json({ message: "Error fetching order details from Razorpay", error: err.message });
         }
 
         const amountInRupees = orderDetails.amount / 100;
