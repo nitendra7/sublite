@@ -86,12 +86,10 @@ exports.register = async (req, res, next) => {
 
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(201)
-      .json({
-        message:
-          "OTP sent to your email. Please verify to complete registration.",
-      });
+    res.status(201).json({
+      message:
+        "OTP sent to your email. Please verify to complete registration.",
+    });
   } catch (err) {
     next(err);
   }
@@ -119,13 +117,30 @@ exports.login = async (req, res, next) => {
       );
     }
     // Compare password directly without trimming since validation ensures no whitespace
+    logger.info(
+      `Login attempt for ${user.email || user.username}: password length=${password.length}, hash=${user.password.substring(0, 30)}...`,
+    );
+
     const passwordMatch = await bcrypt.compare(password, user.password);
+
+    // Add backward compatibility for existing users with trimmed passwords
+    let finalMatch = passwordMatch;
     if (!passwordMatch) {
+      const trimmedMatch = await bcrypt.compare(password.trim(), user.password);
+      if (trimmedMatch) {
+        logger.info(
+          `Login successful with trimmed password for ${user.email || user.username} - user should reset password`,
+        );
+        finalMatch = true;
+      }
+    }
+
+    if (!finalMatch) {
       logger.warn(
-        `Login failed: Password mismatch for ${user.email || user.username}`,
+        `Login failed: Password mismatch for ${user.email || user.username} - tried both direct and trimmed comparison`,
       );
       throw new AuthenticationError(
-        "Invalid credentials. If you recently reset your password, please check your email and try again.",
+        "Invalid credentials. If you're having trouble logging in, try resetting your password using the 'Forgot Password' link.",
       );
     }
 
