@@ -261,7 +261,7 @@ const Availableplans = () => {
                             className="text-gray-600 dark:text-gray-400"
                           />
                           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                            {Math.min(service.availableSlots, service.maxUsers)}
+                            {service.availableSlots}
                             /{service.maxUsers} slots
                           </span>
                         </span>
@@ -370,7 +370,7 @@ const Availableplans = () => {
                           className="text-gray-600 dark:text-gray-400"
                         />
                         <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                          {Math.min(service.availableSlots, service.maxUsers)}/
+                          {service.availableSlots}/
                           {service.maxUsers} slots
                         </span>
                       </div>
