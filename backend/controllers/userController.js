@@ -17,11 +17,18 @@ exports.getMe = async (req, res) => {
 
 exports.updateMe = async (req, res) => {
   try {
+    console.log("DEBUG: updateMe called");
+    console.log("DEBUG: req.method:", req.method);
+    console.log("DEBUG: req.headers.content-type:", req.headers['content-type']);
+    console.log("DEBUG: req.user:", req.user ? req.user._id : 'undefined');
+    console.log("DEBUG: req.body:", JSON.stringify(req.body, null, 2));
+    console.log("DEBUG: req.file:", req.file ? { fieldname: req.file.fieldname, mimetype: req.file.mimetype, size: req.file.size, path: req.file.path, filename: req.file.filename } : 'no file');
     const userId = req.user._id;
     const name = req.body.name;
     const username = req.body.username;
     const phone = req.body.phone;
     const password = req.body.password;
+    console.log("DEBUG: extracted fields:", { name, username, phone, password: password ? '[REDACTED]' : undefined });
     let providerSettings;
     if (req.body.providerSettings) {
       try {
@@ -30,18 +37,28 @@ exports.updateMe = async (req, res) => {
             ? JSON.parse(req.body.providerSettings)
             : req.body.providerSettings;
       } catch (e) {
+        console.log("DEBUG: providerSettings parse error:", e);
         return res.status(400).json({
           message: "Invalid providerSettings format. Must be valid JSON.",
         });
       }
     }
+    console.log("DEBUG: fetching user by id:", userId);
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user) {
+      console.log("DEBUG: user not found:", userId);
+      return res.status(404).json({ message: "User not found." });
+    }
+    console.log("DEBUG: user found:", user._id, user.name);
     if (name !== undefined) user.name = name;
     if (username !== undefined) user.username = username;
     if (phone !== undefined) user.phone = phone;
-    if (password) user.password = await bcrypt.hash(password, 12);
+    if (password) {
+      console.log("DEBUG: hashing password");
+      user.password = await bcrypt.hash(password, 12);
+    }
     if (providerSettings) {
+      console.log("DEBUG: updating providerSettings");
       if (!user.providerSettings || typeof user.providerSettings !== "object")
         user.providerSettings = {};
       if (providerSettings.activeHours) {
@@ -62,19 +79,27 @@ exports.updateMe = async (req, res) => {
       user.providerSettingsCompleted = true;
     }
     if (req.file && req.file.path) {
+      console.log("DEBUG: setting profilePicture from req.file.path:", req.file.path);
       user.profilePicture = req.file.path;
     } else if (req.file && req.file.filename) {
+      console.log("DEBUG: setting profilePicture from req.file.filename:", req.file.filename);
       user.profilePicture = req.file.filename;
+    } else {
+      console.log("DEBUG: no file uploaded");
     }
+    console.log("DEBUG: saving user");
     const updatedUser = await user.save();
+    console.log("DEBUG: user saved successfully");
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
     if (!userResponse.profilePicture) {
       userResponse.profilePicture = user.profilePicture || "/logos/logo.png";
     }
+    console.log("DEBUG: sending response");
     res.json(userResponse);
   } catch (err) {
-    console.error("Profile update error:", err);
+    console.error("DEBUG: Profile update error caught:", err);
+    console.error("DEBUG: Error stack:", err.stack);
     res.status(500).json({
       message: "Server error while updating profile.",
       error: err.message,
