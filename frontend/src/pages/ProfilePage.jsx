@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
-import { useUser } from '../context/UserContext';
-import { Loader2 } from 'lucide-react';
-import Loading from '../components/ui/Loading';
+import { useUser } from "../context/UserContext";
+import {
+  Loader2,
+  Camera,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Wallet,
+  CheckCircle,
+  AlertCircle,
+  Star,
+  Edit3,
+  Save,
+  X,
+} from "lucide-react";
+import Loading from "../components/ui/Loading";
 import OtpModal from "../components/ui/OtpModal";
-
-import api, { API_BASE } from '../utils/api';
-
-// Debug logging
-console.log('Environment variables:', {
-  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-  API_BASE: API_BASE
-});
+import api from "../utils/api";
 
 export default function ProfilePage() {
   const { user, loading, error, updateUserContext } = useUser();
@@ -21,25 +28,20 @@ export default function ProfilePage() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
+  const [activeField, setActiveField] = useState(null);
   const [profile, setProfile] = useState({
-    name: '',
-    username: '',
-    password: '',
-    email: '',
-    phone: '',
-    profilePicture: '',
-    userType: '',
+    name: "",
+    username: "",
+    password: "",
+    email: "",
+    phone: "",
+    profilePicture: "",
+    userType: "",
     isVerified: false,
     isActive: true,
     rating: 0,
     totalRatings: 0,
     walletBalance: 0,
-    businessName: '',
-    businessDescription: '',
-    businessCategory: '',
-    businessLocation: { address: '', city: '', state: '', pincode: '' },
-    coordinates: { latitude: 0, longitude: 0 },
-    preferredLocation: { city: '', state: '' },
   });
   const [initialProfile, setInitialProfile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -50,7 +52,7 @@ export default function ProfilePage() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       const fetchedProfile = {
         name: user.name || "",
         username: user.username || "",
@@ -60,42 +62,25 @@ export default function ProfilePage() {
         profilePicture: user.profilePicture || "",
         userType: user.userType || "",
         isVerified: user.isVerified || false,
-        isActive: user.isActive || true,
+        isActive: user.isActive !== undefined ? user.isActive : true,
         rating: user.rating || 0,
         totalRatings: user.totalRatings || 0,
         walletBalance: user.walletBalance || 0,
-        businessName: user.businessName || "",
-        businessDescription: user.businessDescription || "",
-        businessCategory: user.businessCategory || "",
-        businessLocation: {
-          address: user.businessLocation?.address || '',
-          city: user.businessLocation?.city || '',
-          state: user.businessLocation?.state || '',
-          pincode: user.businessLocation?.pincode || '',
-        },
-        coordinates: {
-          latitude: user.coordinates?.latitude || 0,
-          longitude: user.coordinates?.longitude || 0,
-        },
-        preferredLocation: {
-          city: user.preferredLocation?.city || '',
-          state: user.preferredLocation?.state || '',
-        },
       };
       setProfile(fetchedProfile);
-      setInitialProfile(fetchedProfile);
-      setImagePreview(user.profilePicture || null);
-      setLocalError(null);
-      setSaveSuccess(false);
+      setInitialProfile({ ...fetchedProfile });
     }
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
-    if (profile.profilePicture && typeof profile.profilePicture !== 'string') {
+    if (profile.profilePicture && typeof profile.profilePicture !== "string") {
       const objectUrl = URL.createObjectURL(profile.profilePicture);
       setImagePreview(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
-    } else if (profile.profilePicture && typeof profile.profilePicture === 'string') {
+    } else if (
+      profile.profilePicture &&
+      typeof profile.profilePicture === "string"
+    ) {
       setImagePreview(profile.profilePicture);
     } else {
       setImagePreview(null);
@@ -104,27 +89,28 @@ export default function ProfilePage() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === 'profilePicture' && files && files[0]) {
-      setProfile(prev => ({ ...prev, [name]: files[0] }));
+    if (name === "profilePicture" && files && files[0]) {
+      setProfile((prev) => ({ ...prev, [name]: files[0] }));
     } else {
-      setProfile(prev => ({ ...prev, [name]: value }));
+      setProfile((prev) => ({ ...prev, [name]: value }));
+      setActiveField(name);
     }
   };
 
   const handleEditToggle = () => {
     if (isEditing) {
-      setProfile(initialProfile);
+      setProfile({ ...initialProfile });
       setImagePreview(initialProfile?.profilePicture || null);
       setOtpVerified(false);
       setChangePasswordMode(false);
+      setLocalError(null);
+      setSaveSuccess(false);
+      setActiveField(null);
     }
     setIsEditing(!isEditing);
-    setLocalError(null);
-    setSaveSuccess(false);
   };
 
-  // Show OTP modal before allowing password edit
-  const handleOtpVerify = async otp => {
+  const handleOtpVerify = async (otp) => {
     setOtpLoading(true);
     setOtpError("");
     try {
@@ -145,36 +131,32 @@ export default function ProfilePage() {
     setLocalError(null);
     setSaveSuccess(false);
 
-    // Validate token
     if (!token) {
-      setLocalError('No authentication token found. Please log in again.');
+      setLocalError("No authentication token found. Please log in again.");
       setSaving(false);
       return;
     }
 
     try {
-      // Prepare FormData for multipart/form-data
       const formData = new FormData();
-      // Add text fields
-      formData.append('name', profile.name || '');
-      formData.append('username', profile.username || '');
-      formData.append('phone', profile.phone || '');
-      if (profile.password) formData.append('password', profile.password);
-      // If you have providerSettings, send as JSON string (not used in this UI, but backend expects it as JSON string)
-      // formData.append('providerSettings', JSON.stringify(...));
-      // Add profile picture if changed
+      formData.append("name", profile.name || "");
+      formData.append("username", profile.username || "");
+      formData.append("phone", profile.phone || "");
+      if (profile.password) formData.append("password", profile.password);
+
       if (profile.profilePicture instanceof File) {
-        formData.append('profilePicture', profile.profilePicture);
+        formData.append("profilePicture", profile.profilePicture);
       }
 
       const res = await api.put(`/users/me`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       updateUserContext(res.data);
       setSaveSuccess(true);
       setIsEditing(false);
       setInitialProfile(profile);
+      setActiveField(null);
     } catch (err) {
       setLocalError(`Failed to save profile: ${err.message}`);
     } finally {
@@ -188,180 +170,309 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-        <div className="text-center text-red-500 dark:text-red-400">
+      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-[#141b2a]">
+        <div className="text-center text-red-400">
           <p>Error: {error}</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-        <div className="text-center text-gray-600 dark:text-gray-400">
-          <p>Please log in to view your profile.</p>
-        </div>
-      </div>
-    );
-  }
+  const getInitials = (name) => {
+    return name
+      ? name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+      : "?";
+  };
 
   return (
-    <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
-      {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-          My Profile
-        </h1>
-        <p className="text-gray-500 dark:text-gray-300">
-          Manage your account information and preferences.
-        </p>
-      </div>
-
+    <div className="min-h-screen bg-[#141b2a] p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Profile Picture Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 mb-8">
-          <div className="flex flex-col items-center">
-            <div className="relative group mb-6">
-              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-lg overflow-hidden border-4 border-[#2bb6c4] dark:border-[#5ed1dc]">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] flex items-center justify-center">
-                    <span className="text-4xl font-bold text-white">
-                      {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {isEditing && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 cursor-pointer rounded-full">
-                  <input type="file" accept="image/*" className="hidden" name="profilePicture" onChange={handleChange} />
-                  <span className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-camera"><path d="M15 6v-3a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v3"/><path d="M23 19l-6-6"/><path d="M19 19h3v3H2"/><path d="M19 19l-3 3"/><path d="M19 19l-3-3"/></svg>
-                  </span>
-                </label>
-              )}
-            </div>
-            
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                {profile.name || 'User'}
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
-                @{profile.username}
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Profile Settings
+              </h1>
+              <p className="text-gray-400">
+                {isEditing
+                  ? "You're in edit mode. Make changes and save."
+                  : "Manage your account information"}
               </p>
-              <div className="flex items-center justify-center gap-2">
-                {profile.isVerified ? (
-                  <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium dark:bg-green-800 dark:text-green-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-                    Verified
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium dark:bg-gray-700 dark:text-gray-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-                    Unverified
-                  </span>
-                )}
-                {profile.rating > 0 && (
-                  <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium dark:bg-yellow-800 dark:text-yellow-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    {profile.rating.toFixed(1)} ({profile.totalRatings})
-                  </span>
-                )}
-              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleEditToggle}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 bg-gray-600 text-white hover:bg-gray-700"
+                >
+                  <X size={18} />
+                  Cancel
+                </button>
+              )}
+              {!isEditing && (
+                <button
+                  onClick={handleEditToggle}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 bg-[#2bb6c4] text-white hover:bg-[#1ea1b0]"
+                >
+                  <Edit3 size={18} />
+                  Edit Profile
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Profile Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-          <form onSubmit={handleSave} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={profile.name}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                  required
-                />
+        {/* Success/Error Messages */}
+        {saveSuccess && (
+          <div className="mb-6 p-4 bg-green-900/30 border border-green-700 rounded-xl flex items-center gap-3 text-green-400">
+            <CheckCircle size={20} />
+            <span>Profile updated successfully!</span>
+          </div>
+        )}
+
+        {localError && (
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-xl flex items-center gap-3 text-red-400">
+            <AlertCircle size={20} />
+            <span>{localError}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-[#1e2633] rounded-2xl p-8 border border-gray-700 h-fit sticky top-8">
+              {/* Profile Picture */}
+              <div className="relative mb-6">
+                <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-[#2bb6c4] to-[#1ea1b0] p-1">
+                  <label
+                    className={`w-full h-full rounded-full bg-[#1e2633] flex items-center justify-center overflow-hidden relative ${isEditing ? "cursor-pointer hover:bg-[#252f3e] transition-colors" : ""}`}
+                  >
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-3xl font-bold text-[#5ed1dc]">
+                        {getInitials(profile.name)}
+                      </span>
+                    )}
+                    {isEditing && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          name="profilePicture"
+                          onChange={handleChange}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-all duration-200">
+                          <Camera
+                            size={20}
+                            className="text-white opacity-0 hover:opacity-100 transition-opacity duration-200"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#2bb6c4] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1ea1b0] transition-colors shadow-lg">
+                    <Camera size={18} className="text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      name="profilePicture"
+                      onChange={handleChange}
+                    />
+                  </label>
+                )}
               </div>
 
-              {/* Username */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Username
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={profile.username}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                  required
-                />
+              {/* Profile Info */}
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  {profile.name || "User"}
+                </h2>
+                <p className="text-gray-400 mb-4">@{profile.username}</p>
+
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  {profile.isVerified ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-900/30 border border-green-700 rounded-full text-green-400 text-sm font-medium">
+                      <CheckCircle size={14} />
+                      Verified
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 border border-gray-600 rounded-full text-gray-400 text-sm font-medium">
+                      <AlertCircle size={14} />
+                      Unverified
+                    </div>
+                  )}
+
+                  {profile.rating > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-900/30 border border-yellow-700 rounded-full text-yellow-400 text-sm font-medium">
+                      <Star size={14} />
+                      {profile.rating.toFixed(1)} ({profile.totalRatings})
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profile.email}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                />
+              {/* Wallet Balance */}
+              <div className="bg-[#2a3343] rounded-xl p-4 border border-gray-600">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet size={18} className="text-[#5ed1dc]" />
+                  <span className="text-gray-300 text-sm font-medium">
+                    Wallet Balance
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-[#5ed1dc]">
+                  ₹{profile.walletBalance?.toFixed(2) || "0.00"}
+                </p>
               </div>
+            </div>
+          </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.06 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.06-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={profile.phone}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                />
-              </div>
+          {/* Form Section */}
+          <div className="lg:col-span-2">
+            <form onSubmit={handleSave} className="space-y-6">
+              <div
+                className={`bg-[#1e2633] rounded-2xl p-6 border transition-all duration-300 ${
+                  isEditing ? "border-[#2bb6c4]/50" : "border-gray-700"
+                }`}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Full Name */}
+                  <div className="space-y-2">
+                    <label
+                      className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                        activeField === "name" && isEditing
+                          ? "text-[#5ed1dc]"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      <User size={16} />
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={profile.name}
+                      onChange={handleChange}
+                      onFocus={() => setActiveField("name")}
+                      disabled={!isEditing}
+                      className={`w-full px-4 py-2.5 rounded-lg border bg-[#2a3343] text-white placeholder-gray-400 transition-all duration-200 ${
+                        isEditing
+                          ? activeField === "name"
+                            ? "border-[#2bb6c4] ring-1 ring-[#2bb6c4]/50 focus:outline-none"
+                            : "border-gray-600 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]/50 focus:outline-none"
+                          : "border-gray-600 cursor-not-allowed opacity-60"
+                      }`}
+                      required
+                    />
+                  </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  Change Password
-                </label>
-                {isEditing ? (
-                  <>
-                    {!changePasswordMode ? (
+                  {/* Username */}
+                  <div className="space-y-2">
+                    <label
+                      className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                        activeField === "username" && isEditing
+                          ? "text-[#5ed1dc]"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      <User size={16} />
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={profile.username}
+                      onChange={handleChange}
+                      onFocus={() => setActiveField("username")}
+                      disabled={!isEditing}
+                      className={`w-full px-4 py-2.5 rounded-lg border bg-[#2a3343] text-white placeholder-gray-400 transition-all duration-200 ${
+                        isEditing
+                          ? activeField === "username"
+                            ? "border-[#2bb6c4] ring-1 ring-[#2bb6c4]/50 focus:outline-none"
+                            : "border-gray-600 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]/50 focus:outline-none"
+                          : "border-gray-600 cursor-not-allowed opacity-60"
+                      }`}
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                      <Mail size={16} />
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={profile.email}
+                      disabled
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-600 bg-[#1a2030] text-gray-400 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Email cannot be changed
+                    </p>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <label
+                      className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                        activeField === "phone" && isEditing
+                          ? "text-[#5ed1dc]"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      <Phone size={16} />
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={profile.phone}
+                      onChange={handleChange}
+                      onFocus={() => setActiveField("phone")}
+                      disabled={!isEditing}
+                      className={`w-full px-4 py-2.5 rounded-lg border bg-[#2a3343] text-white placeholder-gray-400 transition-all duration-200 ${
+                        isEditing
+                          ? activeField === "phone"
+                            ? "border-[#2bb6c4] ring-1 ring-[#2bb6c4]/50 focus:outline-none"
+                            : "border-gray-600 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]/50 focus:outline-none"
+                          : "border-gray-600 cursor-not-allowed opacity-60"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Password Section */}
+                <div className="mt-4 space-y-2 md:col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                    <Lock size={16} />
+                    Password
+                  </label>
+                  {isEditing ? (
+                    !changePasswordMode ? (
                       <button
                         type="button"
-                        className="mt-2 text-blue-600 underline text-sm"
-                        onClick={() => {
-                          setShowOtpModal(true);
-                          setOtpError("");
-                        }}
-                        disabled={changePasswordMode}
+                        onClick={() => setShowOtpModal(true)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-[#2bb6c4] bg-[#2bb6c4]/10 text-[#5ed1dc] hover:bg-[#2bb6c4]/20 transition-colors text-left"
                       >
-                        Change Password
+                        Click to change password
                       </button>
                     ) : otpVerified ? (
                       <input
@@ -369,85 +480,63 @@ export default function ProfilePage() {
                         name="password"
                         value={profile.password}
                         onChange={handleChange}
-                        disabled={!isEditing || !otpVerified}
+                        onFocus={() => setActiveField("password")}
                         placeholder="Enter new password"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                        className={`w-full px-4 py-2.5 rounded-lg border bg-[#2a3343] text-white placeholder-gray-400 transition-all duration-200 ${
+                          activeField === "password"
+                            ? "border-[#2bb6c4] ring-1 ring-[#2bb6c4]/50 focus:outline-none"
+                            : "border-gray-600 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]/50 focus:outline-none"
+                        }`}
                       />
-                    ) : null}
-                  </>
-                ) : (
-                  <input
-                    type="password"
-                    name="password"
-                    value="********"
-                    disabled
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  />
+                    ) : (
+                      <div className="w-full px-4 py-2.5 rounded-lg border border-gray-600 bg-[#1a2030] text-gray-400 cursor-not-allowed">
+                        Verify OTP to change password
+                      </div>
+                    )
+                  ) : (
+                    <div className="w-full px-4 py-2.5 rounded-lg border border-gray-600 bg-[#1a2030] text-gray-400 cursor-not-allowed">
+                      ••••••••
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Button */}
+                {isEditing && (
+                  <div className="mt-6 md:col-span-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex items-center gap-2 px-8 py-3 bg-[#2bb6c4] text-white rounded-lg font-medium hover:bg-[#1ea1b0] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-[#2bb6c4]/20"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={18} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
-
-              {/* Wallet Balance */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wallet"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 16v-4"/><path d="M12 12v-4"/><path d="M12 8v-4"/></svg>
-                  Wallet Balance
-                </label>
-                <div className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] font-bold cursor-not-allowed">
-                  ₹{profile.walletBalance?.toFixed(2) || '0.00'}
-                </div>
-              </div>
-            </div>
-
-            {/* Status Messages */}
-            {localError && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
-                {localError}
-              </div>
-            )}
-            {saveSuccess && (
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400">
-                Profile updated successfully!
-              </div>
-            )}
-            {/* No warning needed; profile picture changes are now supported */}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={handleEditToggle}
-                className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
-              >
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </button>
-              {isEditing && (
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-3 bg-[#2bb6c4] text-white rounded-xl font-semibold hover:bg-[#1ea1b0] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              )}
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
 
-      {/* OTP Modal for Password Change */}
+      {/* OTP Modal */}
       <OtpModal
         isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
         onVerify={handleOtpVerify}
-        onCancel={() => setShowOtpModal(false)}
         loading={otpLoading}
         error={otpError}
+        title="Verify Identity"
+        description="Please enter the OTP sent to your email to change your password."
       />
     </div>
   );

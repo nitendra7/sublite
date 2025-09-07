@@ -1,241 +1,769 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DollarSign, Shield, Tag, FileText, MapPin } from 'lucide-react';
-import api from '../utils/api';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Save,
+  ArrowLeft,
+  Info,
+  Shield,
+  Tag,
+  IndianRupee,
+  Users,
+  Calendar,
+  FileText,
+  MapPin,
+  Eye,
+  EyeOff,
+  CheckCircle,
+} from "lucide-react";
+import api from "../utils/api";
 
 const AddServicePage = () => {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        serviceName: '',
-        serviceType: 'Streaming', // Default value
-        description: '',
-        originalPrice: '',
-        maxUsers: '',
-        subscriptionExpiry: '',
-        accessInstructionsTemplate: '',
-        features: '',
-        credentials: {
-            username: '',
-            password: '',
-            profileName: ''
-        },
-        terms: '',
-        location: {
-            city: '',
-            state: '',
-            country: ''
-        }
-    });
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showLocationFields, setShowLocationFields] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+  const [formData, setFormData] = useState({
+    serviceName: "",
+    serviceType: "Streaming",
+    description: "",
+    originalPrice: "",
+    maxUsers: "",
+    subscriptionExpiry: "",
+    accessInstructionsTemplate: "",
+    features: "",
+    credentials: {
+      username: "",
+      password: "",
+      profileName: "",
+    },
+    terms: "",
+    location: {
+      city: "",
+      state: "",
+      country: "",
+    },
+  });
 
-    const handleCredentialChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            credentials: { ...prev.credentials, [name]: value }
-        }));
-    };
-    
-    const handleLocationChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            location: { ...prev.location, [name]: value }
-        }));
-    };
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError(null);
-        setSuccess(null);
+  const validateStep = (step) => {
+    const errors = {};
 
-        // Basic frontend validation
-        if (!formData.serviceName || !formData.originalPrice || !formData.maxUsers) {
-            setError("Service Name, Original Price, and Max Users are required.");
-            setIsLoading(false);
-            return;
-        }
+    if (step === 1) {
+      if (!formData.serviceName.trim()) {
+        errors.serviceName = "Service name is required";
+      }
+      if (!formData.description.trim()) {
+        errors.description = "Description is required";
+      }
+    }
 
-        try {
-            const response = await api.post(`/services`, {
-                ...formData,
-                features: formData.features.split(',').map(f => f.trim()),
-            });
+    if (step === 2) {
+      if (!formData.originalPrice || formData.originalPrice <= 0) {
+        errors.originalPrice = "Valid price is required";
+      }
+      if (
+        !formData.maxUsers ||
+        formData.maxUsers <= 0 ||
+        formData.maxUsers > 10
+      ) {
+        errors.maxUsers = "Max users should be between 1-10";
+      }
+    }
 
-            const result = response.data;
+    if (step === 3) {
+      if (!formData.credentials.username.trim()) {
+        errors.username = "Username/Email is required";
+      }
+      if (!formData.credentials.password.trim()) {
+        errors.password = "Password is required";
+      }
+    }
 
-            setSuccess(`Service "${result.serviceName}" added successfully! The fair rental price is calculated to be ₹${result.rentalPrice}.`);
-            setTimeout(() => {
-                navigate('/dashboard/subscriptions');
-            }, 3000);
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    return (
-        <div className="p-6 md:p-10 min-h-full bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-            <h1 className="text-3xl font-bold mb-2">Add a New Service</h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">List your subscription service for others to share.</p>
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
 
-            <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
-                {/* Service Details */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center"><Tag size={20} className="mr-2 text-[#2bb6c4]" />Service Details</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input name="serviceName" value={formData.serviceName} onChange={handleChange} placeholder="Service Name (e.g., Netflix Premium)" className="input-style" required />
-                        <select name="serviceType" value={formData.serviceType} onChange={handleChange} className="input-style">
-                            <option>Streaming</option>
-                            <option>Music</option>
-                            <option>Gaming</option>
-                            <option>Education</option>
-                            <option>Software</option>
-                            <option>Other</option>
-                        </select>
-                        <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" className="input-style md:col-span-2" rows="3"></textarea>
-                    </div>
-                </div>
+  const handleCredentialChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      credentials: { ...prev.credentials, [name]: value },
+    }));
 
-                {/* Pricing and Slots */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center"><DollarSign size={20} className="mr-2 text-[#2bb6c4]" />Pricing & Slots</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Original Monthly Price *</label>
-                            <input 
-                                type="number" 
-                                name="originalPrice" 
-                                value={formData.originalPrice} 
-                                onChange={handleChange} 
-                                placeholder="₹ 999" 
-                                className="input-style" 
-                                required 
-                                min="1"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Max Users Allowed *</label>
-                            <input 
-                                type="number" 
-                                name="maxUsers" 
-                                value={formData.maxUsers} 
-                                onChange={handleChange} 
-                                placeholder="4" 
-                                className="input-style" 
-                                required 
-                                min="1"
-                                max="10"
-                            />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Subscription Expiry Date</label>
-                            <input 
-                                type="date" 
-                                name="subscriptionExpiry" 
-                                value={formData.subscriptionExpiry} 
-                                onChange={handleChange} 
-                                className="input-style" 
-                                min={new Date().toISOString().split('T')[0]}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Access Instructions Template</label>
-                            <input 
-                                type="text" 
-                                name="accessInstructionsTemplate" 
-                                value={formData.accessInstructionsTemplate} 
-                                onChange={handleChange} 
-                                placeholder="How to access the service" 
-                                className="input-style" 
-                            />
-                        </div>
-                    </div>
-                     <p className="text-xs text-gray-400 mt-2">The base rental price per slot will be calculated automatically: (Original Price ÷ Max Users) × 1.1. Buyers will choose their rental duration when purchasing.</p>
-                </div>
-                
-                 {/* Credentials */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center"><Shield size={20} className="mr-2 text-[#2bb6c4]" />Shared Credentials</h2>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <input name="username" value={formData.credentials.username} onChange={handleCredentialChange} placeholder="Username / Email" className="input-style"/>
-                        <input type="password" name="password" value={formData.credentials.password} onChange={handleCredentialChange} placeholder="Password" className="input-style"/>
-                        <input name="profileName" value={formData.credentials.profileName} onChange={handleCredentialChange} placeholder="Shared Profile Name" className="input-style"/>
-                    </div>
-                     <p className="text-xs text-gray-400 mt-2">These will only be shared with confirmed members of your group.</p>
-                </div>
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
 
-                {/* Features & Terms */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center"><FileText size={20} className="mr-2 text-[#2bb6c4]" />Features & Terms</h2>
-                     <div className="space-y-4">
-                        <input name="features" value={formData.features} onChange={handleChange} placeholder="Features (comma-separated, e.g., 4K, Ad-free)" className="input-style" />
-                        <textarea name="terms" value={formData.terms} onChange={handleChange} placeholder="Your terms for users (e.g., No password changes)" className="input-style" rows="3"></textarea>
-                    </div>
-                </div>
+  const handleLocationChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      location: { ...prev.location, [name]: value },
+    }));
+  };
 
-                {/* Location */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center"><MapPin size={20} className="mr-2 text-[#2bb6c4]" />Location (Optional)</h2>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <input name="city" value={formData.location.city} onChange={handleLocationChange} placeholder="City" className="input-style"/>
-                        <input name="state" value={formData.location.state} onChange={handleLocationChange} placeholder="State" className="input-style"/>
-                        <input name="country" value={formData.location.country} onChange={handleLocationChange} placeholder="Country" className="input-style"/>
-                    </div>
-                </div>
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
 
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1);
+  };
 
-                {/* Submission */}
-                <div className="flex justify-end items-center">
-                    {error && <p className="text-red-500 mr-4">{error}</p>}
-                    {success && <p className="text-green-500 mr-4">{success}</p>}
-                    <button type="submit" disabled={isLoading} className="bg-[#2bb6c4] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1ea1b0] transition-colors shadow disabled:bg-gray-400">
-                        {isLoading ? 'Submitting...' : 'Add Service'}
-                    </button>
-                </div>
-            </form>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateStep(3)) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const submitData = {
+        ...formData,
+        features: formData.features
+          .split(",")
+          .map((f) => f.trim())
+          .filter((f) => f),
+      };
+
+      // Don't send location if not provided
+      if (
+        !showLocationFields ||
+        (!formData.location.city &&
+          !formData.location.state &&
+          !formData.location.country)
+      ) {
+        delete submitData.location;
+      }
+
+      const response = await api.post(`/services`, submitData);
+      const result = response.data;
+
+      setSuccess(
+        `Service "${result.serviceName}" added successfully! The rental price is ₹${result.rentalPrice}/slot.`,
+      );
+      setTimeout(() => {
+        navigate("/dashboard/subscriptions");
+      }, 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Something went wrong",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStepIcon = (step) => {
+    if (step < currentStep)
+      return <CheckCircle className="w-5 h-5 text-green-500" />;
+    if (step === currentStep)
+      return (
+        <div className="w-5 h-5 bg-[#2bb6c4] rounded-full flex items-center justify-center text-white text-xs font-bold">
+          {step}
         </div>
+      );
+    return (
+      <div className="w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 text-xs font-bold">
+        {step}
+      </div>
     );
+  };
+
+  const calculatedRentalPrice =
+    formData.originalPrice && formData.maxUsers
+      ? Math.ceil(
+          (parseFloat(formData.originalPrice) / parseInt(formData.maxUsers)) *
+            1.1,
+        )
+      : 0;
+
+  return (
+    <div className="p-4 md:p-8 min-h-full bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          {currentStep > 1 && (
+            <button
+              onClick={prevStep}
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Go back to previous step"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              Add New Service
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
+              Share your subscription and earn by splitting costs
+            </p>
+          </div>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-8 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStepIcon(1)}
+              <span
+                className={`text-sm font-medium ${currentStep >= 1 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+              >
+                Service Info
+              </span>
+            </div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4"></div>
+            <div className="flex items-center gap-2">
+              {getStepIcon(2)}
+              <span
+                className={`text-sm font-medium ${currentStep >= 2 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+              >
+                Pricing
+              </span>
+            </div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4"></div>
+            <div className="flex items-center gap-2">
+              {getStepIcon(3)}
+              <span
+                className={`text-sm font-medium ${currentStep >= 3 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+              >
+                Credentials & Publish
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Step 1: Service Details */}
+          {currentStep === 1 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <Tag className="w-6 h-6 text-[#2bb6c4]" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Service Information
+                </h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Service Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="serviceName"
+                      value={formData.serviceName}
+                      onChange={handleChange}
+                      placeholder="e.g., Netflix Premium Family Plan"
+                      className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                        fieldErrors.serviceName
+                          ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                      } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                    />
+                    {fieldErrors.serviceName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {fieldErrors.serviceName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Service Type
+                    </label>
+                    <select
+                      name="serviceType"
+                      value={formData.serviceType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    >
+                      <option value="Streaming">🎬 Streaming</option>
+                      <option value="Music">🎵 Music</option>
+                      <option value="Gaming">🎮 Gaming</option>
+                      <option value="Education">📚 Education</option>
+                      <option value="Software">💻 Software</option>
+                      <option value="Other">📱 Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Description *
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Describe what's included, plan benefits, and any important details..."
+                    rows="4"
+                    className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
+                      fieldErrors.description
+                        ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                    } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                  />
+                  {fieldErrors.description && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {fieldErrors.description}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Features (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="features"
+                    value={formData.features}
+                    onChange={handleChange}
+                    placeholder="e.g., 4K Quality, Ad-free, Multiple Devices"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                  />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Separate multiple features with commas
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Pricing & Capacity */}
+          {currentStep === 2 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <IndianRupee className="w-6 h-6 text-[#2bb6c4]" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Pricing & Capacity
+                </h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Monthly Subscription Price *
+                    </label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="number"
+                        name="originalPrice"
+                        value={formData.originalPrice}
+                        onChange={handleChange}
+                        placeholder="999"
+                        min="1"
+                        step="0.01"
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
+                          fieldErrors.originalPrice
+                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                      />
+                    </div>
+                    {fieldErrors.originalPrice && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {fieldErrors.originalPrice}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Maximum Users *
+                    </label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="number"
+                        name="maxUsers"
+                        value={formData.maxUsers}
+                        onChange={handleChange}
+                        placeholder="4"
+                        min="1"
+                        max="10"
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
+                          fieldErrors.maxUsers
+                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                      />
+                    </div>
+                    {fieldErrors.maxUsers && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {fieldErrors.maxUsers}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {calculatedRentalPrice > 0 && (
+                  <div className="bg-[#2bb6c4]/5 dark:bg-[#5ed1dc]/5 border border-[#2bb6c4]/20 dark:border-[#5ed1dc]/20 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <Info className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Calculated Rental Price: ₹{calculatedRentalPrice} per
+                          slot
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          Users will choose their rental duration when booking
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Subscription Expiry Date
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="date"
+                        name="subscriptionExpiry"
+                        value={formData.subscriptionExpiry}
+                        onChange={handleChange}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Access Instructions
+                    </label>
+                    <input
+                      type="text"
+                      name="accessInstructionsTemplate"
+                      value={formData.accessInstructionsTemplate}
+                      onChange={handleChange}
+                      placeholder="e.g., Use Profile 3, Don't change settings"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Credentials & Final Details */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              {/* Credentials */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <Shield className="w-6 h-6 text-[#2bb6c4]" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Account Credentials
+                  </h2>
+                </div>
+
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <Shield className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
+                        Security Notice
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                        Credentials will only be shared with confirmed group
+                        members and are encrypted for security.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Username / Email *
+                      </label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={formData.credentials.username}
+                        onChange={handleCredentialChange}
+                        placeholder="your.email@example.com"
+                        className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                          fieldErrors.username
+                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                      />
+                      {fieldErrors.username && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {fieldErrors.username}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Password *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.credentials.password}
+                          onChange={handleCredentialChange}
+                          placeholder="Enter account password"
+                          className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors ${
+                            fieldErrors.password
+                              ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
+                              : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                          } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {fieldErrors.password && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {fieldErrors.password}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Profile Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="profileName"
+                      value={formData.credentials.profileName}
+                      onChange={handleCredentialChange}
+                      placeholder="e.g., Family, Shared Profile, Profile 1"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms & Conditions */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <FileText className="w-6 h-6 text-[#2bb6c4]" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Terms & Guidelines
+                  </h2>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Rules for Group Members
+                  </label>
+                  <textarea
+                    name="terms"
+                    value={formData.terms}
+                    onChange={handleChange}
+                    placeholder="e.g., Don't change password, Use only assigned profile, No downloading for offline viewing"
+                    rows="4"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent resize-none"
+                  />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Set clear expectations to avoid conflicts
+                  </p>
+                </div>
+              </div>
+
+              {/* Optional Location */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-6 h-6 text-[#2bb6c4]" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Location Information
+                    </h2>
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Add location details
+                    </span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={showLocationFields}
+                        onChange={(e) =>
+                          setShowLocationFields(e.target.checked)
+                        }
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-11 h-6 rounded-full transition-colors ${
+                          showLocationFields
+                            ? "bg-[#2bb6c4]"
+                            : "bg-gray-300 dark:bg-gray-600"
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                            showLocationFields
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          } mt-1`}
+                        ></div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {showLocationFields && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.location.city}
+                      onChange={handleLocationChange}
+                      placeholder="City"
+                      className="px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    />
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.location.state}
+                      onChange={handleLocationChange}
+                      placeholder="State"
+                      className="px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    />
+                    <input
+                      type="text"
+                      name="country"
+                      value={formData.location.country}
+                      onChange={handleLocationChange}
+                      placeholder="Country"
+                      className="px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
+                    />
+                  </div>
+                )}
+
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-3">
+                  Location helps users find nearby group members for better
+                  streaming quality
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <p className="text-green-600 dark:text-green-400 text-sm">
+                  {success}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                className="flex items-center gap-2 px-6 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+            )}
+
+            <div className="flex-1"></div>
+
+            {currentStep < 3 && (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="flex items-center gap-2 px-8 py-3 bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:hover:bg-[#2bb6c4] text-white rounded-lg font-semibold transition-colors shadow-lg"
+              >
+                Next
+                <ArrowLeft className="w-4 h-4 rotate-180" />
+              </button>
+            )}
+
+            {currentStep === 3 && (
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-8 py-3 bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:hover:bg-[#2bb6c4] text-white rounded-lg font-semibold transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Publishing...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Publish Service
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
-
-// Helper style for inputs to avoid repetition
-const InputStyle = `
-    .input-style {
-        width: 100%;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border: 1px solid #D1D5DB; /* gray-300 */
-        background-color: #F9FAFB; /* gray-50 */
-        color: #111827; /* gray-900 */
-    }
-    .dark .input-style {
-        border-color: #4B5563; /* gray-600 */
-        background-color: #374151; /* gray-700 */
-        color: #F9FAFB; /* gray-50 */
-    }
-    .input-style:focus {
-        outline: none;
-        border-color: #2bb6c4;
-        box-shadow: 0 0 0 2px rgba(43, 182, 196, 0.5);
-    }
-`;
-
-// Injecting the style into the document head
-const styleSheet = document.createElement("style");
-styleSheet.innerText = InputStyle;
-document.head.appendChild(styleSheet);
-
 
 export default AddServicePage;

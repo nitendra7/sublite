@@ -1,10 +1,18 @@
-import { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import { Bell, CheckCircle, Info, Gift, Loader2, MessageSquare, Clock } from "lucide-react";
-import { useUser } from '../context/UserContext';
-import Loading from '../components/ui/Loading';
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import {
+  Bell,
+  CheckCircle,
+  Info,
+  Gift,
+  Loader2,
+  MessageSquare,
+  Clock,
+} from "lucide-react";
+import { useUser } from "../context/UserContext";
+import Loading from "../components/ui/Loading";
 
-import api from '../utils/api';
+import api from "../utils/api";
 
 const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
   const [bookingStatus, setBookingStatus] = useState(null);
@@ -19,7 +27,7 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
         setBookingStatus(booking.bookingStatus);
         setBookingCreatedAt(booking.createdAt);
       } catch (err) {
-        console.error('Failed to fetch booking details:', err);
+        console.error("Failed to fetch booking details:", err);
       } finally {
         setIsLoading(false);
       }
@@ -30,7 +38,7 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   const isEligible = () => {
     if (isLoading || !bookingStatus || !bookingCreatedAt) return false;
-    if (bookingStatus !== 'pending') return false;
+    if (bookingStatus !== "pending") return false;
     const created = new Date(bookingCreatedAt);
     const now = new Date();
     const diffMinutes = (now - created) / (1000 * 60);
@@ -39,7 +47,10 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   if (isLoading) {
     return (
-      <button disabled className="mt-3 px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200">
+      <button
+        disabled
+        className="mt-3 px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
+      >
         <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
         Loading...
       </button>
@@ -50,8 +61,8 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
     <button
       className={`mt-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
         isEligible()
-          ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
-          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl"
+          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
       }`}
       onClick={() => {
         if (isEligible()) {
@@ -59,7 +70,11 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
         }
       }}
       disabled={!isEligible()}
-      title={!isEligible() ? 'Booking not eligible (must be pending and within 15 minutes)' : ''}
+      title={
+        !isEligible()
+          ? "Booking not eligible (must be pending and within 15 minutes)"
+          : ""
+      }
     >
       Send Credentials
     </button>
@@ -72,24 +87,31 @@ SendCredentialsButton.propTypes = {
 };
 
 const typeIcon = {
-  booking: <CheckCircle className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
+  booking: (
+    <CheckCircle className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
+  ),
   payment: <Info className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
   reminder: <Bell className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
   promotion: <Gift className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />,
 };
 
- export default function NotificationsPage() {
-   const { loading: loadingUser } = useUser();
-   const [notifications, setNotifications] = useState([]);
+export default function NotificationsPage() {
+  const { loading: loadingUser } = useUser();
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
   const [showCredModal, setShowCredModal] = useState(false);
   const [credBookingId, setCredBookingId] = useState(null);
-  const [credValues, setCredValues] = useState({ username: '', password: '', profileName: '', accessInstructions: '' });
+  const [credValues, setCredValues] = useState({
+    username: "",
+    password: "",
+    profileName: "",
+    accessInstructions: "",
+  });
   const [credLoading, setCredLoading] = useState(false);
-  const [credError, setCredError] = useState('');
+  const [credError, setCredError] = useState("");
   const [credBookingCreatedAt, setCredBookingCreatedAt] = useState(null);
 
   const markRead = async (notifId) => {
@@ -97,7 +119,7 @@ const typeIcon = {
       await api.patch(`/notifications/${notifId}/read`);
       return true;
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+      console.error("Failed to mark notification as read:", err);
       return false;
     }
   };
@@ -106,7 +128,7 @@ const typeIcon = {
     try {
       await api.patch(`/bookings/${bookingId}/confirm`);
     } catch (err) {
-      console.error('Failed to confirm booking:', err);
+      console.error("Failed to confirm booking:", err);
     }
   };
 
@@ -128,26 +150,31 @@ const typeIcon = {
       setCredBookingCreatedAt(booking.createdAt);
       setCredBookingId(bookingId);
       setShowCredModal(true);
-      setCredError('');
+      setCredError("");
     } catch (err) {
-      console.error('Failed to fetch booking details:', err);
-      setCredError('Failed to load booking details');
+      console.error("Failed to fetch booking details:", err);
+      setCredError("Failed to load booking details");
     }
   };
 
   const handleCredChange = (e) => {
-    setCredValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setCredValues((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSendCredentials = async (e) => {
     e.preventDefault();
     setCredLoading(true);
-    setCredError('');
+    setCredError("");
 
     try {
       await api.post(`/bookings/${credBookingId}/send-message`, credValues);
       setShowCredModal(false);
-      setCredValues({ username: '', password: '', profileName: '', accessInstructions: '' });
+      setCredValues({
+        username: "",
+        password: "",
+        profileName: "",
+        accessInstructions: "",
+      });
       await fetchNotifications();
     } catch (err) {
       setCredError(err.message);
@@ -198,7 +225,9 @@ const typeIcon = {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Notifications</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total Notifications
+              </p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
                 {notifications.length}
               </p>
@@ -212,32 +241,15 @@ const typeIcon = {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Unread</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Unread
+              </p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {notifications.filter(n => !n.isRead).length}
+                {notifications.filter((n) => !n.isRead).length}
               </p>
             </div>
             <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
               <Bell className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Recent</p>
-              <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {notifications.filter(n => {
-                  const created = new Date(n.createdAt);
-                  const now = new Date();
-                  const diffHours = (now - created) / (1000 * 60 * 60);
-                  return diffHours <= 24;
-                }).length}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#2bb6c4] dark:text-[#5ed1dc]" />
             </div>
           </div>
         </div>
@@ -247,7 +259,9 @@ const typeIcon = {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {error ? (
           <div className="flex flex-col items-center justify-center py-16 text-red-500 dark:text-red-400">
-            <p className="text-lg font-semibold mb-2">Error loading notifications</p>
+            <p className="text-lg font-semibold mb-2">
+              Error loading notifications
+            </p>
             <p className="text-sm">{error}</p>
           </div>
         ) : notifications.length === 0 ? (
@@ -273,28 +287,41 @@ const typeIcon = {
                 style={{ animationDelay: `${idx * 100}ms` }}
                 onClick={async () => {
                   if (!n.isRead) {
-                    setNotifications((prev) => prev.map(notification => 
-                      notification._id === n._id ? { ...notification, isRead: true } : notification
-                    ));
+                    setNotifications((prev) =>
+                      prev.map((notification) =>
+                        notification._id === n._id
+                          ? { ...notification, isRead: true }
+                          : notification,
+                      ),
+                    );
                     const success = await markRead(n._id);
                     if (!success) {
-                      setNotifications((prev) => prev.map(notification => 
-                        notification._id === n._id ? { ...notification, isRead: false } : notification
-                      ));
+                      setNotifications((prev) =>
+                        prev.map((notification) =>
+                          notification._id === n._id
+                            ? { ...notification, isRead: false }
+                            : notification,
+                        ),
+                      );
                     }
                   }
                   setExpandedId(expandedId === n._id ? null : n._id);
-                  if (n.title === 'Access Details Received!' && n.relatedId) await confirmBooking(n.relatedId);
+                  if (n.title === "Access Details Received!" && n.relatedId)
+                    await confirmBooking(n.relatedId);
                 }}
               >
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                    {typeIcon[n.type] || <Info className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
+                    {typeIcon[n.type] || (
+                      <Info className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className={`font-semibold text-lg ${n.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-100'}`}>
+                        <h3
+                          className={`font-semibold text-lg ${n.isRead ? "text-gray-500 dark:text-gray-400" : "text-gray-800 dark:text-gray-100"}`}
+                        >
                           {n.title}
                         </h3>
                         <p className="text-gray-600 dark:text-gray-300 mt-1">
@@ -306,11 +333,11 @@ const typeIcon = {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Send Credentials Button */}
-                    {n.title === 'New Booking!' && n.relatedId && (
-                      <SendCredentialsButton 
-                        bookingId={n.relatedId} 
+                    {n.title === "New Booking!" && n.relatedId && (
+                      <SendCredentialsButton
+                        bookingId={n.relatedId}
                         onOpenModal={openCredModal}
                       />
                     )}
@@ -330,7 +357,7 @@ const typeIcon = {
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
                 Send Credentials
               </h2>
-              
+
               {canSendNow() ? (
                 <form onSubmit={handleSendCredentials} className="space-y-4">
                   <div>
@@ -346,7 +373,7 @@ const typeIcon = {
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Password
@@ -360,7 +387,7 @@ const typeIcon = {
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Profile Name (Optional)
@@ -373,7 +400,7 @@ const typeIcon = {
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Access Instructions (Optional)
@@ -405,7 +432,7 @@ const typeIcon = {
                           Sending...
                         </>
                       ) : (
-                        'Send Credentials'
+                        "Send Credentials"
                       )}
                     </button>
                     <button
@@ -426,7 +453,8 @@ const typeIcon = {
                     Time Expired
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-6">
-                    Credentials can only be sent within 15 minutes of booking creation.
+                    Credentials can only be sent within 15 minutes of booking
+                    creation.
                   </p>
                   <button
                     onClick={() => setShowCredModal(false)}

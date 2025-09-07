@@ -102,7 +102,7 @@ export default function HomePage() {
                   <Star className="w-4 h-4 mr-2" />
                   Trusted by 10,000+ users
                 </div>
-                
+
                 <h1 id="hero-title" className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                   Rent Premium Subscriptions
                   <span className="text-[#2bb6c4] dark:text-[#5ed1dc] block">
@@ -111,7 +111,7 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                  Rent Netflix, Spotify, Adobe, and 50+ premium services for just the days you need them. 
+                  Rent Netflix, Spotify, Adobe, and 50+ premium services for just the days you need them.
                   <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-semibold">Save up to 90% on your favorite apps.</span>
                 </p>
 
@@ -139,7 +139,7 @@ export default function HomePage() {
                     <Link to="/available-plans">View All Services</Link>
                   </Button>
                 </div>
-                
+
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
                   ✓ No hidden fees ✓ Instant access ✓ 24/7 support
                 </p>
@@ -153,7 +153,7 @@ export default function HomePage() {
                     <div className="text-3xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">3 Days</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Netflix binge weekend</div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center">
@@ -168,7 +168,7 @@ export default function HomePage() {
                         <div className="text-xs text-gray-500 line-through">₹199</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center">
                         <img src="/icons/spotify.svg" alt="Spotify" className="w-8 h-8 mr-3" />
@@ -182,7 +182,7 @@ export default function HomePage() {
                         <div className="text-xs text-gray-500 line-through">₹199</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center">
                         <img src="/icons/adobe.svg" alt="Adobe" className="w-8 h-8 mr-3" />
@@ -197,7 +197,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 p-4 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-lg">
                     <div className="text-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total for this week</div>
@@ -206,7 +206,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Floating elements for visual appeal */}
                 <div className="absolute -top-4 -right-4 w-16 h-16 bg-[#2bb6c4] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   ₹145
@@ -229,7 +229,7 @@ export default function HomePage() {
                 Join thousands of smart users who save money while enjoying premium services
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-16 h-16 bg-[#2bb6c4] dark:bg-[#5ed1dc] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -238,7 +238,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Save Up to 90%</h3>
                 <p className="text-gray-600 dark:text-gray-300">Pay only for the days you actually use. No more wasting money on unused subscriptions.</p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-16 h-16 bg-[#2bb6c4] dark:bg-[#5ed1dc] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Zap className="w-8 h-8 text-white" />
@@ -246,7 +246,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Instant Access</h3>
                 <p className="text-gray-600 dark:text-gray-300">Get your login credentials within minutes via WhatsApp. Start using immediately.</p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-16 h-16 bg-[#2bb6c4] dark:bg-[#5ed1dc] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="w-8 h-8 text-white" />

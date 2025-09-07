@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import {
   FaBars,
   FaBook,
@@ -9,42 +9,53 @@ import {
   FaListAlt,
   FaPlus,
   FaEnvelope,
-  FaQuestionCircle
-} from 'react-icons/fa';
-import { useUser } from '../../context/UserContext';
-
+  FaQuestionCircle,
+} from "react-icons/fa";
+import { useUser } from "../../context/UserContext";
 
 const sidebarItems = [
-  { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
-  { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
-  { name: 'Available Plans', icon: <FaListAlt />, route: '/dashboard/available-plans' },
-  { name: 'Add Service', icon: <FaPlus />, route: '/dashboard/add-service' },
-  { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
-  { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
-  { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
-  { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' },
+  { name: "Dashboard", icon: <FaHome />, route: "/dashboard" },
+  {
+    name: "My Subscriptions",
+    icon: <FaBook />,
+    route: "/dashboard/subscriptions",
+  },
+  {
+    name: "Available Plans",
+    icon: <FaListAlt />,
+    route: "/dashboard/available-plans",
+  },
+  { name: "Add Service", icon: <FaPlus />, route: "/dashboard/add-service" },
+  { name: "Wallet", icon: <FaWallet />, route: "/dashboard/wallet" },
+  { name: "Reviews", icon: <FaStar />, route: "/dashboard/reviews" },
+  {
+    name: "Notifications",
+    icon: <FaBell />,
+    route: "/dashboard/notifications",
+  },
+  { name: "Help", icon: <FaQuestionCircle />, route: "/dashboard/help" },
 ];
 
 function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
   const { user } = useUser();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
 
   return (
     <nav
       className={`z-20 flex flex-col justify-between items-center md:items-stretch shadow-lg bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out overflow-hidden h-screen ${
-        sidebarOpen ? 'w-64' : 'w-16'
+        sidebarOpen ? "w-64" : "w-16"
       }`}
     >
       {/* Header Section */}
       <div className="w-full">
         <div className="flex items-center justify-between py-5 px-4 border-b border-gray-200 dark:border-gray-700 min-h-[65px]">
-                      {sidebarOpen ? (
-              <div className="flex items-center space-x-3">
-                <span className="text-base font-bold text-gray-800 dark:text-gray-100">
-                  {isAdmin ? 'Admin' : 'Sublite'}
-                </span>
-              </div>
-            ) : (
+          {sidebarOpen ? (
+            <div className="flex items-center space-x-3">
+              <span className="text-base font-bold text-gray-800 dark:text-gray-100">
+                {isAdmin ? "Admin" : "Sublite"}
+              </span>
+            </div>
+          ) : (
             <div className="flex items-center justify-center w-full">
               <button
                 className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
@@ -71,11 +82,12 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
               <li key={item.name}>
                 <button
                   className={`group flex items-center w-full text-left transition-all duration-200 rounded-xl p-3 relative overflow-hidden
-                    ${active === idx
-                      ? 'bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
+                    ${
+                      active === idx
+                        ? "bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105"
+                        : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]"
                     }
-                    ${sidebarOpen ? 'justify-start' : 'justify-center'}
+                    ${sidebarOpen ? "justify-start" : "justify-center"}
                   `}
                   onClick={() => onSidebarClick(idx, item.route)}
                 >
@@ -84,16 +96,20 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
                     <div className="absolute -left-2 top-0 bottom-0 w-1 bg-white"></div>
                   )}
 
-                  <span className={`text-lg transition-all duration-200 ${
-                    active === idx
-                      ? 'text-white'
-                      : 'text-gray-500 dark:text-gray-400 group-hover:text-[#2bb6c4] dark:group-hover:text-[#5ed1dc]'
-                  }`}>
+                  <span
+                    className={`text-lg transition-all duration-200 ${
+                      active === idx
+                        ? "text-white"
+                        : "text-gray-400 dark:text-gray-400 group-hover:text-[#2bb6c4] dark:group-hover:text-[#5ed1dc]"
+                    }`}
+                  >
                     {item.icon}
                   </span>
 
                   {sidebarOpen && (
-                    <span className="ml-3 font-medium text-sm">{item.name}</span>
+                    <span className="ml-3 font-medium text-sm">
+                      {item.name}
+                    </span>
                   )}
 
                   {/* Hover effect */}
@@ -112,9 +128,12 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
         <div className="p-4">
           {sidebarOpen ? (
             <div className="text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Need Help? {' '}
-                <a href="mailto:sublite.app@gmail.com" className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium hover:underline">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Need Help?{" "}
+                <a
+                  href="mailto:sublite.app@gmail.com"
+                  className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium hover:underline"
+                >
                   Contact us
                 </a>
               </p>
@@ -122,9 +141,11 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
           ) : (
             <div className="flex flex-col items-center">
               <button
-                className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                className="p-2 rounded-lg text-gray-400 dark:text-gray-400 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 title="Contact us: sublite.app@gmail.com"
-                onClick={() => window.location.href = 'mailto:sublite.app@gmail.com'}
+                onClick={() =>
+                  (window.location.href = "mailto:sublite.app@gmail.com")
+                }
               >
                 <FaEnvelope className="text-lg" />
               </button>
@@ -140,7 +161,7 @@ Sidebar.propTypes = {
   sidebarOpen: PropTypes.bool.isRequired,
   active: PropTypes.number.isRequired,
   onSidebarClick: PropTypes.func.isRequired,
-  handleSidebarToggle: PropTypes.func.isRequired
+  handleSidebarToggle: PropTypes.func.isRequired,
 };
 
 export default Sidebar;

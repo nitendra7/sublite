@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { BookOpen, Users, Plus, ArrowRight, TrendingUp, Sparkles, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
-import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
+import { useState, useEffect } from "react";
+import { BookOpen, Users, Plus, TrendingUp, Star } from "lucide-react";
+import { Link } from "react-router-dom";
+import ProvidedServicesList from "../components/subscriptions/ProvidedServicesList";
+import JoinedSubscriptionsList from "../components/subscriptions/JoinedSubscriptionsList";
 
-import api from '../utils/api';
-import Loading from '../components/ui/Loading';
+import api from "../utils/api";
+import Loading from "../components/ui/Loading";
 
 const SubscriptionsPage = () => {
   const [providedServices, setProvidedServices] = useState([]);
@@ -22,7 +22,6 @@ const SubscriptionsPage = () => {
 
         setProvidedServices(responseProvided.data);
         setJoinedSubscriptions(responseJoined.data);
-
       } catch (err) {
         setError(err.message);
       } finally {
@@ -34,7 +33,9 @@ const SubscriptionsPage = () => {
   }, []);
 
   const handleServiceDeleted = (deletedServiceId) => {
-    setProvidedServices(prev => prev.filter(service => service._id !== deletedServiceId));
+    setProvidedServices((prev) =>
+      prev.filter((service) => service._id !== deletedServiceId),
+    );
   };
 
   if (loading) {
@@ -61,21 +62,22 @@ const SubscriptionsPage = () => {
           </h1>
         </div>
         <p className="text-gray-500 dark:text-gray-300 text-lg">
-          Manage your owned services and joined subscriptions in one beautiful place
+          Manage your owned services and joined subscriptions in one beautiful
+          place
         </p>
 
         {/* Quick Actions */}
-        <div className="flex flex-wrap gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Link
             to="/dashboard/add-service"
-            className="inline-flex items-center gap-2 px-4 py-2 btn-gradient rounded-lg text-white font-medium shadow-lg hover:shadow-xl"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:hover:bg-[#2bb6c4] rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             Add New Service
           </Link>
           <Link
             to="/dashboard/available-plans"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg border border-gray-300 dark:border-gray-600 font-medium hover:border-[#2bb6c4] transition-all"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-lg border-2 border-[#2bb6c4] dark:border-[#5ed1dc] font-semibold hover:bg-[#2bb6c4] hover:text-white dark:hover:bg-[#5ed1dc] dark:hover:text-gray-900 shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <TrendingUp className="w-4 h-4" />
             Explore Plans
@@ -99,7 +101,7 @@ const SubscriptionsPage = () => {
                 {providedServices.length}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {providedServices.length === 1 ? 'service' : 'services'} active
+                {providedServices.length === 1 ? "service" : "services"} active
               </p>
             </div>
             <div className="w-14 h-14 bg-gradient-to-br from-[#2bb6c4]/15 to-[#5ed1dc]/15 rounded-2xl flex items-center justify-center card-hover relative">
@@ -117,13 +119,16 @@ const SubscriptionsPage = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-                Services I've Joined
+                Services I&apos;ve Joined
               </p>
               <p className="text-3xl font-bold gradient-text mt-1">
                 {joinedSubscriptions.length}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {joinedSubscriptions.length === 1 ? 'subscription' : 'subscriptions'} active
+                {joinedSubscriptions.length === 1
+                  ? "subscription"
+                  : "subscriptions"}{" "}
+                active
               </p>
             </div>
             <div className="w-14 h-14 bg-gradient-to-br from-[#2bb6c4]/15 to-[#5ed1dc]/15 rounded-2xl flex items-center justify-center card-hover relative">
@@ -138,8 +143,8 @@ const SubscriptionsPage = () => {
       <div className="space-y-12">
         <div className="anim-fade-in-up stagger-3">
           <ProvidedServicesList
-              services={providedServices}
-              onServiceDeleted={handleServiceDeleted}
+            services={providedServices}
+            onServiceDeleted={handleServiceDeleted}
           />
         </div>
 

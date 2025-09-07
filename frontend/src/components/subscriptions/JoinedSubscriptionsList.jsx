@@ -23,7 +23,7 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
 
     const getStatusBadge = (status) => {
         const colors = {
-            active: 'bg-[#2bb6c4]/15 text-[#2bb6c4] border-[#2bb6c4]/30',
+            active: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 border-green-200 dark:border-green-600',
             confirmed: 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-300 dark:border-green-700/30',
             pending: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700/30',
             completed: 'bg-[#5ed1dc]/15 text-[#5ed1dc] border-[#5ed1dc]/30',
@@ -46,7 +46,7 @@ const JoinedSubscriptionsList = ({ subscriptions }) => {
         const colorClass = colors[status] || colors.default;
 
         return (
-            <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${colorClass}`}>
+            <div className={`inline-flex items-center gap-1 px-1 py-1 rounded-full text-xs font-medium border ${colorClass}`}>
                 <IconComponent size={12} />
                 {status.charAt(0).toUpperCase() + status.slice(1)}
             </div>
