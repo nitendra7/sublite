@@ -139,7 +139,7 @@ export default function AuthPage({ isLogin = true }) {
         setShowOtpModal(true);
       }
     } catch (err) {
-      setError(err.message || 'Failed to connect to the server.');
+      setError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setLoading(false);
     }
@@ -154,15 +154,20 @@ export default function AuthPage({ isLogin = true }) {
     try {
       const res = await api.post(`/auth/verify-otp`, {
         email: formData.email,
-        otp
+        otp,
+        instantLogin: true
       });
       const data = res.data;
 
       // If backend returns token after OTP verification, store it and navigate
       if (data.accessToken) {
         localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('userName', data.user?.name || '');
         localStorage.setItem('userId', data.user?.id || data.user?._id || '');
+        if (data.user) {
+          rehydrateUserContext(data.user, true);
+        }
         setOtpSuccess('Email verified! Logging you in...');
         setTimeout(() => { setShowOtpModal(false); navigate('/dashboard'); }, 1500);
       } else {
@@ -171,7 +176,7 @@ export default function AuthPage({ isLogin = true }) {
         setTimeout(() => { setShowOtpModal(false); navigate('/login'); }, 1500);
       }
     } catch (err) {
-      setOtpError(err.message || 'Failed to connect to the server.');
+      setOtpError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setOtpLoading(false);
     }
@@ -193,7 +198,7 @@ export default function AuthPage({ isLogin = true }) {
       setResendSuccess('OTP resent! Check your email.');
       setOtpTimer(30); // Reset timer
     } catch (err) {
-      setResendError(err.message || 'Failed to connect to the server.');
+      setResendError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setResendLoading(false);
     }
@@ -210,7 +215,7 @@ export default function AuthPage({ isLogin = true }) {
       setForgotSuccess('OTP sent! Check your email.');
       setForgotStep(2);
     } catch (err) {
-      setForgotError(err.message);
+      setForgotError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setForgotLoading(false);
     }
@@ -227,7 +232,7 @@ export default function AuthPage({ isLogin = true }) {
       setForgotOtpSuccess('OTP verified!');
       setTimeout(() => setForgotStep(3), 500);
     } catch (err) {
-      setForgotOtpError(err.message);
+      setForgotOtpError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setForgotOtpLoading(false);
     }
@@ -243,7 +248,7 @@ export default function AuthPage({ isLogin = true }) {
       setForgotResendSuccess('OTP resent! Check your email.');
       setForgotOtpTimer(30);
     } catch (err) {
-      setForgotResendError(err.message || 'Failed to connect to the server.');
+      setForgotResendError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setForgotResendLoading(false);
     }
@@ -277,7 +282,7 @@ export default function AuthPage({ isLogin = true }) {
         navigate('/login');
       }, 1500);
     } catch (err) {
-      setForgotResetError(err.message);
+      setForgotResetError(err.response?.data?.message || err.message || 'Failed to connect to the server.');
     } finally {
       setForgotResetLoading(false);
     }

@@ -265,6 +265,45 @@ exports.verifyOtp = async (req, res, next) => {
     });
     await newUser.save();
     await PendingUser.deleteOne({ _id: pendingUser._id });
+
+    // Instant login support
+    if (req.body.instantLogin === true) {
+      const { v4: uuidv4 } = require('uuid');
+      const jwt = require('jsonwebtoken');
+      const RefreshToken = require('../models/refreshtoken');
+      const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+      const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+
+      const newRefreshToken = uuidv4();
+      const refreshTokenExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
+
+      await RefreshToken.deleteOne({ userId: newUser._id });
+      await RefreshToken.create({ token: newRefreshToken, userId: newUser._id, expiresAt: new Date(refreshTokenExpiry) });
+
+      const accessTokenPayload = {
+        userId: newUser._id,
+        id: newUser._id,
+        username: newUser.username,
+        isProvider: newUser.isProvider,
+        isAdmin: newUser.isAdmin,
+        tokenType: 'custom_jwt'
+      };
+      const accessToken = jwt.sign(accessTokenPayload, ACCESS_TOKEN_SECRET, { expiresIn: '8h' });
+
+      return res.status(200).json({
+        accessToken,
+        refreshToken: newRefreshToken,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          username: newUser.username,
+          email: newUser.email,
+          isProvider: newUser.isProvider,
+          isAdmin: newUser.isAdmin,
+        }
+      });
+    }
+
     res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
     next(err);
@@ -291,7 +330,9 @@ exports.resetPassword = async (req, res, next) => {
     if (user.resetOtpExpires < Date.now()) {
       throw new ValidationError('OTP expired.');
     }
-    user.password = trimmedNewPassword;
+    // SECURITY FIX: Hash new password before saving!
+    const hashedPassword = await bcrypt.hash(trimmedNewPassword, 12);
+    user.password = hashedPassword;
     user.resetOtp = null;
     user.resetOtpExpires = null;
     await user.save();
