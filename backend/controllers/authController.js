@@ -25,7 +25,11 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, username, email, password } = req.body;
+    let { name, username, email, password } = req.body;
+    name = name.trim();
+    username = username.toLowerCase().trim();
+    email = email.toLowerCase().trim();
+    const trimmedPassword = password.trim();
 
     const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] });
     if (existingUser) {
@@ -41,7 +45,7 @@ exports.register = async (req, res, next) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
     // Hash password before storing in PendingUser
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 12);
     const pendingUser = new PendingUser({ name, username, email, password: hashedPassword, signupOtp: otp, signupOtpExpires: otpExpires });
     await pendingUser.save();
 
@@ -72,8 +76,9 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const emailOrUsername = req.body.emailOrUsername || req.body.email || req.body.username;
+    const emailOrUsername = (req.body.emailOrUsername || req.body.email || req.body.username)?.trim() || '';
     const { password } = req.body;
+    const trimmedPassword = password.trim();
     const user = await User.findOne({
       $or: [
         { email: emailOrUsername.toLowerCase() },
@@ -84,7 +89,7 @@ exports.login = async (req, res, next) => {
       logger.warn(`Login failed: User not found for ${emailOrUsername}`);
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
     }
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
     if (!passwordMatch) {
       logger.warn(`Login failed: Password mismatch for ${user.email || user.username}`);
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
@@ -265,6 +270,7 @@ exports.verifyOtp = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     const { email, otp, newPassword } = req.body;
+    const trimmedNewPassword = newPassword.trim();
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       throw new NotFoundError('No user found with this email.');
@@ -281,7 +287,7 @@ exports.resetPassword = async (req, res, next) => {
     if (user.resetOtpExpires < Date.now()) {
       throw new ValidationError('OTP expired.');
     }
-    user.password = newPassword;
+    user.password = trimmedNewPassword;
     user.resetOtp = null;
     user.resetOtpExpires = null;
     await user.save();
