@@ -149,6 +149,26 @@ export default function NotificationsPage() {
       const booking = bookingRes.data;
       setCredBookingCreatedAt(booking.createdAt);
       setCredBookingId(bookingId);
+
+      // Pre-fill credentials from the service
+      if (booking.serviceId && booking.serviceId.credentials) {
+        const credentials = booking.serviceId.credentials;
+        setCredValues({
+          username: credentials.username || "",
+          password: credentials.password || "",
+          profileName: credentials.profileName || "",
+          accessInstructions: booking.serviceId.accessInstructionsTemplate || "",
+        });
+      } else {
+        // Reset to empty if no credentials
+        setCredValues({
+          username: "",
+          password: "",
+          profileName: "",
+          accessInstructions: "",
+        });
+      }
+
       setShowCredModal(true);
       setCredError("");
     } catch (err) {
