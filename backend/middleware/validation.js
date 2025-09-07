@@ -60,7 +60,7 @@ const verifyOtpSchema = Joi.object({
     "string.length": "OTP must be 6 digits",
     "string.pattern.base": "OTP must contain only numbers",
   }),
-  instantLogin: Joi.boolean().optional().messages({
+  instantLogin: Joi.boolean().strict().optional().messages({
     "boolean.base": "instantLogin must be a boolean value",
   }),
 });
