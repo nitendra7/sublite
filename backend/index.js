@@ -119,7 +119,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await cache.connect(); // Connect to Redis cache
-    initializeScheduler();
+    start();
 
     // Initialize cleanup jobs
     startCleanupScheduler();
