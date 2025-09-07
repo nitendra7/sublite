@@ -333,12 +333,6 @@ exports.verifyOtp = async (req, res, next) => {
 
     // Instant login support
     if (req.body.instantLogin === true) {
-      const { v4: uuidv4 } = require("uuid");
-      const jwt = require("jsonwebtoken");
-      const RefreshToken = require("../models/refreshtoken");
-      const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-      const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-
       const newRefreshToken = uuidv4();
       const refreshTokenExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000;
 

@@ -33,44 +33,81 @@ exports.createRazorpayOrder = async (req, res) => {
  */
 exports.verifyRazorpayPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const userId = req.user._id; // Uses req.user._id
+    const userId = req.user?._id; // Uses req.user._id
 
     try {
+        console.log("[VerifyPayment] userId:", userId, "order_id:", razorpay_order_id, "payment_id:", razorpay_payment_id);
+
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSign = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign.toString())
             .digest("hex");
 
+        console.log("[VerifyPayment] Expected signature:", expectedSign, "Provided signature:", razorpay_signature);
+
         if (razorpay_signature !== expectedSign) {
+            console.warn("[VerifyPayment] Invalid signature for user", userId);
             return res.status(400).json({ message: "Invalid signature." });
         }
 
-        const orderDetails = await razorpayInstance.orders.fetch(razorpay_order_id);
+        let orderDetails;
+        try {
+            orderDetails = await razorpayInstance.orders.fetch(razorpay_order_id);
+            console.log("[VerifyPayment] Fetched order details:", orderDetails);
+        } catch (err) {
+            console.error("[VerifyPayment] Error fetching order details:", err);
+            throw err;
+        }
+
         const amountInRupees = orderDetails.amount / 100;
 
-        await Payment.create({
-            userId: userId,
-            razorpay_order_id,
-            razorpay_payment_id,
-            amount: amountInRupees,
-            currency: 'INR',
-            status: 'success'
-        });
+        try {
+            await Payment.create({
+                userId: userId,
+                razorpay_order_id,
+                razorpay_payment_id,
+                amount: amountInRupees,
+                currency: 'INR',
+                status: 'success'
+            });
+            console.log("[VerifyPayment] Payment record created.");
+        } catch (err) {
+            console.error("[VerifyPayment] Error creating Payment record:", err);
+            throw err;
+        }
 
-        await WalletTransaction.create({
-            userId: userId,
-            amount: amountInRupees,
-            type: 'credit',
-            description: `Wallet Top-Up via Razorpay`
-        });
+        try {
+            await WalletTransaction.create({
+                userId: userId,
+                amount: amountInRupees,
+                type: 'credit',
+                description: `Wallet Top-Up via Razorpay`
+            });
+            console.log("[VerifyPayment] WalletTransaction record created.");
+        } catch (err) {
+            console.error("[VerifyPayment] Error creating WalletTransaction:", err);
+            throw err;
+        }
 
-        await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } });
+        try {
+            await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } });
+            console.log("[VerifyPayment] User wallet balance updated.");
+        } catch (err) {
+            console.error("[VerifyPayment] Error updating user wallet balance:", err);
+            throw err;
+        }
 
         return res.status(200).json({ message: "Payment verified and wallet updated successfully" });
 
     } catch (error) {
-        console.error("Error verifying payment:", error);
+        console.error("[VerifyPayment] Error verifying payment:", {
+            errorMessage: error.message,
+            errorStack: error.stack,
+            requestBody: req.body,
+            userId: userId,
+            step: "See previous logs for step context"
+        });
         res.status(500).json({ message: `Error verifying payment: ${error.message}` });
     }
 };

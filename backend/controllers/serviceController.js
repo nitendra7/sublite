@@ -3,9 +3,6 @@ const { User } = require("../models/user");
 
 const createService = async (req, res) => {
   try {
-    console.log("Creating service for user:", req.user._id);
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-
     const provider = await User.findById(req.user._id); // Uses req.user._id
 
     if (!provider.isProvider || !provider.providerSettingsCompleted) {
@@ -33,12 +30,7 @@ const createService = async (req, res) => {
       providerId: req.user._id,
     });
 
-    console.log(
-      "Service object before save:",
-      JSON.stringify(service.toObject(), null, 2),
-    );
     await service.save();
-    console.log("Service created successfully:", service._id);
 
     if (!provider.isProvider) {
       provider.isProvider = true;
@@ -146,7 +138,6 @@ const getServiceById = async (req, res) => {
       providerActive: service?.providerId?.isActive,
     });
     if (!service) {
-      console.log("Service not found for ID:", req.params.id);
       return res.status(404).json({ message: "Service not found." });
     }
 
@@ -195,43 +186,16 @@ const updateService = async (req, res) => {
 
 const deleteService = async (req, res) => {
   try {
-    console.log("=== DELETE SERVICE STARTED ===");
-    console.log("Delete service request:", {
-      serviceId: req.params.id,
-      userId: req.user._id,
-      userType: typeof req.user._id,
-    });
-
     const service = await Service.findById(req.params.id);
-    console.log("DeleteService findById result:", {
-      requestedId: req.params.id,
-      foundService: service ? service._id : null,
-      serviceProviderId: service ? service.providerId : null,
-    });
 
     if (!service) {
-      console.log("DeleteService: Service not found for ID:", req.params.id);
       return res.status(404).json({ message: "Service not found" });
     }
-
-    console.log("Service found:", {
-      serviceId: service._id,
-      providerId: service.providerId,
-      providerIdType: typeof service.providerId,
-      userId: req.user._id,
-      userIdType: typeof req.user._id,
-      isEqual: service.providerId.toString() === req.user._id.toString(),
-    });
 
     // Compare as strings to avoid ObjectId comparison issues
     if (service.providerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         message: "User not authorized to delete this service",
-        debug: {
-          serviceProviderId: service.providerId.toString(),
-          userId: req.user._id.toString(),
-          isEqual: service.providerId.toString() === req.user._id.toString(),
-        },
       });
     }
 
