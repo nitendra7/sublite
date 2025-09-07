@@ -22,11 +22,11 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 1024 * 1024 * 2 }, // 2MB file size limit
   fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only images (jpeg, jpg, png, gif) are allowed!'));
+      cb(new Error('Invalid file type. Only images (jpeg, jpg, png, gif, webp) are allowed!'));
     }
   }
 }).single('profilePicture'); // 'profilePicture' is the field name from frontend FormData
