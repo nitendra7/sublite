@@ -51,6 +51,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
             return res.status(400).json({ message: "Invalid signature." });
         }
 
+        // Simplified: Fetch order details with error handling
         let orderDetails;
         try {
             orderDetails = await razorpayInstance.orders.fetch(razorpay_order_id);
@@ -67,41 +68,27 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
         const amountInRupees = orderDetails.amount / 100;
 
-        try {
-            await Payment.create({
-                userId: userId,
-                razorpay_order_id,
-                razorpay_payment_id,
-                amount: amountInRupees,
-                currency: 'INR',
-                status: 'success'
-            });
-            console.log("[VerifyPayment] Payment record created.");
-        } catch (err) {
-            console.error("[VerifyPayment] Error creating Payment record:", err);
-            throw err;
-        }
+        // Simplified: Single try block for DB operations, let errors bubble to outer catch
+        await Payment.create({
+            userId: userId,
+            razorpay_order_id,
+            razorpay_payment_id,
+            amount: amountInRupees,
+            currency: 'INR',
+            status: 'success'
+        });
+        console.log("[VerifyPayment] Payment record created.");
 
-        try {
-            await WalletTransaction.create({
-                userId: userId,
-                amount: amountInRupees,
-                type: 'credit',
-                description: `Wallet Top-Up via Razorpay`
-            });
-            console.log("[VerifyPayment] WalletTransaction record created.");
-        } catch (err) {
-            console.error("[VerifyPayment] Error creating WalletTransaction:", err);
-            throw err;
-        }
+        await WalletTransaction.create({
+            userId: userId,
+            amount: amountInRupees,
+            type: 'credit',
+            description: `Wallet Top-Up via Razorpay`
+        });
+        console.log("[VerifyPayment] WalletTransaction record created.");
 
-        try {
-            await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } });
-            console.log("[VerifyPayment] User wallet balance updated.");
-        } catch (err) {
-            console.error("[VerifyPayment] Error updating user wallet balance:", err);
-            throw err;
-        }
+        await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amountInRupees } });
+        console.log("[VerifyPayment] User wallet balance updated.");
 
         return res.status(200).json({ message: "Payment verified and wallet updated successfully" });
 
