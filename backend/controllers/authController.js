@@ -89,9 +89,13 @@ exports.login = async (req, res, next) => {
       logger.warn(`Login failed: User not found for ${emailOrUsername}`);
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
     }
-    const passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
+    let passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
+    if (!passwordMatch && trimmedPassword !== password) {
+      // Fallback for backward compatibility with passwords that may have spaces
+      passwordMatch = await bcrypt.compare(password, user.password);
+    }
     if (!passwordMatch) {
-      logger.warn(`Login failed: Password mismatch for ${user.email || user.username}`);
+      logger.warn(`Login failed: Password mismatch for ${user.email || user.username}, trimmed length: ${trimmedPassword.length}, original length: ${password.length}`);
       throw new AuthenticationError('Invalid credentials. If you recently reset your password, please check your email and try again.');
     }
 
