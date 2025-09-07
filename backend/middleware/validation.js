@@ -94,7 +94,7 @@ const updateUserSchema = Joi.object({
     "string.min": "Username must be at least 3 characters long",
     "string.max": "Username cannot exceed 30 characters",
   }),
-  phone: Joi.string().min(5).max(20).optional().messages({
+  phone: Joi.string().allow('').min(5).max(20).optional().messages({
     "string.min": "Phone number must be at least 5 digits",
     "string.max": "Phone number cannot exceed 20 digits",
   }),
