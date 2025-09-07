@@ -14,20 +14,20 @@ import api from '../utils/api';
 const fontFamily = 'Inter, Roboto, Arial, sans-serif';
 
 const coreNavigationItems = [
-  { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
-  { name: 'My Subscriptions', icon: <FaBook />, route: '/dashboard/subscriptions' },
-  { name: 'Available Plans', icon: <FaListAlt />, route: '/dashboard/available-plans' },
-  { name: 'Add Service', icon: <FaPlus />, route: '/dashboard/add-service' },
-  { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
+  { name: 'Dashboard', icon: <FaHome size={20} />, route: '/dashboard' },
+  { name: 'My Subscriptions', icon: <FaBook size={20} />, route: '/dashboard/subscriptions' },
+  { name: 'Available Plans', icon: <FaListAlt size={20} />, route: '/dashboard/available-plans' },
+  { name: 'Add Service', icon: <FaPlus size={20} />, route: '/dashboard/add-service' },
+  { name: 'Wallet', icon: <FaWallet size={20} />, route: '/dashboard/wallet' },
 ];
 
 const secondaryNavigationItems = [
-  { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
-  { name: 'Notifications', icon: <FaBell />, route: '/dashboard/notifications' },
+  { name: 'Reviews', icon: <FaStar size={20} />, route: '/dashboard/reviews' },
+  { name: 'Notifications', icon: <FaBell size={20} />, route: '/dashboard/notifications' },
 ];
 
 // Keep original for desktop compatibility
-const sidebarItems = [...coreNavigationItems, ...secondaryNavigationItems, { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' }];
+const sidebarItems = [...coreNavigationItems, ...secondaryNavigationItems, { name: 'Help', icon: <FaQuestionCircle size={20} />, route: '/dashboard/help' }];
 
 function getInitials(name) {
   if (!name) return '?';
@@ -158,7 +158,7 @@ function Dashboard() {
               onClick={() => setMobileMenuOpen(true)}
               title="Open Navigation Menu"
             >
-              <FaBars className="text-lg" />
+              <FaBars size={20} />
             </button>
 
             <Link to="/dashboard" className="flex items-center space-x-2 cursor-pointer">
@@ -183,7 +183,7 @@ function Dashboard() {
                   title="Admin Settings"
                   onClick={() => navigate('/admin')}
                 >
-                  <FaCog className="text-lg group-hover:rotate-90 transition-transform duration-300" />
+                  <FaCog size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                 </button>
               )}
               
@@ -194,9 +194,9 @@ function Dashboard() {
                 title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {darkMode ? (
-                  <FaSun className="text-lg group-hover:rotate-12 transition-transform duration-300" />
+                  <FaSun size={20} className="group-hover:rotate-12 transition-transform duration-300" />
                 ) : (
-                  <FaMoon className="text-lg group-hover:rotate-12 transition-transform duration-300" />
+                  <FaMoon size={20} className="group-hover:rotate-12 transition-transform duration-300" />
                 )}
               </button>
               
@@ -206,7 +206,7 @@ function Dashboard() {
                 title="Notifications"
                 onClick={() => navigate('/dashboard/notifications')}
               >
-                <FaBell className="text-lg group-hover:scale-110 transition-transform duration-200" />
+                <FaBell size={20} className="group-hover:scale-110 transition-transform duration-200" />
                 {/* Notification indicator - only show if there are unread notifications */}
                 {unreadNotifications > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
@@ -409,7 +409,7 @@ function Dashboard() {
                 }}
                 className="flex items-center w-full py-2 px-4 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-colors duration-200 font-medium min-h-[44px]"
               >
-                <FaSignOutAlt className="w-5 h-5 mr-3" />
+                <FaSignOutAlt size={20} className="mr-3" />
                 <span className="text-base">Logout</span>
               </button>
 
@@ -420,7 +420,7 @@ function Dashboard() {
                   window.location.href = 'mailto:sublite.app@gmail.com?subject=Help and Support Request';
                 }}
               >
-                <FaQuestionCircle className="w-5 h-5 mr-3" />
+                <FaQuestionCircle size={20} className="mr-3" />
                 <span className="text-base font-medium">Help & Support</span>
               </button>
             </div>
