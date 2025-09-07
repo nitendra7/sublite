@@ -1,7 +1,8 @@
 const express = require('express');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
-const admin = require('../middleware/admin'); 
+const admin = require('../middleware/admin');
+const { validate, updateUserSchema } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ const router = express.Router();
 router.get('/me', auth, userController.getMe);
 
 const upload = require('../middleware/upload');
-router.put('/me', auth, upload, userController.updateMe);
+router.put('/me', validate(updateUserSchema), auth, upload, userController.updateMe);
 
 router.delete('/me', auth, userController.deactivateMe);
 

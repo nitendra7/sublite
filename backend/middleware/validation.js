@@ -83,6 +83,24 @@ const resetPasswordSchema = Joi.object({
   }),
 });
 
+const updateUserSchema = Joi.object({
+  name: Joi.string().min(2).max(50).optional().messages({
+    "string.empty": "Name cannot be empty",
+    "string.min": "Name must be at least 2 characters long",
+    "string.max": "Name cannot exceed 50 characters",
+  }),
+  phone: Joi.string().min(5).max(20).optional().messages({
+    "string.min": "Phone number must be at least 5 digits",
+    "string.max": "Phone number cannot exceed 20 digits",
+  }),
+  password: Joi.string().min(6).trim().pattern(/^\S*$/).optional().messages({
+    "string.empty": "Password cannot be empty",
+    "string.min": "Password must be at least 6 characters long",
+    "string.pattern.base": "Password cannot contain spaces or whitespace characters",
+  }),
+  providerSettings: Joi.object().optional(),
+});
+
 // Validation middleware function
 const validate = (schema) => {
   return (req, res, next) => {
@@ -108,4 +126,5 @@ module.exports = {
   forgotPasswordSchema,
   verifyOtpSchema,
   resetPasswordSchema,
+  updateUserSchema,
 };
