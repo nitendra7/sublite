@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaMoon, FaSun } from 'react-icons/fa';
+import { useUser } from '../../context/UserContext';
 
 const Header = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const hideAuthLinks = location.pathname === '/login' || location.pathname === '/register';
+  const { user } = useUser();
 
   return (
     <header className="relative z-10 flex items-center justify-between px-4 py-3 shadow-lg bg-white/95 dark:bg-gray-800/95 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-md w-full">
@@ -16,9 +18,9 @@ const Header = () => {
             alt="Sublite Logo"
             className="block w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover m-0"
           />
-
         </div>
-        <span className="text-2xl sm:text-3xl font-extrabold text-[#2bb6c4] tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200">
+        {/* TEMP: Render "Sublite" unconditionally for debug */}
+        <span className="block text-lg sm:text-3xl font-extrabold text-[#2bb6c4] tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200 ml-2">
           Sublite
         </span>
       </Link>

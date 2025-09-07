@@ -53,6 +53,7 @@ function Dashboard() {
   const userName = user?.name || localStorage.getItem('userName') || 'User';
   const firstName = userName.split(' ')[0];
   const isAuthenticated = !!user || !!localStorage.getItem('token');
+  const isAdmin = user?.role === 'admin';
 
   const handleSidebarClick = (idx, route) => {
     setActive(idx);
@@ -165,10 +166,11 @@ function Dashboard() {
               <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
                 <img src="/logos/logo.png" alt="logo" className="w-10 h-10 rounded-full object-cover" />
               </div>
-                              <div className="hidden sm:block">
+              {!isAdmin && (
+                <div className="md:hidden">
                   <h2 className="font-bold text-xl text-[#2bb6c4] dark:text-[#5ed1dc] tracking-wide">Sublite</h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Management</p>
                 </div>
+              )}
             </Link>
           </div>
 
@@ -293,7 +295,7 @@ function Dashboard() {
               <div className="flex items-center space-x-3 -ml-2">
                 <img src="/logos/logo.png" alt="logo" className="w-10 h-10 object-cover rounded-full" />
                 <div>
-                  <h2 className="font-bold text-lg text-[#2bb6c4] dark:text-[#5ed1dc]">Sublite</h2>
+                  {!isAdmin ? <h2 className="font-bold text-lg text-[#2bb6c4] dark:text-[#5ed1dc]">Sublite</h2> : null}
                 </div>
               </div>
 

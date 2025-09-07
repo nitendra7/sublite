@@ -51,9 +51,7 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
         <div className="flex items-center justify-between py-5 px-4 border-b border-gray-200 dark:border-gray-700 min-h-[65px]">
           {sidebarOpen ? (
             <div className="flex items-center space-x-3">
-              <span className="text-base font-bold text-gray-800 dark:text-gray-100">
-                {isAdmin ? "Admin" : "Sublite"}
-              </span>
+              {!isAdmin ? <span className="text-base font-bold text-gray-800 dark:text-gray-100">Sublite</span> : null}
             </div>
           ) : (
             <div className="flex items-center justify-center w-full">

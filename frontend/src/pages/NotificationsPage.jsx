@@ -326,7 +326,7 @@ export default function NotificationsPage() {
                     }
                   }
                   setExpandedId(expandedId === n._id ? null : n._id);
-                  if (n.title === "Access Details Received!" && n.relatedId)
+                  if (n.title === "New Booking!" && n.relatedId)
                     await confirmBooking(n.relatedId);
                 }}
               >
