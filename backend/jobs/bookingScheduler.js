@@ -13,21 +13,29 @@ const completeExpiredBookings = async () => {
   console.log('Running cron job: Checking for expired bookings...');
   try {
     const now = new Date();
-    
+    const fifteenMinsAgo = new Date(now - 15 * 60 * 1000);
+
     // Find all 'active' bookings where the end date is in the past
-    const expiredBookings = await Booking.find({
+    const expiredActiveBookings = await Booking.find({
       bookingStatus: 'active',
       endDate: { $lt: now }
     }).populate('clientId providerId serviceId'); // Populate for notification details
 
-    if (expiredBookings.length === 0) {
+    // Find pending bookings older than 15 minutes (timeout cancellation)
+    const expiredPendingBookings = await Booking.find({
+      bookingStatus: 'pending',
+      createdAt: { $lt: fifteenMinsAgo }
+    }).populate('serviceId clientId'); // Populate for notification details
+
+    if (expiredActiveBookings.length === 0 && expiredPendingBookings.length === 0) {
       console.log('No expired bookings found.');
       return;
     }
 
-    console.log(`Found ${expiredBookings.length} expired bookings to process.`);
+    console.log(`Found ${expiredActiveBookings.length} expired active bookings and ${expiredPendingBookings.length} expired pending bookings to process.`);
 
-    for (const booking of expiredBookings) {
+    // Process expired active bookings (mark as completed)
+    for (const booking of expiredActiveBookings) {
       // 1. Update the booking status to 'completed'
       booking.bookingStatus = 'completed';
       booking.completedAt = now;
@@ -58,6 +66,48 @@ const completeExpiredBookings = async () => {
       });
     }
 
+    // Process expired pending bookings (cancel and refund)
+    for (const booking of expiredPendingBookings) {
+      // Update booking status to cancelled
+      booking.bookingStatus = 'cancelled';
+      booking.cancelledAt = now;
+      booking.cancellationReason = 'Provider timeout - no response within 15 minutes';
+      await booking.save();
+
+      // Refund the client
+      await User.findByIdAndUpdate(booking.clientId._id, {
+        $inc: { walletBalance: booking.bookingDetails.rentalPrice }
+      });
+
+      // Create refund transaction record
+      await WalletTransaction.create({
+        userId: booking.clientId._id,
+        amount: booking.bookingDetails.rentalPrice,
+        type: 'credit',
+        description: `Refund for cancelled booking: ${booking.serviceId.serviceName}`,
+        relatedId: booking._id,
+        relatedType: 'booking'
+      });
+
+      // Notify the client about the cancellation and refund
+      await Notification.create({
+        userId: booking.clientId._id,
+        title: 'Booking Cancelled - Refund Processed',
+        message: `Your booking for "${booking.serviceId.serviceName}" was cancelled because the provider didn't respond within 15 minutes. You have been refunded ₹${booking.bookingDetails.rentalPrice}.`,
+        type: 'booking',
+        relatedId: booking._id
+      });
+
+      // Notify the provider about the missed booking
+      await Notification.create({
+        userId: booking.providerId,
+        title: 'Booking Cancelled Due to Timeout',
+        message: `Your booking for "${booking.serviceId.serviceName}" was cancelled because you didn't respond within 15 minutes. The client has been refunded.`,
+        type: 'booking',
+        relatedId: booking._id
+      });
+    }
+
     console.log('Successfully processed all expired bookings.');
 
   } catch (error) {
@@ -79,14 +129,14 @@ const scheduleBookingCancellation = (bookingId) => {
   const timeoutId = setTimeout(async () => {
     try {
       console.log(`Attempting to cancel booking ${bookingId} due to timeout...`);
-      
+
       const booking = await Booking.findById(bookingId).populate('serviceId clientId');
-      
+
       if (!booking) {
         console.log(`Booking ${bookingId} not found for cancellation.`);
         return;
       }
-      
+
       // Only cancel if booking is still in 'pending' status
       if (booking.bookingStatus === 'pending') {
         // Update booking status to cancelled
@@ -94,12 +144,12 @@ const scheduleBookingCancellation = (bookingId) => {
         booking.cancelledAt = new Date();
         booking.cancellationReason = 'Provider timeout - no response within 15 minutes';
         await booking.save();
-        
+
         // Refund the client
         await User.findByIdAndUpdate(booking.clientId._id, {
           $inc: { walletBalance: booking.bookingDetails.rentalPrice }
         });
-        
+
         // Create refund transaction record
         await WalletTransaction.create({
           userId: booking.clientId._id,
@@ -109,10 +159,10 @@ const scheduleBookingCancellation = (bookingId) => {
           relatedId: booking._id,
           relatedType: 'booking'
         });
-        
+
         // Note: No need to restore slots since booking was cancelled before becoming active
         // (currentUsers was never incremented for this booking)
-        
+
         // Notify the client about the cancellation and refund
         await Notification.create({
           userId: booking.clientId._id,
@@ -121,7 +171,7 @@ const scheduleBookingCancellation = (bookingId) => {
           type: 'booking',
           relatedId: booking._id
         });
-        
+
         // Notify the provider about the missed booking
         await Notification.create({
           userId: booking.providerId,
@@ -130,12 +180,12 @@ const scheduleBookingCancellation = (bookingId) => {
           type: 'booking',
           relatedId: booking._id
         });
-        
+
         console.log(`Successfully cancelled booking ${bookingId} due to timeout.`);
       } else {
         console.log(`Booking ${bookingId} status is ${booking.bookingStatus}, no action needed.`);
       }
-      
+
     } catch (error) {
       console.error(`Error cancelling booking ${bookingId}:`, error);
     } finally {
@@ -143,7 +193,7 @@ const scheduleBookingCancellation = (bookingId) => {
       bookingTimeouts.delete(bookingId);
     }
   }, 15 * 60 * 1000); // 15 minutes
-  
+
   // Store the timeout reference
   bookingTimeouts.set(bookingId, timeoutId);
   console.log(`Scheduled cancellation for booking ${bookingId} in 15 minutes.`);
@@ -168,8 +218,8 @@ const start = () => {
   console.log('✅ Booking completion scheduler has been started.');
 };
 
-module.exports = { 
-  start, 
-  scheduleBookingCancellation, 
-  clearCancellationTimer 
+module.exports = {
+  start,
+  scheduleBookingCancellation,
+  clearCancellationTimer
 };

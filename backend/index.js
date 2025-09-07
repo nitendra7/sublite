@@ -5,7 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const connectDB = require("./lib/db");
-const { start: initializeScheduler } = require("./jobs/bookingScheduler");
+const { start } = require("./jobs/bookingScheduler");
 const {
   startCleanupScheduler,
   runStartupCleanup,
