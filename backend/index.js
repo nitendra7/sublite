@@ -99,6 +99,10 @@ app.get("/", (_req, res) => {
   res.send("Sublite API is running successfully!");
 });
 
+app.head("/", (_req, res) => {
+  res.sendStatus(200);
+});
+
 app.get("/api/v1/status", (_req, res) => {
   res.json({
     status: "running",
