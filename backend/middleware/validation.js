@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const Joi = require('joi');
 const { ValidationError } = require('../utils/errors');
 
@@ -80,6 +81,7 @@ const validate = (schema) => {
 
     if (error) {
       const errorMessage = error.details.map(detail => detail.message).join(', ');
+      logger.warn(`Validation failed for ${req.path}: ${errorMessage}`);
       throw new ValidationError(errorMessage);
     }
 

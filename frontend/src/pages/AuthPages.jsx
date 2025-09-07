@@ -110,6 +110,21 @@ export default function AuthPage({ isLogin = true }) {
           setLoading(false);
           return;
         }
+        if (formData.name.trim().length < 2 || formData.name.trim().length > 50) {
+          setError('Name must be between 2 and 50 characters.');
+          setLoading(false);
+          return;
+        }
+        if (formData.username.trim().length < 3 || formData.username.trim().length > 30) {
+          setError('Username must be between 3 and 30 characters.');
+          setLoading(false);
+          return;
+        }
+        if (formData.password.length < 6) {
+          setError('Password must be at least 6 characters long.');
+          setLoading(false);
+          return;
+        }
         // Signup API call
         await api.post(`/auth/register`, {
            name: formData.name,
