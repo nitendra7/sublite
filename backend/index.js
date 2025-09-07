@@ -82,19 +82,7 @@ app.use("/api/v1/settings", settingRoutes);
 app.use("/api/v1/wallettransactions", walletTransactionRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
-// Centralized error handling middleware
-const errorHandler = require("./middleware/errorHandler");
-app.use(errorHandler);
-
-app.use((req, res) => {
-  res.status(404).json({
-    status: 404,
-    message: "API route not found",
-  });
-});
-
-const PORT = process.env.PORT || 5000;
-
+// Specific routes before error handler
 app.get("/", (_req, res) => {
   res.send("Sublite API is running successfully!");
 });
@@ -113,6 +101,19 @@ app.get("/api/v1/status", (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Centralized error handling middleware
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
+
+app.use((req, res) => {
+  res.status(404).json({
+    status: 404,
+    message: "API route not found",
+  });
+});
+
+const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
