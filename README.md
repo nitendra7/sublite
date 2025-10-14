@@ -27,22 +27,3 @@
 | State Mgmt  | Context API            |
 | Deployment  | Render / Vercel        |
 
-
-📁 Folder Structure
-
-sublite/
-├── client/ # React Frontend
-│ ├── public/
-│ └── src/
-│ ├── components/ # Reusable UI components
-│ ├── pages/ # Page-level components (Routes)
-│ ├── context/ # Global State (like Auth context)
-│ └── App.jsx # Root component
-│
-├── server/ # Node.js + Express Backend
-│ ├── controllers/ # Request handlers / logic
-│ ├── models/ # Mongoose schemas & models
-│ ├── routes/ # API routes
-│ ├── middlewares/ # Custom middleware (auth, error, etc.)
-│ └── server.js # Entry point for backend
-
