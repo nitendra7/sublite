@@ -8,7 +8,20 @@ const getApiBaseUrl = () => {
   }
 
   // In production, use the deployed backend URL from environment
-  return import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl) {
+    // Ensure the URL ends with /api/v1 if it's not already included
+    if (apiUrl.endsWith('/api/v1')) {
+      return apiUrl;
+    } else if (apiUrl.endsWith('/')) {
+      return apiUrl + 'api/v1';
+    } else {
+      return apiUrl + '/api/v1';
+    }
+  }
+
+  // Fallback to localhost for development or if no env var is set
+  return 'http://localhost:5001/api/v1';
 };
 
 export const API_BASE = getApiBaseUrl();
