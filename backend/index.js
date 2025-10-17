@@ -38,8 +38,9 @@ const corsOptions = {
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:5001",
-      // Production origin
+      // Production origins
       "https://sublite.vercel.app",
+      "https://sublite-wmu2.onrender.com",
     ];
 
     if (allowedOrigins.includes(origin)) {

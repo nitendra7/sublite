@@ -160,8 +160,8 @@ export default function AuthPage({ isLogin = true }) {
         // Signup API call
         await api.post(`/auth/register`, {
           name: formData.name,
-          username: formData.username,
-          email: formData.email,
+          username: formData.username.toLowerCase(),
+          email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
@@ -187,7 +187,7 @@ export default function AuthPage({ isLogin = true }) {
     setOtpSuccess("");
     try {
       const res = await api.post(`/auth/verify-otp`, {
-        email: formData.email,
+        email: formData.email.toLowerCase(),
         otp,
         instantLogin: true,
       });
@@ -235,8 +235,8 @@ export default function AuthPage({ isLogin = true }) {
       // Re-trigger the registration endpoint to send a new OTP
       await api.post(`/auth/register`, {
         name: formData.name,
-        username: formData.username,
-        email: formData.email,
+        username: formData.username.toLowerCase(),
+        email: formData.email.toLowerCase(),
         password: formData.password,
       });
       setResendSuccess("OTP resent! Check your email.");
@@ -259,7 +259,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotError("");
     setForgotSuccess("");
     try {
-      await api.post(`/auth/forgot-password`, { email: forgotEmail });
+      await api.post(`/auth/forgot-password`, { email: forgotEmail.toLowerCase() });
       setForgotSuccess("OTP sent! Check your email.");
       setForgotStep(2);
     } catch (err) {
@@ -281,7 +281,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotOtpSuccess("");
     try {
       await api.post(`/auth/verify-reset-otp`, {
-        email: forgotEmail,
+        email: forgotEmail.toLowerCase(),
         otp: forgotOtp,
       });
       setForgotOtpSuccess("OTP verified!");
@@ -303,7 +303,7 @@ export default function AuthPage({ isLogin = true }) {
     setForgotResendError("");
     setForgotResendSuccess("");
     try {
-      await api.post(`/auth/forgot-password`, { email: forgotEmail });
+      await api.post(`/auth/forgot-password`, { email: forgotEmail.toLowerCase() });
       setForgotResendSuccess("OTP resent! Check your email.");
       setForgotOtpTimer(30);
     } catch (err) {
@@ -340,7 +340,7 @@ export default function AuthPage({ isLogin = true }) {
     }
     try {
       await api.post(`/auth/reset-password`, {
-        email: forgotEmail,
+        email: forgotEmail.toLowerCase(),
         otp: forgotOtp,
         newPassword: forgotNewPassword,
       });
