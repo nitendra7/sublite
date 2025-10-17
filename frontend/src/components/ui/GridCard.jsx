@@ -1,5 +1,5 @@
-import React from "react";
 import { Users, Star } from "lucide-react";
+import PropTypes from 'prop-types';
 
 /**
  * GridCard component for displaying a service in grid view.
@@ -123,6 +123,30 @@ const GridCard = ({
       </div>
     </div>
   );
+};
+
+// PropTypes validation
+GridCard.propTypes = {
+  service: PropTypes.shape({
+    availableSlots: PropTypes.number.isRequired,
+    maxUsers: PropTypes.number.isRequired,
+    serviceStatus: PropTypes.string.isRequired,
+    serviceName: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    features: PropTypes.arrayOf(PropTypes.string),
+    providerId: PropTypes.shape({
+      name: PropTypes.string,
+      username: PropTypes.string,
+    }),
+    rentalPrice: PropTypes.number.isRequired,
+  }).isRequired,
+  existingBooking: PropTypes.shape({
+    bookingStatus: PropTypes.string,
+  }),
+  onBook: PropTypes.func.isRequired,
+  disableBook: PropTypes.bool,
+  animationDelay: PropTypes.number,
+  disableFullClick: PropTypes.bool,
 };
 
 export default GridCard;

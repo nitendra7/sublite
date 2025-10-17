@@ -7,7 +7,7 @@ const Header = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const hideAuthLinks = location.pathname === '/login' || location.pathname === '/register';
-  const { user } = useUser();
+  const { user: _user } = useUser();
 
   return (
     <header className="relative z-10 flex items-center justify-between px-4 py-3 shadow-lg bg-white/95 dark:bg-gray-800/95 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-md w-full">
@@ -58,5 +58,4 @@ const Header = () => {
     </header>
   );
 };
-//ho
 export default Header;

@@ -1,23 +1,29 @@
-// api.js - Centralized API utility with token refresh
-
 import axios from 'axios';
 
-// Ensure /api/v1 is included only once
-let base = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') || 'http://localhost:5000';
-if (!base.endsWith('/api/v1')) {
-  base += '/api/v1';
-}
-export const API_BASE = base;
+// Get API base URL based on environment
+const getApiBaseUrl = () => {
+  // In development, use Vite proxy (relative URL)
+  if (import.meta.env.DEV) {
+    return '/api/v1';
+  }
+
+  // In production, use the deployed backend URL from environment
+  return import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
+};
+
+export const API_BASE = getApiBaseUrl();
 
 let onSessionExpired = null;
 export function setSessionExpiredHandler(handler) {
   onSessionExpired = handler;
 }
 
+// Create axios instance with credentials enabled
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   responseType: 'json',
+  withCredentials: true, // Ensure cookies are sent for CORS
 });
 
 // Request Interceptor: Attach token
@@ -35,7 +41,7 @@ async function refreshAccessToken() {
   const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
   if (!refreshToken) throw new Error('No refresh token available');
   try {
-    const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+    const { data } = await api.post('/auth/refresh', { refreshToken });
     const { accessToken, refreshToken: newRefreshToken } = data;
     localStorage.setItem('token', accessToken);
     localStorage.setItem('refreshToken', newRefreshToken);

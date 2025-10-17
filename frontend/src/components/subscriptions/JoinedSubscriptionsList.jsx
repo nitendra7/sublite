@@ -4,23 +4,6 @@ import { Link } from 'react-router-dom';
 
 const JoinedSubscriptionsList = ({ subscriptions }) => {
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'active':
-            case 'confirmed':
-                return 'text-[#2bb6c4] dark:text-[#5ed1dc]';
-            case 'pending':
-                return 'text-yellow-500';
-            case 'completed':
-                return 'text-[#2bb6c4] dark:text-[#5ed1dc]';
-            case 'cancelled':
-            case 'disputed':
-                return 'text-red-500';
-            default:
-                return 'text-gray-400';
-        }
-    };
-
     const getStatusBadge = (status) => {
         const colors = {
             active: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 border-green-200 dark:border-green-600',
