@@ -15,8 +15,8 @@ exports.getDashboardStats = async (req, res, next) => {
     }
 
     // If not cached, fetch from database
-    const usersCountPromise = User.countDocuments();
-    const bookingsCountPromise = Booking.countDocuments();
+    const usersCountPromise = User.count({});
+    const bookingsCountPromise = Booking.count({});
     const revenueTotalPromise = Payment.aggregate([
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);

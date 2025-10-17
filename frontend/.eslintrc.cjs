@@ -16,6 +16,17 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    // Add essential rules for better code quality
+    'no-unused-vars': ['error', {
+      'argsIgnorePattern': '^_',
+      'varsIgnorePattern': '^_',
+      'caughtErrorsIgnorePattern': '^_'
+    }],
+    'react/prop-types': 'warn',
+    'react/no-unescaped-entities': 'error',
+    'no-console': 'warn',
+    'prefer-const': 'error',
+    'no-var': 'error',
   },
   overrides: [
     {

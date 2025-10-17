@@ -4,6 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
+    "dev": "nodemon index.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -51,6 +54,9 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "eslint": "^9.37.0",
+    "eslint-config-node": "^4.1.0",
+    "globals": "^16.4.0",
     "nodemon": "^3.1.10"
   }
 }
