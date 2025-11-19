@@ -35,7 +35,7 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
         sidebarOpen ? 'w-64' : 'w-16'
       }`}
     >
-      {/* Header Section */}
+      { /* Header Section */ }
       <div className="w-full">
         <div className="flex items-center justify-between py-5 px-4 border-b border-gray-200 dark:border-gray-700 min-h-[65px]">
           {sidebarOpen ? (
@@ -62,7 +62,7 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
           )}
         </div>
 
-        {/* Navigation Items */}
+        { /* Navigation Items */ }
         <div className="py-4 px-2">
           <ul className="space-y-2">
             {sidebarLinks.map((link) => {
