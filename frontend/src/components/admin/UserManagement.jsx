@@ -167,6 +167,7 @@ const UserManagement = () => {
                     }`}>
                       {user.isAdmin ? 'Admin' : 'User'}
                     </span>
+                  
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
