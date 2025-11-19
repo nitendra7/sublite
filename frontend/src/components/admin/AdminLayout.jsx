@@ -18,7 +18,7 @@ const AdminLayout = () => {
         handleSidebarToggle={handleSidebarToggle}
       />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Admin Header */}
+        { /* Admin Header */ }
         <header className="relative z-10 flex items-center justify-between px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-sm -ml-px">
           { /* Left Section - Logo and Brand */ }
           <div className="flex items-center gap-3">
