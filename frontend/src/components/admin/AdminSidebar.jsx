@@ -97,7 +97,7 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
                       <span className="ml-3 font-medium text-sm">{link.label}</span>
                     )}
 
-                    {/* Hover effect */}
+                    {/* hover effect */}
                     {!active && (
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                     )}
