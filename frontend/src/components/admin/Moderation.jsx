@@ -119,4 +119,4 @@ const Moderation = () => (
   </div>
 );
 
-export default Moderation;
+export default Moderation ;

@@ -88,7 +88,7 @@ const Analytics = () => (
       </div>
     </div>
 
-    {/* Additional Analytics Section */}
+    { /* Additional Analytics Section */ }
     <div className="mt-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#263238]">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Platform Insights</h3>

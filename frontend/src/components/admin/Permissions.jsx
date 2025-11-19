@@ -41,7 +41,7 @@ const Permissions = () => (
       }
     />
 
-    {/* Permission Stats */}
+    { /* Permission Stats */ }
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-[#263238]">
         <div className="flex items-center justify-between">

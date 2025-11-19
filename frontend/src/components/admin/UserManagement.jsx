@@ -47,7 +47,7 @@ const UserManagement = () => {
   };
 
   const handleToggleAdmin = async (userId, currentIsAdmin) => {
-    const action = currentIsAdmin ? 'remove admin rights from' : 'make admin';
+    const action = currentIsAdmin ? 'remove admin rights from' : 'make admin' ;
     if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
     try {
               const res = await fetch(`${API_BASE}/users/${userId}/role`, {
