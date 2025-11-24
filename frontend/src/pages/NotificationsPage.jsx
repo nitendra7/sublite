@@ -197,7 +197,10 @@ export default function NotificationsPage() {
       });
       await fetchNotifications();
     } catch (err) {
-      setCredError(err.message);
+      // Extract error message from API response
+      const errorMessage = err.response?.data?.message || err.message || "Failed to send credentials";
+      console.error("Error sending credentials:", err);
+      setCredError(errorMessage);
     } finally {
       setCredLoading(false);
     }
