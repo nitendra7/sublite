@@ -25,8 +25,38 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 const sendEmail = async (to, subject, text, timeoutMs = 10000) => {
   const emailPromise = (async () => {
     try {
-      if (process.env.NODE_ENV === "production" && process.env.RESEND_API_KEY) {
-        // Use Resend API only in production (to bypass Render's SMTP blocking)
+      // Use Gmail SMTP (works with any recipient)
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const mailOptions = {
+          from: `Sublite <${process.env.EMAIL_USER}>`,
+          to,
+          subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2bb6c4;">Sublite</h2>
+              <p style="font-size: 16px; line-height: 1.6;">${text}</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #666; font-size: 12px;">
+                This email was sent from Sublite. If you didn't request this, please ignore it.
+              </p>
+            </div>
+          `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Email sent via Gmail:', result.messageId);
+        return result;
+      } 
+      // Fallback to Resend if Gmail not configured
+      else if (process.env.RESEND_API_KEY) {
         const { Resend } = require("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -47,26 +77,6 @@ const sendEmail = async (to, subject, text, timeoutMs = 10000) => {
           `,
         });
         console.log('✅ Email sent via Resend:', result.data?.id);
-        return result;
-      } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        // Use nodemailer in development
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to,
-          subject,
-          text,
-        };
-
-        const result = await transporter.sendMail(mailOptions);
-        console.log('✅ Email sent via Gmail:', result.messageId);
         return result;
       } else {
         console.error('❌ Email configuration missing - no EMAIL_USER/EMAIL_PASS or RESEND_API_KEY provided');
