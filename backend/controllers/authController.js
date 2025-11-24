@@ -182,8 +182,23 @@ exports.register = async (req, res, next) => {
       logger.info('Verification email sent successfully');
     } catch (emailError) {
       logger.error('Failed to send verification email:', emailError.message);
-      // Don't fail registration if email fails - log the OTP for debugging
-      console.log('⚠️ EMAIL FAILED - OTP for', email, ':', otp);
+      
+      // Log OTP prominently when email fails
+      console.log('\n' + '='.repeat(70));
+      console.log('⚠️  EMAIL SENDING FAILED - OTP FOR VERIFICATION');
+      console.log('='.repeat(70));
+      console.log(`📧 Email: ${email}`);
+      console.log(`🔑 OTP: ${otp}`);
+      console.log(`⏰ Expires: ${otpExpires.toISOString()}`);
+      console.log(`❌ Error: ${emailError.message}`);
+      console.log('='.repeat(70) + '\n');
+      
+      // Check if it's a Resend sandbox restriction
+      if (emailError.message && emailError.message.includes('only send testing emails')) {
+        console.log('💡 TIP: Resend sandbox can only send to your verified email.');
+        console.log('   Either register with your verified email or verify a domain.');
+        console.log('   Visit: https://resend.com/domains\n');
+      }
     }
 
     logger.info('=== REGISTER FUNCTION SUCCESS ===');
@@ -419,7 +434,16 @@ exports.forgotPassword = async (req, res, next) => {
       );
     } catch (emailError) {
       logger.error('Failed to send password reset email:', emailError.message);
-      console.log('⚠️ EMAIL FAILED - Reset OTP for', user.email, ':', otp);
+      
+      // Log OTP prominently when email fails
+      console.log('\n' + '='.repeat(70));
+      console.log('⚠️  EMAIL SENDING FAILED - PASSWORD RESET OTP');
+      console.log('='.repeat(70));
+      console.log(`📧 Email: ${user.email}`);
+      console.log(`🔑 OTP: ${otp}`);
+      console.log(`⏰ Expires: ${new Date(user.resetOtpExpires).toISOString()}`);
+      console.log(`❌ Error: ${emailError.message}`);
+      console.log('='.repeat(70) + '\n');
     }
 
     res.json({ message: "OTP sent to your email." });
