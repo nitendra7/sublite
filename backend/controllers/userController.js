@@ -231,66 +231,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-exports.onboardProfile = async (req, res) => {
-  try {
-    const { firebaseUid, email, name, username } = req.body;
-
-    // Security: ensure the firebaseUid matches the authenticated user's UID
-    if (
-      req.user &&
-      req.user.firebaseUid &&
-      req.user.firebaseUid !== firebaseUid
-    ) {
-      return res.status(403).json({
-        message: "Unauthorized: Cannot onboard profile for another user.",
-      });
-    }
-
-    let user = await User.findOne({ firebaseUid });
-
-    if (user) {
-      let updated = false;
-      if (name && user.name !== name) {
-        user.name = name;
-        updated = true;
-      }
-      if (username && user.username !== username) {
-        user.username = username;
-        updated = true;
-      }
-      if (updated) {
-        await user.save();
-        return res.status(200).json({
-          message: "User profile updated successfully.",
-          userProfile: user,
-        });
-      } else {
-        return res
-          .status(200)
-          .json({ message: "User profile already up to date." });
-      }
-    } else {
-      user = new User({
-        firebaseUid: firebaseUid,
-        email: email,
-        name: name,
-        username: username,
-        isSocialLogin: true,
-      });
-      await user.save();
-      return res.status(201).json({
-        message: "User profile created successfully.",
-        userProfile: user,
-      });
-    }
-  } catch (error) {
-    console.error("Server error during profile onboarding/sync:", error);
-    res.status(500).json({
-      message: "Server error during profile sync.",
-      error: error.message,
-    });
-  }
-};
+// Removed: Firebase onboarding endpoint (not used)
 
 // Admin function to get all soft-deleted users
 exports.getSoftDeletedUsers = async (req, res) => {

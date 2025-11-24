@@ -54,16 +54,10 @@ const userSchema = new mongoose.Schema(
     businessName: String,
     businessDescription: String,
 
-    // Social login flag
+    // Social login flag (reserved for future use)
     isSocialLogin: {
       type: Boolean,
       default: false,
-    },
-
-    // Firebase UID for social login users (nullable for manual users)
-    firebaseUid: {
-      type: String,
-      sparse: true,
     },
 
     // Refresh token fields (optional, based on your auth strategy)
@@ -98,7 +92,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ email: 1 }, { unique: true }); // Unique email constraint
 // userSchema.index({ username: 1 }, { unique: true, sparse: true }); // Unique username constraint - commented to avoid duplicates
-// userSchema.index({ firebaseUid: 1 }, { unique: true, sparse: true }); // Unique firebaseUid constraint - commented to avoid duplicates
 userSchema.index({ isProvider: 1 }); // Provider lookup index
 
 // OTP-related indexes for improved query performance
