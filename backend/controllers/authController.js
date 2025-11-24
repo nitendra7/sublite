@@ -30,8 +30,9 @@ const sendEmail = async (to, subject, text, timeoutMs = 10000) => {
         const { Resend } = require("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
 
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'Sublite <onboarding@resend.dev>';
         const result = await resend.emails.send({
-          from: 'Sublite <onboarding@resend.dev>', // Use sandbox domain
+          from: fromEmail,
           to: [to],
           subject: subject,
           html: `
