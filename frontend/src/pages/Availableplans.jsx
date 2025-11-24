@@ -277,7 +277,7 @@ const Availableplans = () => {
                             "Unknown"}
                         </span>
                         {existingBooking &&
-                        existingBooking.bookingStatus === "pending" ? (
+                        ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
                           <button
                             disabled
                             className="px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm"
@@ -395,7 +395,7 @@ const Availableplans = () => {
                       {/* Book Button */}
                       <div className="flex flex-col items-end justify-center">
                         {existingBooking &&
-                        existingBooking.bookingStatus === "pending" ? (
+                        ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
                           <button
                             disabled
                             className="px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm"

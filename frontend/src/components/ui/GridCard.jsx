@@ -23,20 +23,20 @@ const GridCard = ({
     <div
       className={
         "relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 animate-fade-in flex flex-col h-full " +
-        (!disableFullClick && !disableBook && !(existingBooking && existingBooking.bookingStatus === "pending")
+        (!disableFullClick && !disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))
           ? "hover:shadow-xl hover:scale-[1.02] cursor-pointer"
           : (disableFullClick ? "" : "cursor-not-allowed"))
       }
       style={{ animationDelay: `${animationDelay}ms` }}
       {...(!disableFullClick && {
         onClick: () => {
-          if (!disableBook && !(existingBooking && existingBooking.bookingStatus === "pending")) {
+          if (!disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))) {
             onBook(service);
           }
         },
-        tabIndex: (!disableBook && !(existingBooking && existingBooking.bookingStatus === "pending")) ? 0 : -1,
+        tabIndex: (!disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))) ? 0 : -1,
         role: "button",
-        "aria-disabled": disableBook || (existingBooking && existingBooking.bookingStatus === "pending"),
+        "aria-disabled": disableBook || (existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus)),
       })}
     >
       {/* Status Badge - top right */}
@@ -100,7 +100,7 @@ const GridCard = ({
             per day (incl. commission)
           </p>
         </div>
-        {existingBooking && existingBooking.bookingStatus === "pending" ? (
+        {existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
           <button
             disabled
             className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
