@@ -4,7 +4,7 @@ let redis = null;
 try {
   redis = require('redis');
 } catch (error) {
-  console.warn('Redis package not available. Using in-memory cache fallback.');
+  // Redis package not available. Using in-memory cache fallback.
 }
 
 const logger = require('./logger');
@@ -17,7 +17,7 @@ class InMemoryCache {
   }
 
   async connect() {
-    console.log('Using in-memory cache (Redis not configured)');
+    // Using in-memory cache (Redis not configured)
     this.isConnected = true;
     return true;
   }
@@ -211,7 +211,7 @@ class RedisCache {
     try {
       // Skip Redis connection if not available or not configured
       if (!redis || (!process.env.REDIS_HOST && process.env.NODE_ENV === 'production')) {
-        logger.warn('Redis not configured or available. Running without cache.');
+        // Redis not configured or available. Running without cache.
         this.isConnected = false;
         return;
       }
@@ -337,10 +337,10 @@ let cache;
 const shouldUseRedis = redis && process.env.REDIS_HOST;
 
 if (shouldUseRedis) {
-  console.log('Using Redis cache (Redis configured and available)');
+  // Using Redis cache (Redis configured and available)
   cache = new RedisCache();
 } else {
-  console.log('Using in-memory cache (Redis not configured or unavailable)');
+  // Using in-memory cache (Redis not configured or unavailable)
   cache = new InMemoryCache();
 }
 
