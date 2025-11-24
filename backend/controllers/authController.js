@@ -21,59 +21,68 @@ const logger = require("../utils/logger");
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
-// Email helper function
-const sendEmail = async (to, subject, text) => {
-  try {
-    if (process.env.NODE_ENV === "production" && process.env.RESEND_API_KEY) {
-      // Use Resend API only in production (to bypass Render's SMTP blocking)
-      const { Resend } = require("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
+// Email helper function with timeout
+const sendEmail = async (to, subject, text, timeoutMs = 10000) => {
+  const emailPromise = (async () => {
+    try {
+      if (process.env.NODE_ENV === "production" && process.env.RESEND_API_KEY) {
+        // Use Resend API only in production (to bypass Render's SMTP blocking)
+        const { Resend } = require("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-      const result = await resend.emails.send({
-        from: 'Sublite <onboarding@resend.dev>', // Use sandbox domain
-        to: [to],
-        subject: subject,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2bb6c4;">Sublite</h2>
-            <p>${text}</p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">
-              This email was sent from Sublite. If you didn't request this, please ignore it.
-            </p>
-          </div>
-        `,
-      });
-      console.log('Email sent via Resend:', result.data?.id);
-      return result;
-    } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      // Use nodemailer in development
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+        const result = await resend.emails.send({
+          from: 'Sublite <onboarding@resend.dev>', // Use sandbox domain
+          to: [to],
+          subject: subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2bb6c4;">Sublite</h2>
+              <p>${text}</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #666; font-size: 12px;">
+                This email was sent from Sublite. If you didn't request this, please ignore it.
+              </p>
+            </div>
+          `,
+        });
+        console.log('✅ Email sent via Resend:', result.data?.id);
+        return result;
+      } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        // Use nodemailer in development
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
-        subject,
-        text,
-      };
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to,
+          subject,
+          text,
+        };
 
-      const result = await transporter.sendMail(mailOptions);
-      console.log('Email sent via Gmail:', result.messageId);
-      return result;
-    } else {
-      console.error('Email configuration missing - no EMAIL_USER/EMAIL_PASS or RESEND_API_KEY provided');
-      throw new Error('Email service not configured');
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Email sent via Gmail:', result.messageId);
+        return result;
+      } else {
+        console.error('❌ Email configuration missing - no EMAIL_USER/EMAIL_PASS or RESEND_API_KEY provided');
+        throw new Error('Email service not configured');
+      }
+    } catch (error) {
+      console.error('❌ Email sending failed:', error.message);
+      throw error;
     }
-  } catch (error) {
-    console.error('Email sending failed:', error);
-    throw error;
-  }
+  })();
+
+  // Add timeout to prevent hanging
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Email timeout after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  return Promise.race([emailPromise, timeoutPromise]);
 };
 
 // These functions handle manual email/password registration, login, token refreshing, and logout.
@@ -163,17 +172,25 @@ exports.register = async (req, res, next) => {
     logger.info('Pending user saved to database successfully');
 
     logger.info('Sending verification email...');
-    await sendEmail(
-      email,
-      "Your Signup OTP",
-      `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`
-    );
-    logger.info('Verification email sent successfully');
+    try {
+      await sendEmail(
+        email,
+        "Your Signup OTP",
+        `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`
+      );
+      logger.info('Verification email sent successfully');
+    } catch (emailError) {
+      logger.error('Failed to send verification email:', emailError.message);
+      // Don't fail registration if email fails - log the OTP for debugging
+      console.log('⚠️ EMAIL FAILED - OTP for', email, ':', otp);
+    }
 
     logger.info('=== REGISTER FUNCTION SUCCESS ===');
     res.status(201).json({
       message:
         "OTP sent to your email. Please verify to complete registration.",
+      email: email, // Include email so frontend knows where OTP was sent
+      ...(process.env.NODE_ENV !== 'production' && { otp }) // Only in dev: include OTP in response
     });
   } catch (err) {
     logger.error('=== REGISTER FUNCTION ERROR ===');
@@ -393,11 +410,16 @@ exports.forgotPassword = async (req, res, next) => {
     user.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    await sendEmail(
-      user.email,
-      "Sublite Password Reset OTP",
-      `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`
-    );
+    try {
+      await sendEmail(
+        user.email,
+        "Sublite Password Reset OTP",
+        `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`
+      );
+    } catch (emailError) {
+      logger.error('Failed to send password reset email:', emailError.message);
+      console.log('⚠️ EMAIL FAILED - Reset OTP for', user.email, ':', otp);
+    }
 
     res.json({ message: "OTP sent to your email." });
   } catch (err) {
