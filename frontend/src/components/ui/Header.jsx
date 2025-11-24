@@ -19,8 +19,8 @@ const Header = () => {
             className="block w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover m-0"
           />
         </div>
-        {/* TEMP: Render "Sublite" unconditionally for debug */}
-        <span className="block text-lg sm:text-3xl font-extrabold text-[#2bb6c4] tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200 ml-2">
+        {/* Show "Sublite" text only on tablet and larger screens */}
+        <span className="hidden md:block text-3xl font-extrabold text-[#2bb6c4] tracking-tight drop-shadow group-hover:scale-105 transition-transform duration-200 ml-2">
           Sublite
         </span>
       </Link>
