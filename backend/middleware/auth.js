@@ -72,7 +72,7 @@ module.exports = async function (req, res, next) {
     try {
         // Verify JWT token
         if (!ACCESS_TOKEN_SECRET) {
-            console.error('ACCESS_TOKEN_SECRET is not set.');
+            console.error('❌ CRITICAL: ACCESS_TOKEN_SECRET is not set in environment variables');
             return res.status(500).json({ message: 'Server configuration error.' });
         }
         
@@ -80,6 +80,7 @@ module.exports = async function (req, res, next) {
         const userId = decodedTokenPayload.id || decodedTokenPayload.userId;
         
         if (!userId) {
+            console.error('❌ Token payload missing userId. Payload:', JSON.stringify(decodedTokenPayload));
             return res.status(403).json({ message: 'Invalid token payload.' });
         }
 
@@ -87,10 +88,12 @@ module.exports = async function (req, res, next) {
         const user = await User.findById(userId).select('-password');
         
         if (!user) {
+            console.error(`❌ User not found in database for userId: ${userId}`);
             return res.status(404).json({ message: 'User not found in database.' });
         }
         
         if (!user.isActive) {
+            console.error(`❌ User account is deactivated: ${userId}`);
             return res.status(403).json({ message: 'Your account has been deactivated.' });
         }
 
@@ -99,11 +102,20 @@ module.exports = async function (req, res, next) {
         next();
         
     } catch (error) {
-        console.error('Authentication failed:', error.message);
+        console.error('❌ Authentication failed:', {
+            error: error.message,
+            name: error.name,
+            tokenPreview: token ? token.substring(0, 20) + '...' : 'no token',
+            hasSecret: !!ACCESS_TOKEN_SECRET,
+            secretLength: ACCESS_TOKEN_SECRET ? ACCESS_TOKEN_SECRET.length : 0
+        });
+        
         let errorMessage = 'Invalid or expired authentication token.';
         
-        if (error.message && error.message.includes('expired')) {
+        if (error.name === 'TokenExpiredError') {
             errorMessage = 'Your session has expired. Please log in again.';
+        } else if (error.name === 'JsonWebTokenError') {
+            errorMessage = 'Invalid authentication token. Please log in again.';
         }
         
         return res.status(403).json({ message: errorMessage });

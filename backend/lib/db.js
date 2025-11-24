@@ -2,14 +2,16 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    // Enhanced connection options for production
+    // Enhanced connection options for production with better performance and stability
     const options = {
-      maxPoolSize: 10, // Maximum number of connections in the connection pool
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      maxPoolSize: 15, // Increased for better concurrency handling
+      minPoolSize: 5, // Maintain minimum connections
+      serverSelectionTimeoutMS: 10000, // Increased timeout for server selection
+      socketTimeoutMS: 60000, // Increased socket timeout for long operations
+      maxIdleTimeMS: 60000, // Increased idle time for connection reuse
       retryWrites: true,
       retryReads: true,
+      w: 'majority', // Write concern for better data consistency
     };
 
     const conn = await mongoose.connect(process.env.MONGO_URI, options);

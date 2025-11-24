@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const crypto = require("crypto");
 const {
   ValidationError,
@@ -20,44 +21,135 @@ const logger = require("../utils/logger");
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
+// Email helper function
+const sendEmail = async (to, subject, text) => {
+  try {
+    if (process.env.NODE_ENV === "production" && process.env.RESEND_API_KEY) {
+      // Use Resend API only in production (to bypass Render's SMTP blocking)
+      const { Resend } = require("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
+      const result = await resend.emails.send({
+        from: 'Sublite <onboarding@resend.dev>', // Use sandbox domain
+        to: [to],
+        subject: subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2bb6c4;">Sublite</h2>
+            <p>${text}</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">
+              This email was sent from Sublite. If you didn't request this, please ignore it.
+            </p>
+          </div>
+        `,
+      });
+      console.log('Email sent via Resend:', result.data?.id);
+      return result;
+    } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      // Use nodemailer in development
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        text,
+      };
+
+      const result = await transporter.sendMail(mailOptions);
+      console.log('Email sent via Gmail:', result.messageId);
+      return result;
+    } else {
+      console.error('Email configuration missing - no EMAIL_USER/EMAIL_PASS or RESEND_API_KEY provided');
+      throw new Error('Email service not configured');
+    }
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    throw error;
+  }
+};
+
 // These functions handle manual email/password registration, login, token refreshing, and logout.
 
 exports.register = async (req, res, next) => {
   try {
+    logger.info('=== REGISTER FUNCTION START ===');
+    logger.info('Request body received:', {
+      hasName: !!req.body.name,
+      hasUsername: !!req.body.username,
+      hasEmail: !!req.body.email,
+      hasPassword: !!req.body.password,
+      passwordLength: req.body.password ? req.body.password.length : 0
+    });
+
     let { name, username, email, password } = req.body;
+    logger.info('Input validation starting...');
+
     name = name.trim();
     username = username.toLowerCase().trim();
     email = email.toLowerCase().trim();
     // Password should not be trimmed since validation already ensures no whitespace
     const trimmedPassword = password;
 
+    logger.info('Input trimmed:', { name, username, email, passwordLength: password.length });
+
+    logger.info('Checking existing users...');
     const existingUser = await User.findOne({
       $or: [
         { email: email.toLowerCase() },
         { username: username.toLowerCase() },
       ],
     });
+    logger.info('Existing user check completed:', {
+      userFound: !!existingUser,
+      existingUserEmail: existingUser?.email,
+      existingUserUsername: existingUser?.username
+    });
+
     if (existingUser) {
+      logger.warn('User already exists with email/username:', { email, username });
       throw new ConflictError(
         "A user with this email or username already exists.",
       );
     }
+    logger.info('Checking existing pending users...');
     const existingPending = await PendingUser.findOne({
       $or: [
         { email: email.toLowerCase() },
         { username: username.toLowerCase() },
       ],
     });
+    logger.info('Existing pending user check completed:', {
+      pendingFound: !!existingPending,
+      pendingUserEmail: existingPending?.email,
+      pendingUserUsername: existingPending?.username
+    });
+
     if (existingPending) {
+      logger.info('Removing old pending user record...');
       await PendingUser.deleteOne({ _id: existingPending._id }); // Remove old pending signup for this email/username
+      logger.info('Old pending user record removed successfully');
     }
 
     // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    logger.info('Generating OTP...');
+    const otp = (await crypto.randomInt(100000, 999999)).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    logger.info('OTP generated:', { otp, expiresAt: otpExpires });
 
     // Hash password before storing in PendingUser
+    logger.info('Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 12);
+    logger.info('Password hashed successfully');
+
+    logger.info('Creating pending user object...');
     const pendingUser = new PendingUser({
       name,
       username,
@@ -66,31 +158,32 @@ exports.register = async (req, res, next) => {
       signupOtp: otp,
       signupOtpExpires: otpExpires,
     });
+    logger.info('Pending user object created, saving to database...');
     await pendingUser.save();
+    logger.info('Pending user saved to database successfully');
 
-    // Send OTP email
-    const transporter = nodemailer.createTransport({
-      service: "gmail", // or your email provider
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    logger.info('Sending verification email...');
+    await sendEmail(
+      email,
+      "Your Signup OTP",
+      `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`
+    );
+    logger.info('Verification email sent successfully');
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Your Signup OTP",
-      text: `Your OTP for signup is: ${otp}. It will expire in 10 minutes.`,
-    };
-
-    await transporter.sendMail(mailOptions);
-
+    logger.info('=== REGISTER FUNCTION SUCCESS ===');
     res.status(201).json({
       message:
         "OTP sent to your email. Please verify to complete registration.",
     });
   } catch (err) {
+    logger.error('=== REGISTER FUNCTION ERROR ===');
+    logger.error('Error occurred in register function:', {
+      error: err.message,
+      stack: err.stack,
+      name: err.name,
+      code: err.code,
+      statusCode: err.statusCode
+    });
     next(err);
   }
 };
@@ -197,27 +290,41 @@ exports.refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
 
+    console.log('🔄 Refresh token request received:', {
+      hasRefreshToken: !!refreshToken,
+      tokenPreview: refreshToken ? refreshToken.substring(0, 10) + '...' : 'none'
+    });
+
     const storedToken = await RefreshToken.findOne({ token: refreshToken });
     if (!storedToken) {
+      console.error('❌ Refresh token not found in database');
       throw new AuthenticationError(
         "Invalid or expired refresh token. Please log in again.",
       );
     }
 
+    console.log('✓ Refresh token found in database, checking expiry...');
+
     if (storedToken.expiresAt && storedToken.expiresAt < new Date()) {
+      console.error('❌ Refresh token has expired:', storedToken.expiresAt);
       await RefreshToken.deleteOne({ token: refreshToken });
       throw new AuthenticationError(
         "Refresh token expired. Please log in again.",
       );
     }
 
+    console.log('✓ Refresh token is valid, looking up user...');
+
     const user = await User.findById(storedToken.userId);
     if (!user) {
+      console.error('❌ User not found for refresh token userId:', storedToken.userId);
       await RefreshToken.deleteOne({ token: refreshToken });
       throw new AuthenticationError(
         "User not found for this refresh token. Please log in again.",
       );
     }
+
+    console.log('✓ User found, generating new tokens...');
 
     await RefreshToken.deleteOne({ token: refreshToken });
     const newRefreshToken = uuidv4();
@@ -242,8 +349,11 @@ exports.refreshToken = async (req, res, next) => {
       { expiresIn: "8h" },
     );
 
+    console.log('✓ New tokens generated successfully for user:', user._id);
+
     res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (err) {
+    console.error('❌ Refresh token error:', err.message);
     next(err);
   }
 };
@@ -278,25 +388,16 @@ exports.forgotPassword = async (req, res, next) => {
     }
 
     // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = (await crypto.randomInt(100000, 999999)).toString();
     user.resetOtp = otp;
     user.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // Send OTP email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Sublite Password Reset OTP",
-      text: `Your OTP for password reset is: ${otp}`,
-    });
+    await sendEmail(
+      user.email,
+      "Sublite Password Reset OTP",
+      `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`
+    );
 
     res.json({ message: "OTP sent to your email." });
   } catch (err) {

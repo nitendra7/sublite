@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       minlength: 3,
-      sparse: true, // Allow null values to be non-unique (for users without usernames)
+      sparse: true,
     },
 
     email: {
@@ -95,13 +95,18 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Create compound and specialized indexes
-// Note: These indexes might already exist in the database from previous runs
-// If you get duplicate index warnings, the database already has these indexes
+
 userSchema.index({ email: 1 }, { unique: true }); // Unique email constraint
 // userSchema.index({ username: 1 }, { unique: true, sparse: true }); // Unique username constraint - commented to avoid duplicates
 // userSchema.index({ firebaseUid: 1 }, { unique: true, sparse: true }); // Unique firebaseUid constraint - commented to avoid duplicates
 userSchema.index({ isProvider: 1 }); // Provider lookup index
+
+// OTP-related indexes for improved query performance
+userSchema.index({ resetOtp: 1 }); // Index for password reset OTP lookup
+userSchema.index({ resetOtpExpires: 1 }); // Index for expired OTP cleanup queries
+userSchema.index({ email: 1, resetOtp: 1 }); // Compound index for password reset verification
+userSchema.index({ signupOtpExpires: 1 }); // Index for expired signup OTP cleanup queries
+userSchema.index({ email: 1, signupOtp: 1 }); // Compound index for signup OTP verification
 
 // Password hashing hook
 userSchema.pre("save", async function (next) {
@@ -129,6 +134,10 @@ const pendingUserSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// OTP-related indexes for PendingUser model
+pendingUserSchema.index({ signupOtpExpires: 1 }); // Index for expired OTP cleanup queries
+pendingUserSchema.index({ email: 1, signupOtp: 1 }); // Compound index for signup OTP verification
 
 const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
 
