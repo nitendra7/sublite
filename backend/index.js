@@ -118,8 +118,7 @@ app.use((req, res) => res.status(404).json({ status: 404, message: "API route no
 const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
-    // Verify critical environment variables
-    console.log('\n=== Environment Check ===');
+    // Verify critical environment variables silently
     const requiredEnvVars = [
       'ACCESS_TOKEN_SECRET',
       'REFRESH_TOKEN_SECRET',
@@ -144,12 +143,6 @@ const startServer = async () => {
       console.error('Please set these variables in your .env file or deployment environment');
       process.exit(1);
     }
-    
-    console.log('✓ ACCESS_TOKEN_SECRET is set (length:', process.env.ACCESS_TOKEN_SECRET.length + ')');
-    console.log('✓ REFRESH_TOKEN_SECRET is set (length:', process.env.REFRESH_TOKEN_SECRET.length + ')');
-    console.log('✓ Database URI is set:', process.env.MONGODB_URI ? 'MONGODB_URI' : 'MONGO_URI');
-    console.log('✓ NODE_ENV:', process.env.NODE_ENV || 'development');
-    console.log('========================\n');
 
     await connectDB();
     await cache.connect();
