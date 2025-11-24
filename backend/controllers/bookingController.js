@@ -184,7 +184,11 @@ const sendMessageToBooking = async (req, res) => {
             userId: booking.clientId,
             title: 'Access Details Received!',
             message: `The provider has sent access details for your booking: ${booking.bookingDetails.serviceName}.
-Username: ${booking.sharedCredentials.username}\nPassword: ${booking.sharedCredentials.password}\nProfile: ${booking.sharedCredentials.profileName}\nInstructions: ${booking.sharedCredentials.accessInstructions}`,
+
+Username: ${booking.sharedCredentials.username}
+Password: ${booking.sharedCredentials.password}
+Profile: ${booking.sharedCredentials.profileName}
+Instructions: ${booking.sharedCredentials.accessInstructions}`,
             type: 'booking',
             relatedId: booking._id
         });
