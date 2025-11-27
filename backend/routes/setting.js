@@ -2,7 +2,6 @@ const express = require('express');
 const settingController = require('../controllers/settingController');
 const auth= require('../middleware/auth');
 const admin = require('../middleware/admin');
-
 const router = express.Router();
 
 // PROTECTED (Admin only)

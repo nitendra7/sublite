@@ -3,7 +3,8 @@ const { User } = require('../models/user');
 const Service = require('../models/service');
 const Payment = require('../models/payment');
 const Notification = require('../models/notification');
-const WalletTransaction = require('../models/walletTransaction'); // Added WalletTransaction import
+const WalletTransaction = require('../models/walletTransaction');
+const logger = require('../utils/logger');
 const { isProviderActive } = require('../utils/availability');
 const { scheduleBookingCancellation, clearCancellationTimer } = require('../jobs/bookingScheduler');
 
@@ -22,35 +23,35 @@ const createBooking = async (req, res) => {
     if (!rentalDuration || rentalDuration < 1) return res.status(400).json({ message: 'Valid rental duration is required.' });
     if (service.providerId._id.equals(clientId)) return res.status(400).json({ message: 'You cannot book your own service.' });
     if (service.availableSlots <= 0) return res.status(400).json({ message: 'No available slots for this service.' });
-    
+
     const existingBooking = await Booking.findOne({
       clientId: clientId,
       serviceId: serviceId,
       bookingStatus: { $in: ['pending', 'confirmed', 'active'] }
     });
-    
+
     if (existingBooking) {
-      return res.status(400).json({ 
-        message: 'You have already booked this service. You cannot book the same service twice.' 
+      return res.status(400).json({
+        message: 'You have already booked this service. You cannot book the same service twice.'
       });
     }
-    
+
     const recentCompletedBooking = await Booking.findOne({
       clientId: clientId,
       serviceId: serviceId,
       bookingStatus: 'completed',
       completedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
     });
-    
+
     if (recentCompletedBooking) {
-      return res.status(400).json({ 
-        message: 'You recently completed this service. Please wait 24 hours before booking again.' 
+      return res.status(400).json({
+        message: 'You recently completed this service. Please wait 24 hours before booking again.'
       });
     }
-    
+
     const dailyRate = service.rentalPrice / 30;
     totalCost = Math.ceil(dailyRate * rentalDuration);
-    
+
     if (client.walletBalance < totalCost) return res.status(400).json({ message: 'Insufficient wallet balance.' });
 
     client.walletBalance -= totalCost;
@@ -83,13 +84,13 @@ const createBooking = async (req, res) => {
     });
 
     const payment = await Payment.create({
-        userId: clientId,
-        providerId: service.providerId._id,
-        bookingId: booking._id,
-        amount: totalCost,
-        paymentMethod,
-        status: 'success',
-        type: 'service-payment'
+      userId: clientId,
+      providerId: service.providerId._id,
+      bookingId: booking._id,
+      amount: totalCost,
+      paymentMethod,
+      status: 'success',
+      type: 'service-payment'
     });
 
     booking.paymentId = payment._id;
@@ -102,129 +103,129 @@ const createBooking = async (req, res) => {
     scheduleBookingCancellation(booking._id.toString());
 
     await Notification.create({
-        userId: service.providerId._id,
-        title: 'New Booking!',
-        message: `${client.username} has booked your service: ${service.serviceName}. Please send access details within 15 minutes.`,
-        type: 'booking',
-        relatedId: booking._id
+      userId: service.providerId._id,
+      title: 'New Booking!',
+      message: `${client.username} has booked your service: ${service.serviceName}. Please send access details within 15 minutes.`,
+      type: 'booking',
+      relatedId: booking._id
     });
 
     let responseMessage = 'Booking created! Waiting for provider to send access details.';
     try {
-        if (!isProviderActive(service.providerId)) {
-            responseMessage = 'Booking created! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
-        }
+      if (!isProviderActive(service.providerId)) {
+        responseMessage = 'Booking created! Provider is outside active hours. If no response in 15 mins, you will be refunded.';
+      }
     } catch (availabilityError) {
-        console.warn('Error checking provider availability:', availabilityError.message);
+      logger.warn('Error checking provider availability:', availabilityError.message);
     }
 
     res.status(201).json({ message: responseMessage, booking });
 
   } catch (err) {
-    console.error('Error in createBooking:', {
+    logger.error('Error in createBooking:', {
       error: err.message,
       stack: err.stack,
       serviceId,
       clientId,
       rentalDuration
     });
-    
-    if(service && totalCost) {
-        try {
-            await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
-            console.log('Wallet balance rolled back successfully');
-        } catch (rollbackErr) {
-            console.error('Failed to rollback wallet balance:', rollbackErr.message);
-        }
+
+    if (service && totalCost) {
+      try {
+        await User.findByIdAndUpdate(clientId, { $inc: { walletBalance: totalCost } });
+        logger.info('Wallet balance rolled back successfully');
+      } catch (rollbackErr) {
+        logger.error('Failed to rollback wallet balance:', rollbackErr.message);
+      }
     }
     res.status(500).json({ message: 'Server error during booking creation.', error: err.message });
   }
 };
 
 const sendMessageToBooking = async (req, res) => {
-    const { bookingId } = req.params;
-    const providerId = req.user._id; // Uses req.user._id
+  const { bookingId } = req.params;
+  const providerId = req.user._id; // Uses req.user._id
 
-    try {
-        const booking = await Booking.findById(bookingId).populate('serviceId');
-        if (!booking) return res.status(404).json({ message: 'Booking not found.' });
+  try {
+    const booking = await Booking.findById(bookingId).populate('serviceId');
+    if (!booking) return res.status(404).json({ message: 'Booking not found.' });
 
-        if (booking.providerId.toString() !== providerId.toString()) return res.status(403).json({ message: 'Not authorized.' });
-        if (!['pending', 'confirmed'].includes(booking.bookingStatus)) return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
+    if (booking.providerId.toString() !== providerId.toString()) return res.status(403).json({ message: 'Not authorized.' });
+    if (!['pending', 'confirmed'].includes(booking.bookingStatus)) return res.status(400).json({ message: 'Booking not in a state to receive messages.' });
 
-        clearCancellationTimer(bookingId.toString());
+    clearCancellationTimer(bookingId.toString());
 
-        const freshBooking = await Booking.findById(bookingId);
-        if (freshBooking.bookingStatus === 'cancelled') {
-            return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
-        }
+    const freshBooking = await Booking.findById(bookingId);
+    if (freshBooking.bookingStatus === 'cancelled') {
+      return res.status(400).json({ message: 'This booking was already cancelled due to a timeout.' });
+    }
 
-        // Use sent credentials from req.body, with service stored credentials as fallback
-        const sentCredentials = req.body || {};
-        const storedCredentials = booking.serviceId.credentials || {};
-        booking.sharedCredentials = {
-            username: sentCredentials.username || storedCredentials.username || '',
-            password: sentCredentials.password || storedCredentials.password || '',
-            profileName: sentCredentials.profileName || storedCredentials.profileName || '',
-            accessInstructions: sentCredentials.accessInstructions || booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
-        };
+    // Use sent credentials from req.body, with service stored credentials as fallback
+    const sentCredentials = req.body || {};
+    const storedCredentials = booking.serviceId.credentials || {};
+    booking.sharedCredentials = {
+      username: sentCredentials.username || storedCredentials.username || '',
+      password: sentCredentials.password || storedCredentials.password || '',
+      profileName: sentCredentials.profileName || storedCredentials.profileName || '',
+      accessInstructions: sentCredentials.accessInstructions || booking.serviceId.accessInstructionsTemplate || "No specific instructions provided."
+    };
 
-        booking.bookingStatus = 'active';
-        await booking.save();
+    booking.bookingStatus = 'active';
+    await booking.save();
 
-        // Increment currentUsers when booking becomes active
-        const serviceDoc = await Service.findById(booking.serviceId);
-        serviceDoc.currentUsers += 1;
-        // availableSlots will be recalculated by pre-save hook
-        await serviceDoc.save();
+    // Increment currentUsers when booking becomes active
+    const serviceDoc = await Service.findById(booking.serviceId);
+    serviceDoc.currentUsers += 1;
+    // availableSlots will be recalculated by pre-save hook
+    await serviceDoc.save();
 
-        await User.findByIdAndUpdate(providerId, { $inc: { walletBalance: booking.bookingDetails.rentalPrice } });
+    await User.findByIdAndUpdate(providerId, { $inc: { walletBalance: booking.bookingDetails.rentalPrice } });
 
-        await Notification.create({
-            userId: booking.clientId,
-            title: 'Access Details Received!',
-            message: `The provider has sent access details for your booking: ${booking.bookingDetails.serviceName}.
+    await Notification.create({
+      userId: booking.clientId,
+      title: 'Access Details Received!',
+      message: `The provider has sent access details for your booking: ${booking.bookingDetails.serviceName}.
 
 Username: ${booking.sharedCredentials.username}
 Password: ${booking.sharedCredentials.password}
 Profile: ${booking.sharedCredentials.profileName}
 Instructions: ${booking.sharedCredentials.accessInstructions}`,
-            type: 'booking',
-            relatedId: booking._id
-        });
+      type: 'booking',
+      relatedId: booking._id
+    });
 
-        res.status(200).json(booking);
+    res.status(200).json(booking);
 
-    } catch (err) {
-        console.error('Error in sendMessageToBooking:', {
-            error: err.message,
-            stack: err.stack,
-            bookingId,
-            providerId
-        });
-        res.status(500).json({ message: 'Server error while sending message.', error: err.message });
-    }
+  } catch (err) {
+    logger.error('Error in sendMessageToBooking:', {
+      error: err.message,
+      stack: err.stack,
+      bookingId,
+      providerId
+    });
+    res.status(500).json({ message: 'Server error while sending message.', error: err.message });
+  }
 };
 
 const getAllBookingsForUser = async (req, res) => {
-    try {
-        const bookings = await Booking.find({ $or: [{ clientId: req.user._id }, { providerId: req.user._id }] })
-            .sort({ createdAt: -1 });
-        res.json(bookings);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const bookings = await Booking.find({ $or: [{ clientId: req.user._id }, { providerId: req.user._id }] })
+      .sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const getMyJoinedBookings = async (req, res) => {
-    try {
-        const bookings = await Booking.find({ clientId: req.user._id })
-            .populate('providerId', 'name username')
-            .sort({ createdAt: -1 });
-        res.json(bookings);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch your joined subscriptions: ' + err.message });
-    }
+  try {
+    const bookings = await Booking.find({ clientId: req.user._id })
+      .populate('providerId', 'name username')
+      .sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch your joined subscriptions: ' + err.message });
+  }
 };
 
 const getBookingById = async (req, res) => {
@@ -238,26 +239,26 @@ const getBookingById = async (req, res) => {
 };
 
 const confirmBooking = async (req, res) => {
-    try {
-        const booking = await Booking.findOne({ _id: req.params.id, providerId: req.user._id });
-        if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
-        
-        if (booking.bookingStatus === 'pending') {
-            booking.bookingStatus = 'confirmed';
-            await booking.save();
-        }
-        
-        res.json(booking);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, providerId: req.user._id });
+    if (!booking) return res.status(404).json({ error: 'Booking not found or you are not authorized.' });
+
+    if (booking.bookingStatus === 'pending') {
+      booking.bookingStatus = 'confirmed';
+      await booking.save();
     }
+
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 module.exports = {
-    createBooking,
-    sendMessageToBooking,
-    getAllBookingsForUser,
-    getMyJoinedBookings,
-    getBookingById,
-    confirmBooking
+  createBooking,
+  sendMessageToBooking,
+  getAllBookingsForUser,
+  getMyJoinedBookings,
+  getBookingById,
+  confirmBooking
 };

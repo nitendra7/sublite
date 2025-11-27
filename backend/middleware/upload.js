@@ -1,26 +1,22 @@
-// backend/middleware/upload.js
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 
-// Configure Cloudinary using environment variables (CLOUDINARY_URL is auto-detected).
 cloudinary.config();
 
-// Configure Cloudinary storage for Multer.
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'sublite_profile_pictures', // Cloudinary folder
-    format: async (req, file) => 'png', // File format
-    public_id: (req, file) => `profile-${req.user.id}-${Date.now()}`, // Unique public ID
-    transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }] // Image transformation
+    folder: 'sublite_profile_pictures',
+    format: async (_req, _file) => 'png',
+    public_id: (_req, file) => `profile-${file.originalname}-${Date.now()}`,
+    transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
   },
 });
 
-// Initialize Multer upload middleware.
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 2 }, // 2MB file size limit
+  limits: { fileSize: 1024 * 1024 * 2 },
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (allowedMimeTypes.includes(file.mimetype)) {
@@ -29,6 +25,6 @@ const upload = multer({
       cb(new Error('Invalid file type. Only images (jpeg, jpg, png, gif, webp) are allowed!'));
     }
   }
-}).single('profilePicture'); // 'profilePicture' is the field name from frontend FormData
+}).single('profilePicture');
 
 module.exports = upload;

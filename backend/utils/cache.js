@@ -1,19 +1,15 @@
-// TODO: Replace in-memory cache with Upstash when ready; easily removable by uncommenting Redis imports and removing fallbacks.
-
 let redis = null;
 try {
   redis = require('redis');
-} catch (error) {
-  // Redis package not available. Using in-memory cache fallback.
+} catch (_error) {
 }
 
 const logger = require('./logger');
 
-// In-memory cache fallback when Redis is unavailable
 class InMemoryCache {
   constructor() {
     this.cache = new Map();
-    this.isConnected = true; // In-memory is always "connected"
+    this.isConnected = true;
   }
 
   async connect() {
@@ -105,7 +101,7 @@ class InMemoryCache {
         const originalSend = res.json.bind(res);
 
         // Override send method to cache response
-        res.json = function(data) {
+        res.json = function (data) {
           // Cache the response
           this.cache.set(key, data, ttl).catch(err => {
             logger.error('Failed to cache response (in-memory):', err);
@@ -313,7 +309,7 @@ class RedisCache {
         const originalSend = res.json;
 
         // Override send method to cache response
-        res.json = function(data) {
+        res.json = function (data) {
           // Cache the response
           this.cache.set(key, data, ttl).catch(err => {
             logger.error('Failed to cache response:', err);

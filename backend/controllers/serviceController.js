@@ -1,6 +1,7 @@
 const Service = require("../models/service");
 const { User } = require("../models/user");
 const Booking = require("../models/booking");
+const logger = require("../utils/logger");
 
 const createService = async (req, res) => {
   try {
@@ -40,16 +41,16 @@ const createService = async (req, res) => {
 
     res.status(201).json(service);
   } catch (err) {
-    console.error("Service creation error:", err);
-    console.error("Error stack:", err.stack);
+    logger.error("Service creation error:", err);
+    logger.error("Error stack:", err.stack);
     res.status(400).json({
       message: "Failed to create service.",
       error: err.message,
       details:
         err.name === "ValidationError"
           ? Object.keys(err.errors).map(
-              (key) => `${key}: ${err.errors[key].message}`,
-            )
+            (key) => `${key}: ${err.errors[key].message}`,
+          )
           : undefined,
     });
   }
@@ -82,7 +83,7 @@ const getAllServices = async (req, res) => {
         { _id: { $in: orphanedIds } },
         { serviceStatus: "suspended" },
       );
-      console.log(
+      logger.info(
         `Suspended ${orphanedServices.length} services with deleted/inactive providers`,
       );
     }
@@ -108,7 +109,7 @@ const getMyServices = async (req, res) => {
     const services = await Service.find({ providerId: userId })
       .populate("categoryId")
       .select("-credentials");
-    console.log(
+    logger.info(
       "getMyServices result:",
       services.map((s) => ({
         _id: s._id,
@@ -118,7 +119,7 @@ const getMyServices = async (req, res) => {
     );
     res.status(200).json(services);
   } catch (error) {
-    console.error("Error fetching services offered by user:", error);
+    logger.error("Error fetching services offered by user:", error);
     res.status(500).json({
       message: "Server Error: Could not fetch your services.",
       error: error.message,
@@ -132,7 +133,7 @@ const getServiceById = async (req, res) => {
       "providerId",
       "username name rating providerSettings isActive",
     );
-    console.log("Service findById result:", {
+    logger.info("Service findById result:", {
       requestedId: req.params.id,
       foundService: service ? service._id : null,
       serviceProviderId: service ? service.providerId : null,
@@ -144,7 +145,7 @@ const getServiceById = async (req, res) => {
 
     // Check if provider exists and is active (wasn't soft deleted)
     if (!service.providerId || service.providerId.isActive === false) {
-      console.log(
+      logger.info(
         "Service provider deleted/inactive, suspending service:",
         req.params.id,
       );
@@ -204,7 +205,7 @@ const deleteService = async (req, res) => {
 
     res.status(200).json({ message: "Service removed successfully" });
   } catch (error) {
-    console.error("Error in deleteService:", error);
+    logger.error("Error in deleteService:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -223,7 +224,7 @@ const cleanupOrphanedServices = async () => {
         { _id: { $in: orphanedIds } },
         { serviceStatus: "suspended" },
       );
-      console.log(
+      logger.info(
         `Cleanup: Suspended ${result.modifiedCount} services with inactive providers`,
       );
       return result.modifiedCount;
@@ -231,11 +232,11 @@ const cleanupOrphanedServices = async () => {
 
     // Also fix slot calculations for existing services
     await fixSlotCalculations();
-    console.log("Slot calculations fixed for existing services");
+    logger.info("Slot calculations fixed for existing services");
 
     return 0;
   } catch (err) {
-    console.error("Error cleaning up orphaned services:", err);
+    logger.error("Error cleaning up orphaned services:", err);
     return 0;
   }
 };
@@ -260,10 +261,10 @@ const fixSlotCalculations = async () => {
       await service.save();
     }
 
-    console.log(`Fixed slot calculations for ${services.length} services`);
+    logger.info(`Fixed slot calculations for ${services.length} services`);
     return services.length;
   } catch (err) {
-    console.error("Error fixing slot calculations:", err);
+    logger.error("Error fixing slot calculations:", err);
     return 0;
   }
 };

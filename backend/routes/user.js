@@ -4,24 +4,15 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { validate, updateUserSchema } = require('../middleware/validation');
 const upload = require('../middleware/upload');
-
 const router = express.Router();
 
-
-
 router.get('/me', auth, userController.getMe);
-
 router.put('/me', auth, upload, validate(updateUserSchema), userController.updateMe);
-
 router.delete('/me', auth, userController.deactivateMe);
 
-
 router.get('/', auth, admin, userController.getAllUsers);
-
 router.get('/:id', auth, admin, userController.getUserById);
-
 router.delete('/:id', auth, admin, userController.deleteUserById);
-
 router.patch('/:id/role', auth, admin, userController.updateUserRole);
 
 module.exports = router;

@@ -4,17 +4,14 @@ const Payment = require('../models/payment');
 const cache = require('../utils/cache');
 const logger = require('../utils/logger');
 
-// Fetch dashboard stats: total users, total bookings, total revenue
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    // Try to get cached stats first
     const cachedStats = await cache.getCachedAdminStats();
     if (cachedStats) {
       logger.info('Serving admin stats from cache');
       return res.json(cachedStats);
     }
 
-    // If not cached, fetch from database
     const usersCountPromise = User.count({});
     const bookingsCountPromise = Booking.count({});
     const revenueTotalPromise = Payment.aggregate([

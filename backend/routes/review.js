@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Import controllers
 const reviewController = require('../controllers/reviewController');
-
-// Import auth middleware correctly (assuming default export is a function)
 const auth = require('../middleware/auth');
 
-// PUBLIC routes
 router.get('/', reviewController.getAllReviews);
 router.get('/service/:serviceId', reviewController.getReviewsByService);
 router.get('/provider/:providerId', reviewController.getReviewsByProvider);

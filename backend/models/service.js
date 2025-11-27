@@ -12,11 +12,9 @@ const serviceSchema = new mongoose.Schema({
     rentalPrice: { 
         type: Number,
         default: function() {
-            // Calculate fair rental price: (originalPrice / maxUsers) with a small markup
             return Math.ceil((this.originalPrice / this.maxUsers) * 1.1);
         }
     },
-    // rentalDuration will be set by buyers when they purchase, not by providers
 
     maxUsers: { type: Number, required: true },
     currentUsers: { type: Number, default: 0 },
@@ -49,14 +47,11 @@ const serviceSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Pre-save middleware to calculate rental price and available slots
 serviceSchema.pre('save', function(next) {
-    // Calculate rental price if not set
     if (!this.rentalPrice && this.originalPrice && this.maxUsers) {
         this.rentalPrice = Math.ceil((this.originalPrice / this.maxUsers) * 1.1);
     }
     
-    // Update available slots
     this.availableSlots = this.maxUsers - this.currentUsers;
     
     next();

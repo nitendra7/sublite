@@ -1,35 +1,28 @@
 const moment = require('moment-timezone');
 
-/**
- * Checks if a provider is currently within their active hours.
- * @param {object} provider - The provider user object from the database.
- * @returns {boolean} - True if the provider is active, false otherwise.
- */
 exports.isProviderActive = (provider) => {
-  if (!provider || !provider.providerSettings) {
-    return false; // Default to inactive if no settings
-  }
-
-  const { start, end } = provider.providerSettings.activeHours;
-  const timezone = provider.providerSettings.timezone || 'UTC';
+  if (!provider || !provider.providerSettings || !provider.providerSettings.activeHours) return false;
 
   try {
+    const { start, end } = provider.providerSettings.activeHours;
+    const timezone = provider.providerSettings.timezone || 'UTC';
+
     const now = moment().tz(timezone);
-    const startTime = moment.tz(`${now.format('YYYY-MM-DD')} ${start}`, 'YYYY-MM-DD HH:mm', timezone);
-    const endTime = moment.tz(`${now.format('YYYY-MM-DD')} ${end}`, 'YYYY-MM-DD HH:mm', timezone);
+    const day = now.format('YYYY-MM-DD');
 
-    // Handle overnight schedules (e.g., 22:00 to 02:00)
+    const startTime = moment.tz(`${day} ${start}`, 'YYYY-MM-DD HH:mm', timezone);
+    const endTime = moment.tz(`${day} ${end}`, 'YYYY-MM-DD HH:mm', timezone);
+
+    let adjustedStart = startTime;
+    let adjustedEnd = endTime;
+
     if (endTime.isBefore(startTime)) {
-      endTime.add(1, 'day'); // Adjust end time to the next day
-      if (now.isBefore(startTime)) {
-        startTime.subtract(1, 'day');
-      }
+      adjustedEnd = endTime.clone().add(1, 'day');
+      if (now.isBefore(startTime)) adjustedStart = startTime.clone().subtract(1, 'day');
     }
-    
-    return now.isBetween(startTime, endTime);
 
-  } catch (error) {
-    console.error("Error checking provider availability:", error);
-    return false; // Fail safely
+    return now.isBetween(adjustedStart, adjustedEnd);
+  } catch (_err) {
+    return false;
   }
 };
