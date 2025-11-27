@@ -3,10 +3,15 @@ import PropTypes from "prop-types";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react"; // For password visibility icons
+import { Eye, EyeOff } from "lucide-react";
+import {
+  useSignIn,
+  useSignUp,
+  useAuth,
+  useUser as useClerkUser
+} from "@clerk/clerk-react";
 
 import api from "../utils/api";
-
 import { useUser } from "../context/UserContext";
 AuthPage.propTypes = {
   isLogin: PropTypes.bool,
@@ -19,6 +24,11 @@ AuthPage.defaultProps = {
 export default function AuthPage({ isLogin = true }) {
   const navigate = useNavigate();
   const { rehydrateUserContext } = useUser();
+  const { isSignedIn } = useAuth();
+  const { user: clerkUser } = useClerkUser();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -28,14 +38,12 @@ export default function AuthPage({ isLogin = true }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // const [success, setSuccess] = useState(''); // Not currently displayed to user
 
   // Modals and their states
-  const [showAccountNotFoundModal, setShowAccountNotFoundModal] =
-    useState(false);
+  const [showAccountNotFoundModal, setShowAccountNotFoundModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false); // For signup OTP verification
-  const [forgotStep, setForgotStep] = useState(1); // 1=email, 2=otp, 3=reset
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
 
   // OTP for Signup Verification
   const [otp, setOtp] = useState("");
@@ -46,6 +54,46 @@ export default function AuthPage({ isLogin = true }) {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendError, setResendError] = useState("");
   const [resendSuccess, setResendSuccess] = useState("");
+
+  const [loginAttempts, setLoginAttempts] = useState(0);
+
+  // Redirect to dashboard if already signed in
+  useEffect(() => {
+    if (isSignedIn && clerkUser) {
+      // Sync Clerk user with your backend
+      const syncWithBackend = async () => {
+        try {
+          // Create or login user in your backend using Clerk data
+          const response = await api.post('/auth/clerk-sync', {
+            clerkUserId: clerkUser.id,
+            email: clerkUser.emailAddresses[0]?.emailAddress,
+            name: clerkUser.fullName || clerkUser.firstName || 'User',
+            profileImage: clerkUser.imageUrl
+          });
+
+          if (response.data.token) {
+            // Store your backend token
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userId', response.data.user.id);
+            localStorage.setItem('userName', response.data.user.name);
+
+            // Update your user context
+            rehydrateUserContext(response.data.user, false);
+
+            // Navigate to dashboard
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Failed to sync with backend:', error);
+          // Clear Clerk session if backend sync fails
+          // await signOut();
+          setError('Failed to complete sign-in. Please try again.');
+        }
+      };
+
+      syncWithBackend();
+    }
+  }, [isSignedIn, clerkUser, navigate, rehydrateUserContext]);
 
   // Forgot Password states
   const [forgotEmail, setForgotEmail] = useState("");
@@ -71,6 +119,8 @@ export default function AuthPage({ isLogin = true }) {
   // Handler for form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setError(""); // Clear error when user starts typing
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -171,8 +221,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setLoading(false);
@@ -200,7 +250,7 @@ export default function AuthPage({ isLogin = true }) {
         localStorage.setItem("userName", data.user?.name || "");
         localStorage.setItem("userId", data.user?.id || data.user?._id || "");
         if (data.user) {
-          rehydrateUserContext(data.user, true);
+          rehydrateUserContext(data.user, false); // Don't refetch - we already have complete data
         }
         setOtpSuccess("Email verified! Logging you in...");
         setTimeout(() => {
@@ -218,8 +268,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setOtpError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setOtpLoading(false);
@@ -244,8 +294,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setResendError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setResendLoading(false);
@@ -265,8 +315,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setForgotError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setForgotLoading(false);
@@ -289,8 +339,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setForgotOtpError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setForgotOtpLoading(false);
@@ -309,8 +359,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setForgotResendError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setForgotResendLoading(false);
@@ -366,8 +416,8 @@ export default function AuthPage({ isLogin = true }) {
     } catch (err) {
       setForgotResetError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to connect to the server.",
+        err.message ||
+        "Failed to connect to the server.",
       );
     } finally {
       setForgotResetLoading(false);
@@ -453,6 +503,70 @@ export default function AuthPage({ isLogin = true }) {
           {isLogin ? "Please enter your details" : "Sign up to get started"}
         </p>
 
+        {/* Google Sign In Section */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                setLoading(true);
+                setError("");
+
+                if (isSignedIn) {
+                  navigate('/dashboard');
+                  return;
+                }
+
+                if (!signIn) {
+                  setError('Authentication service not ready. Please refresh the page.');
+                  return;
+                }
+
+                await signIn.authenticateWithRedirect({
+                  strategy: "oauth_google",
+                  redirectUrl: window.location.origin + "/sso-callback",
+                  redirectUrlComplete: window.location.origin + "/sso-callback"
+                });
+              } catch (err) {
+                if (err.errors?.[0]?.code === 'session_exists' || err.message?.includes('already signed in')) {
+                  navigate('/dashboard');
+                } else {
+                  setError(err.errors?.[0]?.message || "Google sign-in failed. Please try again.");
+                }
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center gap-3 font-medium text-gray-700 dark:text-gray-300 shadow-sm"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+            )}
+            Continue with Google
+          </button>
+        </div>
+
+        {/* Or Divider */}
+        <div className="relative mb-5">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white dark:bg-gray-800 px-4 text-gray-500 dark:text-gray-400 font-medium">
+              Or
+            </span>
+          </div>
+        </div>
+
+        {/* Sign In/Sign Up Tabs */}
         <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
           <Button
             asChild
@@ -467,6 +581,7 @@ export default function AuthPage({ isLogin = true }) {
             <Link to="/register">Sign up</Link>
           </Button>
         </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -613,341 +728,347 @@ export default function AuthPage({ isLogin = true }) {
       </div>
 
       {/* Account Not Found Modal */}
-      {showAccountNotFoundModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">
-              No Account Found
-            </h2>
-            <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Would you like to sign up instead?
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button
-                onClick={() => {
-                  setShowAccountNotFoundModal(false);
-                  navigate("/register");
-                }}
-                className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                Sign Up
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAccountNotFoundModal(false)}
-                className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl px-4 py-2 transition-all duration-200"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm">
-            {forgotStep === 1 && (
-              <>
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-                  Forgot Password
-                </h2>
-                <form onSubmit={handleForgotSendOtp}>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="forgotEmail"
-                      className="block mb-1 text-gray-600 dark:text-gray-300"
-                    >
-                      Email
-                    </label>
-                    <Input
-                      id="forgotEmail"
-                      type="email"
-                      className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  {forgotError && (
-                    <div className="text-red-500 mb-2 text-sm">
-                      {forgotError}
-                    </div>
-                  )}
-                  {forgotSuccess && (
-                    <div className="text-green-500 mb-2 text-sm">
-                      {forgotSuccess}
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-gray-500 hover:underline border-none"
-                      onClick={() => {
-                        setShowForgotModal(false);
-                        setForgotStep(1);
-                      }}
-                      disabled={forgotLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
-                      disabled={forgotLoading}
-                    >
-                      {forgotLoading ? "Sending..." : "Send OTP"}
-                    </Button>
-                  </div>
-                </form>
-              </>
-            )}
-
-            {forgotStep === 2 && (
-              <>
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-                  Verify OTP
-                </h2>
-                <form onSubmit={handleForgotVerifyOtp}>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="forgotOtp"
-                      className="block mb-1 text-gray-600 dark:text-gray-300"
-                    >
-                      OTP
-                    </label>
-                    <Input
-                      id="forgotOtp"
-                      type="text"
-                      className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
-                      value={forgotOtp}
-                      onChange={(e) => setForgotOtp(e.target.value)}
-                      required
-                      maxLength={6}
-                    />
-                  </div>
-                  {forgotOtpError && (
-                    <div className="text-red-500 mb-2 text-sm">
-                      {forgotOtpError}
-                    </div>
-                  )}
-                  {forgotOtpSuccess && (
-                    <div className="text-green-500 mb-2 text-sm">
-                      {forgotOtpSuccess}
-                    </div>
-                  )}
-                  {forgotResendError && (
-                    <div className="text-red-500 mb-2 text-sm">
-                      {forgotResendError}
-                    </div>
-                  )}
-                  {forgotResendSuccess && (
-                    <div className="text-green-500 mb-2 text-sm">
-                      {forgotResendSuccess}
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center mb-4">
-                    <button
-                      type="button"
-                      className={`text-[#2bb6c4] font-semibold text-sm ${forgotOtpTimer > 0 || forgotResendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                      disabled={forgotOtpTimer > 0 || forgotResendLoading}
-                      onClick={handleForgotResendOtp}
-                    >
-                      Resend OTP {forgotOtpTimer > 0 && `(${forgotOtpTimer}s)`}
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-gray-500 hover:underline border-none"
-                      onClick={() => {
-                        setShowForgotModal(false);
-                        setForgotStep(1);
-                      }}
-                      disabled={forgotOtpLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
-                      disabled={forgotOtpLoading}
-                    >
-                      {forgotOtpLoading ? "Verifying..." : "Verify OTP"}
-                    </Button>
-                  </div>
-                </form>
-              </>
-            )}
-
-            {forgotStep === 3 && (
-              <>
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-                  Reset Password
-                </h2>
-                <form onSubmit={handleResetPassword}>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="newPassword"
-                      className="block mb-1 text-gray-600 dark:text-gray-300"
-                    >
-                      New Password
-                    </label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
-                      value={forgotNewPassword}
-                      onChange={(e) => setForgotNewPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="confirmPassword"
-                      className="block mb-1 text-gray-600 dark:text-gray-300"
-                    >
-                      Confirm Password
-                    </label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
-                      value={forgotConfirmPassword}
-                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  {forgotResetError && (
-                    <div className="text-red-500 mb-2 text-sm">
-                      {forgotResetError}
-                    </div>
-                  )}
-                  {forgotResetSuccess && (
-                    <div className="text-green-500 mb-2 text-sm">
-                      {forgotResetSuccess}
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-gray-500 hover:underline border-none"
-                      onClick={() => {
-                        setShowForgotModal(false);
-                        setForgotStep(1);
-                      }}
-                      disabled={forgotResetLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
-                      disabled={forgotResetLoading}
-                    >
-                      {forgotResetLoading ? "Resetting..." : "Reset Password"}
-                    </Button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Signup OTP Verification Modal */}
-      {showOtpModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">
-              Verify Email
-            </h2>
-            <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Enter the OTP sent to your email address:{" "}
-              <span className="font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {formData.email}
-              </span>
-            </p>
-            <form onSubmit={handleOtpVerification}>
-              <div className="mb-4">
-                <label
-                  htmlFor="signupOtp"
-                  className="block mb-1 text-gray-600 dark:text-gray-300"
-                >
-                  OTP
-                </label>
-                <Input
-                  id="signupOtp"
-                  type="text"
-                  className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                  maxLength={6}
-                />
-              </div>
-              {otpError && (
-                <div className="text-red-500 mb-2 text-sm">{otpError}</div>
-              )}
-              {otpSuccess && (
-                <div className="text-green-500 mb-2 text-sm">{otpSuccess}</div>
-              )}
-              {resendError && (
-                <div className="text-red-500 mb-2 text-sm">{resendError}</div>
-              )}
-              {resendSuccess && (
-                <div className="text-green-500 mb-2 text-sm">
-                  {resendSuccess}
-                </div>
-              )}
-              <div className="flex justify-between items-center mb-4">
-                <button
-                  type="button"
-                  className={`text-[#2bb6c4] font-semibold text-sm ${otpTimer > 0 || resendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={otpTimer > 0 || resendLoading}
-                  onClick={handleResendOtp}
-                >
-                  Resend OTP {otpTimer > 0 && `(${otpTimer}s)`}
-                </button>
-              </div>
-              <div className="flex justify-between items-center">
+      {
+        showAccountNotFoundModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
+              <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">
+                No Account Found
+              </h2>
+              <p className="mb-4 text-gray-600 dark:text-gray-300">
+                Would you like to sign up instead?
+              </p>
+              <div className="flex justify-center gap-4">
                 <Button
-                  type="button"
+                  onClick={() => {
+                    setShowAccountNotFoundModal(false);
+                    navigate("/register");
+                  }}
+                  className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2 shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  Sign Up
+                </Button>
+                <Button
                   variant="outline"
-                  className="text-gray-500 hover:underline border-none"
-                  onClick={() => setShowOtpModal(false)}
-                  disabled={otpLoading}
+                  onClick={() => setShowAccountNotFoundModal(false)}
+                  className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl px-4 py-2 transition-all duration-200"
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
-                  disabled={otpLoading}
-                >
-                  {otpLoading ? "Verifying..." : "Verify"}
-                </Button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+
+      {/* Forgot Password Modal */}
+      {
+        showForgotModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-sm">
+              {forgotStep === 1 && (
+                <>
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                    Forgot Password
+                  </h2>
+                  <form onSubmit={handleForgotSendOtp}>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="forgotEmail"
+                        className="block mb-1 text-gray-600 dark:text-gray-300"
+                      >
+                        Email
+                      </label>
+                      <Input
+                        id="forgotEmail"
+                        type="email"
+                        className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    {forgotError && (
+                      <div className="text-red-500 mb-2 text-sm">
+                        {forgotError}
+                      </div>
+                    )}
+                    {forgotSuccess && (
+                      <div className="text-green-500 mb-2 text-sm">
+                        {forgotSuccess}
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="text-gray-500 hover:underline border-none"
+                        onClick={() => {
+                          setShowForgotModal(false);
+                          setForgotStep(1);
+                        }}
+                        disabled={forgotLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
+                        disabled={forgotLoading}
+                      >
+                        {forgotLoading ? "Sending..." : "Send OTP"}
+                      </Button>
+                    </div>
+                  </form>
+                </>
+              )}
+
+              {forgotStep === 2 && (
+                <>
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                    Verify OTP
+                  </h2>
+                  <form onSubmit={handleForgotVerifyOtp}>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="forgotOtp"
+                        className="block mb-1 text-gray-600 dark:text-gray-300"
+                      >
+                        OTP
+                      </label>
+                      <Input
+                        id="forgotOtp"
+                        type="text"
+                        className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
+                        value={forgotOtp}
+                        onChange={(e) => setForgotOtp(e.target.value)}
+                        required
+                        maxLength={6}
+                      />
+                    </div>
+                    {forgotOtpError && (
+                      <div className="text-red-500 mb-2 text-sm">
+                        {forgotOtpError}
+                      </div>
+                    )}
+                    {forgotOtpSuccess && (
+                      <div className="text-green-500 mb-2 text-sm">
+                        {forgotOtpSuccess}
+                      </div>
+                    )}
+                    {forgotResendError && (
+                      <div className="text-red-500 mb-2 text-sm">
+                        {forgotResendError}
+                      </div>
+                    )}
+                    {forgotResendSuccess && (
+                      <div className="text-green-500 mb-2 text-sm">
+                        {forgotResendSuccess}
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mb-4">
+                      <button
+                        type="button"
+                        className={`text-[#2bb6c4] font-semibold text-sm ${forgotOtpTimer > 0 || forgotResendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                        disabled={forgotOtpTimer > 0 || forgotResendLoading}
+                        onClick={handleForgotResendOtp}
+                      >
+                        Resend OTP {forgotOtpTimer > 0 && `(${forgotOtpTimer}s)`}
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="text-gray-500 hover:underline border-none"
+                        onClick={() => {
+                          setShowForgotModal(false);
+                          setForgotStep(1);
+                        }}
+                        disabled={forgotOtpLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
+                        disabled={forgotOtpLoading}
+                      >
+                        {forgotOtpLoading ? "Verifying..." : "Verify OTP"}
+                      </Button>
+                    </div>
+                  </form>
+                </>
+              )}
+
+              {forgotStep === 3 && (
+                <>
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                    Reset Password
+                  </h2>
+                  <form onSubmit={handleResetPassword}>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="newPassword"
+                        className="block mb-1 text-gray-600 dark:text-gray-300"
+                      >
+                        New Password
+                      </label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="confirmPassword"
+                        className="block mb-1 text-gray-600 dark:text-gray-300"
+                      >
+                        Confirm Password
+                      </label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
+                        value={forgotConfirmPassword}
+                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    {forgotResetError && (
+                      <div className="text-red-500 mb-2 text-sm">
+                        {forgotResetError}
+                      </div>
+                    )}
+                    {forgotResetSuccess && (
+                      <div className="text-green-500 mb-2 text-sm">
+                        {forgotResetSuccess}
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="text-gray-500 hover:underline border-none"
+                        onClick={() => {
+                          setShowForgotModal(false);
+                          setForgotStep(1);
+                        }}
+                        disabled={forgotResetLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
+                        disabled={forgotResetLoading}
+                      >
+                        {forgotResetLoading ? "Resetting..." : "Reset Password"}
+                      </Button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {/* Signup OTP Verification Modal */}
+      {
+        showOtpModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-60 z-50"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-center w-full max-w-sm">
+              <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">
+                Verify Email
+              </h2>
+              <p className="mb-4 text-gray-600 dark:text-gray-300">
+                Enter the OTP sent to your email address:{" "}
+                <span className="font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">
+                  {formData.email}
+                </span>
+              </p>
+              <form onSubmit={handleOtpVerification}>
+                <div className="mb-4">
+                  <label
+                    htmlFor="signupOtp"
+                    className="block mb-1 text-gray-600 dark:text-gray-300"
+                  >
+                    OTP
+                  </label>
+                  <Input
+                    id="signupOtp"
+                    type="text"
+                    className="w-full border rounded-xl px-3 py-2 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    maxLength={6}
+                  />
+                </div>
+                {otpError && (
+                  <div className="text-red-500 mb-2 text-sm">{otpError}</div>
+                )}
+                {otpSuccess && (
+                  <div className="text-green-500 mb-2 text-sm">{otpSuccess}</div>
+                )}
+                {resendError && (
+                  <div className="text-red-500 mb-2 text-sm">{resendError}</div>
+                )}
+                {resendSuccess && (
+                  <div className="text-green-500 mb-2 text-sm">
+                    {resendSuccess}
+                  </div>
+                )}
+                <div className="flex justify-between items-center mb-4">
+                  <button
+                    type="button"
+                    className={`text-[#2bb6c4] font-semibold text-sm ${otpTimer > 0 || resendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={otpTimer > 0 || resendLoading}
+                    onClick={handleResendOtp}
+                  >
+                    Resend OTP {otpTimer > 0 && `(${otpTimer}s)`}
+                  </button>
+                </div>
+                <div className="flex justify-between items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-gray-500 hover:underline border-none"
+                    onClick={() => setShowOtpModal(false)}
+                    disabled={otpLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
+                    disabled={otpLoading}
+                  >
+                    {otpLoading ? "Verifying..." : "Verify"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }

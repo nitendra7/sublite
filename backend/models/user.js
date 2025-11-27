@@ -60,6 +60,12 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Clerk integration
+    clerkUserId: {
+      type: String,
+      sparse: true, // Allow multiple documents without this field
+    },
+
     // Refresh token fields (optional, based on your auth strategy)
     refreshToken: {
       type: String,
@@ -93,6 +99,7 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ email: 1 }, { unique: true }); // Unique email constraint
 // userSchema.index({ username: 1 }, { unique: true, sparse: true }); // Unique username constraint - commented to avoid duplicates
 userSchema.index({ isProvider: 1 }); // Provider lookup index
+userSchema.index({ clerkUserId: 1 }, { unique: true, sparse: true }); // Clerk user ID index
 
 // OTP-related indexes for improved query performance
 userSchema.index({ resetOtp: 1 }); // Index for password reset OTP lookup

@@ -39,11 +39,30 @@ const api = axios.create({
   withCredentials: true, // Ensure cookies are sent for CORS
 });
 
-// Request Interceptor: Attach token
+// Allow registering an external async token getter (e.g., Clerk)
+let externalTokenGetter = null;
+export function setExternalTokenGetter(getterFn) {
+  externalTokenGetter = getterFn;
+}
+
+// Request Interceptor: Attach token (supports async external getter)
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+      return config;
+    }
+    if (externalTokenGetter) {
+      try {
+        const extToken = await externalTokenGetter();
+        if (extToken) {
+          config.headers['Authorization'] = `Bearer ${extToken}`;
+        }
+      } catch (e) {
+        // ignore, proceed without header
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)

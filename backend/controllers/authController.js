@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const nodemailer = require("nodemailer");
-const { Resend } = require("resend");
 const crypto = require("crypto");
 const {
   ValidationError,
@@ -14,12 +13,10 @@ const {
   AuthorizationError,
   NotFoundError,
   ConflictError,
-  DatabaseError,
 } = require("../utils/errors");
 const logger = require("../utils/logger");
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 // Email helper function with timeout
 const sendEmail = async (to, subject, text, timeoutMs = 10000) => {
@@ -193,7 +190,7 @@ exports.register = async (req, res, next) => {
       logger.info('Verification email sent successfully');
     } catch (emailError) {
       logger.error('Failed to send verification email:', emailError.message);
-      
+
       // Log OTP prominently when email fails
       console.log('\n' + '='.repeat(70));
       console.log('⚠️  EMAIL SENDING FAILED - OTP FOR VERIFICATION');
@@ -203,7 +200,7 @@ exports.register = async (req, res, next) => {
       console.log(`⏰ Expires: ${otpExpires.toISOString()}`);
       console.log(`❌ Error: ${emailError.message}`);
       console.log('='.repeat(70) + '\n');
-      
+
       // Check if it's a Resend sandbox restriction
       if (emailError.message && emailError.message.includes('only send testing emails')) {
         console.log('💡 TIP: Resend sandbox can only send to your verified email.');
@@ -445,7 +442,7 @@ exports.forgotPassword = async (req, res, next) => {
       );
     } catch (emailError) {
       logger.error('Failed to send password reset email:', emailError.message);
-      
+
       // Log OTP prominently when email fails
       console.log('\n' + '='.repeat(70));
       console.log('⚠️  EMAIL SENDING FAILED - PASSWORD RESET OTP');
@@ -522,6 +519,7 @@ exports.verifyOtp = async (req, res, next) => {
           name: newUser.name,
           username: newUser.username,
           email: newUser.email,
+          profilePicture: newUser.profilePicture,
           isProvider: newUser.isProvider,
           isAdmin: newUser.isAdmin,
         },

@@ -2,31 +2,31 @@ module.exports = {
   root: true,
   env: { browser: true, es2020: true },
   extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
+    'airbnb', 
+    'airbnb/hooks',
     'plugin:react/jsx-runtime',
-    'plugin:react-hooks/recommended',
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
   plugins: ['react-refresh'],
   rules: {
+
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
     ],
-    // Add essential rules for better code quality
     'no-unused-vars': ['error', {
       'argsIgnorePattern': '^_',
       'varsIgnorePattern': '^_',
       'caughtErrorsIgnorePattern': '^_'
     }],
-    'react/prop-types': 'warn',
-    'react/no-unescaped-entities': 'error',
+    'react/prop-types': 'off', // Using TypeScript-style prop validation
+    'react/jsx-props-no-spreading': 'off', // Allow prop spreading for UI components
     'no-console': 'warn',
-    'prefer-const': 'error',
-    'no-var': 'error',
+    'import/no-extraneous-dependencies': ['error', {
+      'devDependencies': ['vite.config.js', 'tailwind.config.js', '**/*.test.js']
+    }],
   },
   overrides: [
     {
@@ -36,7 +36,7 @@ module.exports = {
         browser: false,
       },
       rules: {
-        'no-undef': 'off', // Allow Node.js globals in config files
+        'no-undef': 'off', 
       },
     },
   ],

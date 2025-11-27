@@ -33,6 +33,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@clerk/backend": "^1.7.4",
     "ajv": "^6.12.6",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
@@ -57,7 +58,9 @@
   },
   "devDependencies": {
     "eslint": "^9.37.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-node": "^4.1.0",
+    "eslint-plugin-import": "^2.29.0",
     "globals": "^16.4.0",
     "nodemon": "^3.1.10"
   }

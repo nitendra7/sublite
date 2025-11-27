@@ -12,6 +12,7 @@ const cache = require("./utils/cache");
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const clerkSyncRoutes = require("./routes/clerkSync");
 const userRoutes = require("./routes/user");
 const serviceRoutes = require("./routes/service");
 const bookingRoutes = require("./routes/booking");
@@ -87,6 +88,7 @@ app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "1mb" }));
 
 // ----------------- Routes -----------------
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1", clerkSyncRoutes); // Clerk sync route
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/services", serviceRoutes);
 app.use("/api/v1/bookings", bookingRoutes);

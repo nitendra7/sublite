@@ -57,7 +57,7 @@ const createService = async (req, res) => {
 
 const getAllServices = async (req, res) => {
   try {
-    let query = { serviceStatus: "active", availableSlots: { $gt: 0 } };
+    const query = { serviceStatus: "active", availableSlots: { $gt: 0 } };
     if (req.user && req.user._id) {
       query.providerId = { $ne: req.user._id };
     }

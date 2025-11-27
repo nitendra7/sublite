@@ -1,7 +1,7 @@
 const Review = require('../models/review');
 const Booking = require('../models/booking');
-const { User } = require('../models/user');
-const Service = require('../models/service');
+// const { User } = require("../models/user");
+// const Service = require("../models/service");
 
 exports.getAllReviews = async (req, res) => {
  try {

@@ -82,7 +82,8 @@ export const UserProvider = ({ children }) => {
       setUser(null);
       setError("Please log in to view your profile.");
     }
-  }, [fetchUserProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Session expired handler
   useEffect(() => {
@@ -90,7 +91,7 @@ export const UserProvider = ({ children }) => {
       clearAuthData();
       setSessionExpired(true);
     });
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Updates the user object within the context directly.

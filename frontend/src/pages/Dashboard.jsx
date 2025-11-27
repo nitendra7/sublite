@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useClerk } from '@clerk/clerk-react';
 import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
   FaBook, FaMoon, FaStar, FaSun, FaHome,
@@ -37,6 +38,7 @@ function getInitials(name) {
 }
 
 function Dashboard() {
+  const { signOut } = useClerk();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -80,7 +82,7 @@ function Dashboard() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target) &&
-          profileButtonRef.current && !profileButtonRef.current.contains(event.target)) {
+        profileButtonRef.current && !profileButtonRef.current.contains(event.target)) {
         setIsProfileMenuOpen(false);
       }
     };
@@ -96,7 +98,7 @@ function Dashboard() {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        
+
         const response = await api.get(`/notifications`);
         const notifications = response.data;
         const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -109,8 +111,9 @@ function Dashboard() {
     fetchNotifications();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Are you sure you want to log out?")) {
+      await signOut();
       clearAuthData();
       navigate('/login');
     }
@@ -129,8 +132,24 @@ function Dashboard() {
     );
   }
 
-  if (!isAuthenticated && !loading) {
-    navigate('/login');
+  // Handle authentication redirect in useEffect
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect in useEffect)
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -188,7 +207,7 @@ function Dashboard() {
                   <FaCog size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                 </button>
               )}
-              
+
               {/* Theme Toggle */}
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
@@ -201,7 +220,7 @@ function Dashboard() {
                   <FaMoon size={20} className="group-hover:rotate-12 transition-transform duration-300" />
                 )}
               </button>
-              
+
               {/* Notifications */}
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
@@ -241,7 +260,7 @@ function Dashboard() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
                   </div>
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 {isProfileMenuOpen && (
                   <div
@@ -402,9 +421,11 @@ function Dashboard() {
             <div className="p-4 space-y-3">
               {/* Logout Button */}
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (window.confirm("Are you sure you want to log out?")) {
+                    await signOut();
                     clearAuthData();
+                    // This navigate is in an onClick handler, so it's fine
                     navigate('/login');
                   }
                   setMobileMenuOpen(false);

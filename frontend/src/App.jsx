@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { UserProvider, useUser } from './context/UserContext.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
 import { Toaster } from './components/ui/toaster.jsx';
+import { useAuth } from '@clerk/clerk-react';
+import { useEffect } from 'react';
 
 // Page components
 import HomePage from './pages/HomePage.jsx';
@@ -17,6 +19,7 @@ import NotificationsPage from './pages/NotificationsPage.jsx';
 import AddServicePage from './pages/AddServicePage.jsx';
 import EditServicePage from './pages/EditServicePage.jsx';
 import HelpPage from './pages/HelpPage.jsx';
+import SSOCallback from './pages/SSOCallback.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
 import { lazy, Suspense } from 'react';
 
@@ -33,8 +36,16 @@ const SystemMonitoring = lazy(() => import('./components/admin/SystemMonitoring.
 
 // PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.
 const PrivateRoute = () => {
-  const { user, loading } = useUser();
+  const { user, loading, fetchUserProfile } = useUser();
   const token = localStorage.getItem('token');
+  const { isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isSignedIn && !user && !loading) {
+      // trigger profile load when signed in with Clerk
+      fetchUserProfile();
+    }
+  }, [isSignedIn, user, loading, fetchUserProfile]);
 
   if (loading) {
     return (
@@ -44,7 +55,7 @@ const PrivateRoute = () => {
     );
   }
 
-  return user || token ? <Outlet /> : <Navigate to="/login" replace />;
+  return (user || token || isSignedIn) ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 // ProtectedLayout component: A layout component for protected routes.
@@ -73,7 +84,7 @@ function App() {
   const { darkMode, toggleDarkMode } = useTheme();
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {/* UserProvider wraps the application to provide user authentication context. */}
       <UserProvider>
         {/* Toaster component for displaying toast notifications */}
@@ -84,27 +95,28 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<AuthPage isLogin={true} />} />
           <Route path="/register" element={<AuthPage isLogin={false} />} />
+          <Route path="/sso-callback" element={<SSOCallback />} />
 
           {/* Protected routes group: Access is guarded by PrivateRoute. */}
           {/* ProtectedLayout ensures theme props are passed down to all nested protected components. */}
           <Route element={<PrivateRoute />}>
-              <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
-                  {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
-                  <Route path="/dashboard" element={<Dashboard />}>
-                    <Route index element={<Availableplans />}/>
-                    <Route path="available-plans" element={<Availableplans />} />
-                    <Route path="subscriptions" element={<SubscriptionsPage />} />
-                    <Route path="wallet" element={<WalletPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="reviews" element={<ReviewPage />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="add-service" element={<AddServicePage />} />
-                    <Route path="edit-service/:serviceId" element={<EditServicePage />} />
-                    <Route path="help" element={<HelpPage />} />
-                  </Route>
-
-                  {/* Standalone protected pages. */}
+            <Route element={<ProtectedLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
+              {/* Dashboard layout route: Nested routes render within Dashboard's own Outlet. */}
+              <Route path="/dashboard" element={<Dashboard />}>
+                <Route index element={<Availableplans />} />
+                <Route path="available-plans" element={<Availableplans />} />
+                <Route path="subscriptions" element={<SubscriptionsPage />} />
+                <Route path="wallet" element={<WalletPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="reviews" element={<ReviewPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="add-service" element={<AddServicePage />} />
+                <Route path="edit-service/:serviceId" element={<EditServicePage />} />
+                <Route path="help" element={<HelpPage />} />
               </Route>
+
+              {/* Standalone protected pages. */}
+            </Route>
           </Route>
 
           {/* Admin routes: Only accessible to admin users. */}
