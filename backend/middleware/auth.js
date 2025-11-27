@@ -1,83 +1,82 @@
-const WalletTransaction = require('../models/walletTransaction');
-const { User } = require('../models/user');
+const jwt = require("jsonwebtoken");
+const { User } = require("../models/user");
 
-exports.getAllWalletTransactions = async (req, res) => {
-  const userId = req.user && req.user._id;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+
+const extractBearer = (authHeader) =>
+  typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+
+/*
+ * Optional authentication middleware — attaches req.user if a valid token is provided,
+ * otherwise continues silently.
+ */
+const optionalAuth = async (req, res, next) => {
+  const token = extractBearer(req.headers.authorization);
+  if (!token) return next();
+
+  if (!ACCESS_TOKEN_SECRET) {
+    console.error("ACCESS_TOKEN_SECRET is not set.");
+    return next();
+  }
+
   try {
-    const transactions = await WalletTransaction.find({ userId }).sort({ createdAt: -1 });
-    return res.json(transactions);
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id || decoded.userId;
+    if (!userId) return next();
+
+    const user = await User.findById(userId).select("-password");
+    if (user && user.isActive) req.user = user;
+    return next();
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    // On any error, continue without authentication
+    return next();
   }
 };
 
-exports.getWalletTransactionById = async (req, res) => {
-  const userId = req.user && req.user._id;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-  try {
-    const transaction = await WalletTransaction.findOne({ _id: req.params.id, userId });
-    if (!transaction) return res.status(404).json({ error: 'Wallet transaction not found' });
-    return res.json(transaction);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+/**
+ * Required authentication middleware — must provide a valid JWT.
+ * On success attaches req.user and calls next(); otherwise returns a 4xx response.
+ */
+async function requiredAuth(req, res, next) {
+  const token = extractBearer(req.headers.authorization);
+  if (!token) {
+    return res.status(401).json({ message: "No authentication token provided." });
   }
-};
 
-exports.createWalletTransaction = async (req, res) => {
-  const userId = req.user && req.user._id;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-  try {
-    const { amount, description, type } = req.body;
-    if (!amount || isNaN(amount)) return res.status(400).json({ message: 'Invalid amount' });
-    if (!['credit', 'debit'].includes(type)) return res.status(400).json({ message: 'Invalid type' });
-
-    const transaction = await WalletTransaction.create({
-      userId,
-      amount,
-      description,
-      type
-    });
-
-    const incAmount = type === 'credit' ? amount : -amount;
-    await User.findByIdAndUpdate(userId, { $inc: { walletBalance: incAmount } });
-
-    return res.status(201).json(transaction);
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+  if (!ACCESS_TOKEN_SECRET) {
+    console.error("CRITICAL: ACCESS_TOKEN_SECRET is not set.");
+    return res.status(500).json({ message: "Server configuration error." });
   }
-};
-
-exports.updateWalletTransaction = async (req, res) => {
-  const userId = req.user && req.user._id;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
-    const transaction = await WalletTransaction.findOneAndUpdate(
-      { _id: req.params.id, userId },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!transaction) return res.status(404).json({ error: 'Wallet transaction not found' });
-    return res.json(transaction);
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id || decoded.userId;
+    if (!userId) {
+      console.error("Token payload missing userId", decoded);
+      return res.status(403).json({ message: "Invalid token payload." });
+    }
 
-exports.deleteWalletTransaction = async (req, res) => {
-  const userId = req.user && req.user._id;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    const user = await User.findById(userId).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user.isActive) return res.status(403).json({ message: "Your account has been deactivated." });
 
-  try {
-    const transaction = await WalletTransaction.findOneAndDelete({
-      _id: req.params.id,
-      userId
-    });
-    if (!transaction) return res.status(404).json({ error: 'Wallet transaction not found' });
-    return res.json({ message: 'Wallet transaction deleted' });
+    req.user = user;
+    return next();
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    const name = err?.name;
+    if (name === "TokenExpiredError") {
+      return res.status(403).json({ message: "Your session has expired. Please log in again." });
+    }
+    if (name === "JsonWebTokenError") {
+      return res.status(403).json({ message: "Invalid authentication token. Please log in again." });
+    }
+
+    console.error("Authentication failed:", { message: err?.message, name });
+    return res.status(403).json({ message: "Invalid or expired authentication token." });
   }
-};
+}
+
+module.exports = requiredAuth;
+module.exports.optionalAuth = optionalAuth;
