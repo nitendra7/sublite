@@ -11,11 +11,10 @@ export function formatDate(dateStr, options = { year: 'numeric', month: 'short',
 
   try {
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     return date.toLocaleDateString(undefined, options);
   } catch (error) {
-    console.warn('Invalid date format:', dateStr);
     return '';
   }
 }
@@ -31,7 +30,7 @@ export function formatDateTime(dateStr) {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 }
 
@@ -45,7 +44,7 @@ export function formatRelativeTime(dateStr) {
 
   try {
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -55,15 +54,13 @@ export function formatRelativeTime(dateStr) {
 
     if (diffMinutes < 60) {
       return diffMinutes <= 1 ? 'Just now' : `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
+    } if (diffHours < 24) {
       return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
-    } else if (diffDays < 30) {
+    } if (diffDays < 30) {
       return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
-    } else {
-      return formatDate(date);
     }
+    return formatDate(date);
   } catch (error) {
-    console.warn('Invalid date format:', dateStr);
     return '';
   }
 }
@@ -78,7 +75,7 @@ export function isPastDate(dateStr) {
 
   try {
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-    if (isNaN(date.getTime())) return false;
+    if (Number.isNaN(date.getTime())) return false;
 
     return date.getTime() < new Date().getTime();
   } catch (error) {
@@ -96,7 +93,7 @@ export function isToday(dateStr) {
 
   try {
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-    if (isNaN(date.getTime())) return false;
+    if (Number.isNaN(date.getTime())) return false;
 
     const today = new Date();
     return date.toDateString() === today.toDateString();

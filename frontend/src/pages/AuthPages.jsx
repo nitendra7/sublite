@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import {
   useSignIn,
-  useSignUp,
   useAuth,
-  useUser as useClerkUser
-} from "@clerk/clerk-react";
+  useUser as useClerkUser,
+} from '@clerk/clerk-react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 
-import api from "../utils/api";
-import { useUser } from "../context/UserContext";
+import api from '../utils/api';
+import { useUser } from '../context/UserContext';
+
 AuthPage.propTypes = {
   isLogin: PropTypes.bool,
 };
@@ -27,64 +27,62 @@ export default function AuthPage({ isLogin = true }) {
   const { isSignedIn } = useAuth();
   const { user: clerkUser } = useClerkUser();
   const { signIn } = useSignIn();
-  const { signUp } = useSignUp();
+
   // Form state
   const [formData, setFormData] = useState({
-    name: "",
-    username: "",
-    email: "",
-    password: "",
+    name: '',
+    username: '',
+    email: '',
+    password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  // Modals and their states
+  // Modal states
   const [showAccountNotFoundModal, setShowAccountNotFoundModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
 
-  // OTP for Signup Verification
-  const [otp, setOtp] = useState("");
+  // Signup OTP state
+  const [otp, setOtp] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState("");
-  const [otpSuccess, setOtpSuccess] = useState("");
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
   const [otpTimer, setOtpTimer] = useState(30);
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendError, setResendError] = useState("");
-  const [resendSuccess, setResendSuccess] = useState("");
+  const [resendError, setResendError] = useState('');
+  const [resendSuccess, setResendSuccess] = useState('');
 
-  const [loginAttempts, setLoginAttempts] = useState(0);
-
-  // Redirect to dashboard if already signed in
+  // Redirect if signed in
   useEffect(() => {
     if (isSignedIn && clerkUser) {
-      // Sync Clerk user with your backend
+      // Sync Clerk user
       const syncWithBackend = async () => {
         try {
-          // Create or login user in your backend using Clerk data
+          // Sync with backend
           const response = await api.post('/auth/clerk-sync', {
             clerkUserId: clerkUser.id,
             email: clerkUser.emailAddresses[0]?.emailAddress,
             name: clerkUser.fullName || clerkUser.firstName || 'User',
-            profileImage: clerkUser.imageUrl
+            profileImage: clerkUser.imageUrl,
           });
 
           if (response.data.token) {
-            // Store your backend token
+            // Store token
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('userId', response.data.user.id);
             localStorage.setItem('userName', response.data.user.name);
 
-            // Update your user context
-            rehydrateUserContext(response.data.user, false);
+            // Update context
+            rehydrateUserContext(response.data.user, true);
 
             // Navigate to dashboard
             navigate('/dashboard');
           }
-        } catch (error) {
-          console.error('Failed to sync with backend:', error);
+        } catch (syncError) {
+          // console.error('Failed to sync with backend:', syncError);
           // Clear Clerk session if backend sync fails
           // await signOut();
           setError('Failed to complete sign-in. Please try again.');
@@ -95,53 +93,51 @@ export default function AuthPage({ isLogin = true }) {
     }
   }, [isSignedIn, clerkUser, navigate, rehydrateUserContext]);
 
-  // Forgot Password states
-  const [forgotEmail, setForgotEmail] = useState("");
+  // Forgot Password state
+  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotError, setForgotError] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
 
-  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotOtp, setForgotOtp] = useState('');
   const [forgotOtpLoading, setForgotOtpLoading] = useState(false);
-  const [forgotOtpError, setForgotOtpError] = useState("");
-  const [forgotOtpSuccess, setForgotOtpSuccess] = useState("");
+  const [forgotOtpError, setForgotOtpError] = useState('');
+  const [forgotOtpSuccess, setForgotOtpSuccess] = useState('');
   const [forgotOtpTimer, setForgotOtpTimer] = useState(30);
   const [forgotResendLoading, setForgotResendLoading] = useState(false);
-  const [forgotResendError, setForgotResendError] = useState("");
-  const [forgotResendSuccess, setForgotResendSuccess] = useState("");
+  const [forgotResendError, setForgotResendError] = useState('');
+  const [forgotResendSuccess, setForgotResendSuccess] = useState('');
 
-  const [forgotNewPassword, setForgotNewPassword] = useState("");
-  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
   const [forgotResetLoading, setForgotResetLoading] = useState(false);
-  const [forgotResetError, setForgotResetError] = useState("");
-  const [forgotResetSuccess, setForgotResetSuccess] = useState("");
+  const [forgotResetError, setForgotResetError] = useState('');
+  const [forgotResetSuccess, setForgotResetSuccess] = useState('');
 
-  // Handler for form input changes
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setError(""); // Clear error when user starts typing
+    setError(''); // Clear error when user starts typing
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Password validation helper
+  // Validate password
   const validatePassword = (password) => {
-    if (!password) return "Password is required";
-    if (password.length < 6)
-      return "Password must be at least 6 characters long";
-    if (/\s/.test(password))
-      return "Password cannot contain spaces or whitespace characters";
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters long';
+    if (/\s/.test(password)) return 'Password cannot contain spaces or whitespace characters';
     return null;
   };
 
-  // Main form submission (Login/Signup)
+  // Handle Login/Signup
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      // Validate password before sending
+      // Validate password
       const passwordError = validatePassword(formData.password);
       if (passwordError) {
         setError(passwordError);
@@ -150,53 +146,47 @@ export default function AuthPage({ isLogin = true }) {
       }
 
       if (isLogin) {
-        // Login API call
-        const res = await api.post(`/auth/login`, {
+        // Login
+        const res = await api.post('/auth/login', {
           emailOrUsername: formData.email,
           password: formData.password,
         });
-        const data = res.data;
+        const { data } = res;
 
         // If there's an error, axios throws; catch will handle
 
-        // Store token and user info upon successful login
-        localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("userName", data.user?.name || "");
-        localStorage.setItem("userId", data.user?.id || data.user?._id || "");
-        console.log("Login successful. Stored:", {
-          token: localStorage.getItem("token"),
-          refreshToken: localStorage.getItem("refreshToken"),
-          userId: localStorage.getItem("userId"),
-          userName: localStorage.getItem("userName"),
-        });
-        console.log("Login response data:", data); // Add this debug line
+        // Store auth data
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('userName', data.user?.name || '');
+        localStorage.setItem('userId', data.user?.id || data.user?._id || '');
+
         if (data.user) {
           rehydrateUserContext(data.user, true);
         }
         setTimeout(() => {
-          navigate("/dashboard", { replace: true });
+          navigate('/dashboard', { replace: true });
         }, 400);
       } else {
-        // Signup: simple email validation
-        if (!formData.email.includes("@") || !formData.email.includes(".")) {
-          setError("Invalid email format.");
+        // Signup validation
+        if (!formData.email.includes('@') || !formData.email.includes('.')) {
+          setError('Invalid email format.');
           setLoading(false);
           return;
         }
         if (
-          formData.name.trim().length < 2 ||
-          formData.name.trim().length > 50
+          formData.name.trim().length < 2
+          || formData.name.trim().length > 50
         ) {
-          setError("Name must be between 2 and 50 characters.");
+          setError('Name must be between 2 and 50 characters.');
           setLoading(false);
           return;
         }
         if (
-          formData.username.trim().length < 3 ||
-          formData.username.trim().length > 30
+          formData.username.trim().length < 3
+          || formData.username.trim().length > 30
         ) {
-          setError("Username must be between 3 and 30 characters.");
+          setError('Username must be between 3 and 30 characters.');
           setLoading(false);
           return;
         }
@@ -207,173 +197,172 @@ export default function AuthPage({ isLogin = true }) {
           setLoading(false);
           return;
         }
-        // Signup API call
-        await api.post(`/auth/register`, {
+        // Signup API
+        await api.post('/auth/register', {
           name: formData.name,
           username: formData.username.toLowerCase(),
           email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
-        // If registration is successful, show OTP modal
+        // Show OTP modal
         setShowOtpModal(true);
       }
     } catch (err) {
       setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // OTP Verification for Signup
+  // Verify Signup OTP
   const handleOtpVerification = async (e) => {
     e.preventDefault();
     setOtpLoading(true);
-    setOtpError("");
-    setOtpSuccess("");
+    setOtpError('');
+    setOtpSuccess('');
     try {
-      const res = await api.post(`/auth/verify-otp`, {
+      const res = await api.post('/auth/verify-otp', {
         email: formData.email.toLowerCase(),
         otp,
         instantLogin: true,
       });
-      const data = res.data;
+      const { data } = res;
 
-      // If backend returns token after OTP verification, store it and navigate
+      // Handle successful verification
       if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("userName", data.user?.name || "");
-        localStorage.setItem("userId", data.user?.id || data.user?._id || "");
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('userName', data.user?.name || '');
+        localStorage.setItem('userId', data.user?.id || data.user?._id || '');
         if (data.user) {
           rehydrateUserContext(data.user, false); // Don't refetch - we already have complete data
         }
-        setOtpSuccess("Email verified! Logging you in...");
+        setOtpSuccess('Email verified! Logging you in...');
         setTimeout(() => {
           setShowOtpModal(false);
-          navigate("/dashboard");
+          navigate('/dashboard');
         }, 1500);
       } else {
-        // If backend doesn't return token, user needs to log in manually
-        setOtpSuccess("Email verified! You can now log in.");
+        // Manual login required
+        setOtpSuccess('Email verified! You can now log in.');
         setTimeout(() => {
           setShowOtpModal(false);
-          navigate("/login");
+          navigate('/login');
         }, 1500);
       }
     } catch (err) {
       setOtpError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setOtpLoading(false);
     }
   };
 
-  // Resend OTP for Signup
+  // Resend Signup OTP
   const handleResendOtp = async () => {
     setResendLoading(true);
-    setResendError("");
-    setResendSuccess("");
+    setResendError('');
+    setResendSuccess('');
     try {
-      // Re-trigger the registration endpoint to send a new OTP
-      await api.post(`/auth/register`, {
+      // Resend OTP
+      await api.post('/auth/register', {
         name: formData.name,
         username: formData.username.toLowerCase(),
         email: formData.email.toLowerCase(),
         password: formData.password,
       });
-      setResendSuccess("OTP resent! Check your email.");
+      setResendSuccess('OTP resent! Check your email.');
       setOtpTimer(30); // Reset timer
     } catch (err) {
       setResendError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setResendLoading(false);
     }
   };
 
-  // Forgot Password - Step 1: Send OTP
+  // Forgot Password: Send OTP
   const handleForgotSendOtp = async (e) => {
     e.preventDefault();
     setForgotLoading(true);
-    setForgotError("");
-    setForgotSuccess("");
+    setForgotError('');
+    setForgotSuccess('');
     try {
-      await api.post(`/auth/forgot-password`, { email: forgotEmail.toLowerCase() });
-      setForgotSuccess("OTP sent! Check your email.");
+      await api.post('/auth/forgot-password', { email: forgotEmail.toLowerCase() });
+      setForgotSuccess('OTP sent! Check your email.');
       setForgotStep(2);
     } catch (err) {
       setForgotError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setForgotLoading(false);
     }
   };
 
-  // Forgot Password - Step 2: Verify OTP
+  // Forgot Password: Verify OTP
   const handleForgotVerifyOtp = async (e) => {
     e.preventDefault();
     setForgotOtpLoading(true);
-    setForgotOtpError("");
-    setForgotOtpSuccess("");
+    setForgotOtpError('');
+    setForgotOtpSuccess('');
     try {
-      await api.post(`/auth/verify-reset-otp`, {
+      await api.post('/auth/verify-reset-otp', {
         email: forgotEmail.toLowerCase(),
         otp: forgotOtp,
       });
-      setForgotOtpSuccess("OTP verified!");
+      setForgotOtpSuccess('OTP verified!');
       setTimeout(() => setForgotStep(3), 500);
     } catch (err) {
       setForgotOtpError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setForgotOtpLoading(false);
     }
   };
 
-  // Forgot Password - Step 2: Resend OTP
+  // Forgot Password: Resend OTP
   const handleForgotResendOtp = async () => {
     setForgotResendLoading(true);
-    setForgotResendError("");
-    setForgotResendSuccess("");
+    setForgotResendError('');
+    setForgotResendSuccess('');
     try {
-      await api.post(`/auth/forgot-password`, { email: forgotEmail.toLowerCase() });
-      setForgotResendSuccess("OTP resent! Check your email.");
+      await api.post('/auth/forgot-password', { email: forgotEmail.toLowerCase() });
+      setForgotResendSuccess('OTP resent! Check your email.');
       setForgotOtpTimer(30);
     } catch (err) {
       setForgotResendError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setForgotResendLoading(false);
     }
   };
 
-  // Forgot Password - Step 3: Reset Password
-  // Reset Password Handler
+  // Forgot Password: Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setForgotResetLoading(true);
-    setForgotResetError("");
-    setForgotResetSuccess("");
+    setForgotResetError('');
+    setForgotResetSuccess('');
 
     // Validate new password
     const passwordError = validatePassword(forgotNewPassword);
@@ -384,47 +373,47 @@ export default function AuthPage({ isLogin = true }) {
     }
 
     if (forgotNewPassword !== forgotConfirmPassword) {
-      setForgotResetError("Passwords do not match.");
+      setForgotResetError('Passwords do not match.');
       setForgotResetLoading(false);
       return;
     }
     try {
-      await api.post(`/auth/reset-password`, {
+      await api.post('/auth/reset-password', {
         email: forgotEmail.toLowerCase(),
         otp: forgotOtp,
         newPassword: forgotNewPassword,
       });
-      setForgotResetSuccess("Password reset successful! You can now log in.");
+      setForgotResetSuccess('Password reset successful! You can now log in.');
       setTimeout(() => {
         setShowForgotModal(false);
         setForgotStep(1); // Reset forgot password flow
         // Clear all forgot password states
-        setForgotEmail("");
-        setForgotOtp("");
-        setForgotNewPassword("");
-        setForgotConfirmPassword("");
-        setForgotError("");
-        setForgotSuccess("");
-        setForgotOtpError("");
-        setForgotOtpSuccess("");
-        setForgotResendError("");
-        setForgotResendSuccess("");
-        setForgotResetError("");
-        setForgotResetSuccess("");
-        navigate("/login");
+        setForgotEmail('');
+        setForgotOtp('');
+        setForgotNewPassword('');
+        setForgotConfirmPassword('');
+        setForgotError('');
+        setForgotSuccess('');
+        setForgotOtpError('');
+        setForgotOtpSuccess('');
+        setForgotResendError('');
+        setForgotResendSuccess('');
+        setForgotResetError('');
+        setForgotResetSuccess('');
+        navigate('/login');
       }, 1500);
     } catch (err) {
       setForgotResetError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to connect to the server.",
+        err.response?.data?.message
+        || err.message
+        || 'Failed to connect to the server.',
       );
     } finally {
       setForgotResetLoading(false);
     }
   };
 
-  // OTP timer effect for Signup
+  // Signup OTP timer
   useEffect(() => {
     if (!showOtpModal) return;
     if (otpTimer === 0) return;
@@ -434,19 +423,19 @@ export default function AuthPage({ isLogin = true }) {
     return () => clearInterval(interval);
   }, [showOtpModal, otpTimer]);
 
-  // Reset signup OTP timer and errors when OTP modal is shown
+  // Reset Signup OTP state
   useEffect(() => {
     if (showOtpModal) {
       setOtpTimer(30);
-      setResendError("");
-      setResendSuccess("");
-      setOtpError("");
-      setOtpSuccess("");
-      setOtp(""); // Clear OTP input on modal open
+      setResendError('');
+      setResendSuccess('');
+      setOtpError('');
+      setOtpSuccess('');
+      setOtp(''); // Clear OTP input on modal open
     }
   }, [showOtpModal]);
 
-  // OTP timer effect for Forgot Password
+  // Forgot Password OTP timer
   useEffect(() => {
     if (!showForgotModal || forgotStep !== 2) return;
     if (forgotOtpTimer === 0) return;
@@ -456,25 +445,25 @@ export default function AuthPage({ isLogin = true }) {
     return () => clearInterval(interval);
   }, [showForgotModal, forgotStep, forgotOtpTimer]);
 
-  // Reset forgot password states on step/modal change
+  // Reset Forgot Password state
   useEffect(() => {
     if (showForgotModal) {
       if (forgotStep === 1) {
-        setForgotEmail("");
-        setForgotError("");
-        setForgotSuccess("");
+        setForgotEmail('');
+        setForgotError('');
+        setForgotSuccess('');
       } else if (forgotStep === 2) {
         setForgotOtpTimer(30);
-        setForgotResendError("");
-        setForgotResendSuccess("");
-        setForgotOtpError("");
-        setForgotOtpSuccess("");
-        setForgotOtp(""); // Clear OTP input on step change
+        setForgotResendError('');
+        setForgotResendSuccess('');
+        setForgotOtpError('');
+        setForgotOtpSuccess('');
+        setForgotOtp(''); // Clear OTP input on step change
       } else if (forgotStep === 3) {
-        setForgotNewPassword("");
-        setForgotConfirmPassword("");
-        setForgotResetError("");
-        setForgotResetSuccess("");
+        setForgotNewPassword('');
+        setForgotConfirmPassword('');
+        setForgotResetError('');
+        setForgotResetSuccess('');
       }
     }
   }, [showForgotModal, forgotStep]);
@@ -489,7 +478,7 @@ export default function AuthPage({ isLogin = true }) {
             className="w-12 h-12 rounded-full"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "https://placehold.co/48x48/2bb6c4/ffffff?text=SL";
+              e.target.src = 'https://placehold.co/48x48/2bb6c4/ffffff?text=SL';
             }}
           />
           <span className="text-2xl font-extrabold text-[#2bb6c4] tracking-tight">
@@ -497,10 +486,10 @@ export default function AuthPage({ isLogin = true }) {
           </span>
         </div>
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-1">
-          {isLogin ? "Welcome Back" : "Create Account"}
+          {isLogin ? 'Welcome Back' : 'Create Account'}
         </h2>
         <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-sm">
-          {isLogin ? "Please enter your details" : "Sign up to get started"}
+          {isLogin ? 'Please enter your details' : 'Sign up to get started'}
         </p>
 
         {/* Google Sign In Section */}
@@ -510,7 +499,7 @@ export default function AuthPage({ isLogin = true }) {
             onClick={async () => {
               try {
                 setLoading(true);
-                setError("");
+                setError('');
 
                 if (isSignedIn) {
                   navigate('/dashboard');
@@ -523,15 +512,15 @@ export default function AuthPage({ isLogin = true }) {
                 }
 
                 await signIn.authenticateWithRedirect({
-                  strategy: "oauth_google",
-                  redirectUrl: window.location.origin + "/sso-callback",
-                  redirectUrlComplete: window.location.origin + "/sso-callback"
+                  strategy: 'oauth_google',
+                  redirectUrl: `${window.location.origin}/sso-callback`,
+                  redirectUrlComplete: `${window.location.origin}/sso-callback`,
                 });
               } catch (err) {
                 if (err.errors?.[0]?.code === 'session_exists' || err.message?.includes('already signed in')) {
                   navigate('/dashboard');
                 } else {
-                  setError(err.errors?.[0]?.message || "Google sign-in failed. Please try again.");
+                  setError(err.errors?.[0]?.message || 'Google sign-in failed. Please try again.');
                 }
               } finally {
                 setLoading(false);
@@ -541,7 +530,7 @@ export default function AuthPage({ isLogin = true }) {
             className="w-full py-3 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center gap-3 font-medium text-gray-700 dark:text-gray-300 shadow-sm"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
             ) : (
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -570,18 +559,17 @@ export default function AuthPage({ isLogin = true }) {
         <div className="flex mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
           <Button
             asChild
-            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${isLogin ? "bg-[#2bb6c4] text-white shadow-md" : "bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"} shadow-none border-none`}
+            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${isLogin ? 'bg-[#2bb6c4] text-white shadow-md' : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} shadow-none border-none`}
           >
             <Link to="/login">Sign In</Link>
           </Button>
           <Button
             asChild
-            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${!isLogin ? "bg-[#2bb6c4] text-white shadow-md" : "bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"} shadow-none border-none`}
+            className={`flex-1 py-2 font-semibold text-center rounded-none transition-all duration-200 ${!isLogin ? 'bg-[#2bb6c4] text-white shadow-md' : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} shadow-none border-none`}
           >
             <Link to="/register">Sign up</Link>
           </Button>
         </div>
-
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -629,13 +617,13 @@ export default function AuthPage({ isLogin = true }) {
               htmlFor="emailOrUsername"
               className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1"
             >
-              {isLogin ? "Email or Username" : "Email Address"}
+              {isLogin ? 'Email or Username' : 'Email Address'}
             </label>
             <Input
               id="emailOrUsername"
-              type={isLogin ? "text" : "email"}
+              type={isLogin ? 'text' : 'email'}
               name="email"
-              placeholder={isLogin ? "Email or Username" : "Email Address"}
+              placeholder={isLogin ? 'Email or Username' : 'Email Address'}
               className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
               value={formData.email}
               onChange={handleChange}
@@ -653,7 +641,7 @@ export default function AuthPage({ isLogin = true }) {
             <div className="relative">
               <Input
                 id="password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 placeholder="Password"
                 className="px-4 py-3 rounded-xl border border-gray-400 dark:border-gray-500 outline-none transition-all duration-200 pr-10 focus:border-[#2bb6c4] focus:ring-1 focus:ring-[#2bb6c4]"
@@ -666,7 +654,7 @@ export default function AuthPage({ isLogin = true }) {
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-0 top-0 h-full bg-transparent border-none cursor-pointer px-4 py-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -694,18 +682,19 @@ export default function AuthPage({ isLogin = true }) {
           >
             {loading
               ? isLogin
-                ? "Logging in..."
-                : "Signing Up..."
+                ? 'Logging in...'
+                : 'Signing Up...'
               : isLogin
-                ? "Continue"
-                : "Sign Up"}
+                ? 'Continue'
+                : 'Sign Up'}
           </Button>
         </form>
         {error && <div className="text-red-500 text-center mt-4">{error}</div>}
         <div className="text-center text-gray-400 text-xs mt-4">
           {isLogin ? (
             <>
-              Don&apos;t have an account?{" "}
+              Don&apos;t have an account?
+              {' '}
               <Link
                 to="/register"
                 className="text-[#2bb6c4] hover:underline font-semibold"
@@ -715,7 +704,8 @@ export default function AuthPage({ isLogin = true }) {
             </>
           ) : (
             <>
-              Already have an account?{" "}
+              Already have an account?
+              {' '}
               <Link
                 to="/login"
                 className="text-[#2bb6c4] hover:underline font-semibold"
@@ -746,7 +736,7 @@ export default function AuthPage({ isLogin = true }) {
                 <Button
                   onClick={() => {
                     setShowAccountNotFoundModal(false);
-                    navigate("/register");
+                    navigate('/register');
                   }}
                   className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white rounded-xl px-4 py-2 shadow-md hover:shadow-lg transition-all duration-200"
                 >
@@ -824,7 +814,7 @@ export default function AuthPage({ isLogin = true }) {
                         className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
                         disabled={forgotLoading}
                       >
-                        {forgotLoading ? "Sending..." : "Send OTP"}
+                        {forgotLoading ? 'Sending...' : 'Send OTP'}
                       </Button>
                     </div>
                   </form>
@@ -877,11 +867,13 @@ export default function AuthPage({ isLogin = true }) {
                     <div className="flex justify-between items-center mb-4">
                       <button
                         type="button"
-                        className={`text-[#2bb6c4] font-semibold text-sm ${forgotOtpTimer > 0 || forgotResendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`text-[#2bb6c4] font-semibold text-sm ${forgotOtpTimer > 0 || forgotResendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={forgotOtpTimer > 0 || forgotResendLoading}
                         onClick={handleForgotResendOtp}
                       >
-                        Resend OTP {forgotOtpTimer > 0 && `(${forgotOtpTimer}s)`}
+                        Resend OTP
+                        {' '}
+                        {forgotOtpTimer > 0 && `(${forgotOtpTimer}s)`}
                       </button>
                     </div>
                     <div className="flex justify-between items-center">
@@ -902,7 +894,7 @@ export default function AuthPage({ isLogin = true }) {
                         className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
                         disabled={forgotOtpLoading}
                       >
-                        {forgotOtpLoading ? "Verifying..." : "Verify OTP"}
+                        {forgotOtpLoading ? 'Verifying...' : 'Verify OTP'}
                       </Button>
                     </div>
                   </form>
@@ -975,7 +967,7 @@ export default function AuthPage({ isLogin = true }) {
                         className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
                         disabled={forgotResetLoading}
                       >
-                        {forgotResetLoading ? "Resetting..." : "Reset Password"}
+                        {forgotResetLoading ? 'Resetting...' : 'Reset Password'}
                       </Button>
                     </div>
                   </form>
@@ -999,7 +991,8 @@ export default function AuthPage({ isLogin = true }) {
                 Verify Email
               </h2>
               <p className="mb-4 text-gray-600 dark:text-gray-300">
-                Enter the OTP sent to your email address:{" "}
+                Enter the OTP sent to your email address:
+                {' '}
                 <span className="font-semibold text-[#2bb6c4] dark:text-[#5ed1dc]">
                   {formData.email}
                 </span>
@@ -1039,11 +1032,13 @@ export default function AuthPage({ isLogin = true }) {
                 <div className="flex justify-between items-center mb-4">
                   <button
                     type="button"
-                    className={`text-[#2bb6c4] font-semibold text-sm ${otpTimer > 0 || resendLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`text-[#2bb6c4] font-semibold text-sm ${otpTimer > 0 || resendLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={otpTimer > 0 || resendLoading}
                     onClick={handleResendOtp}
                   >
-                    Resend OTP {otpTimer > 0 && `(${otpTimer}s)`}
+                    Resend OTP
+                    {' '}
+                    {otpTimer > 0 && `(${otpTimer}s)`}
                   </button>
                 </div>
                 <div className="flex justify-between items-center">
@@ -1061,7 +1056,7 @@ export default function AuthPage({ isLogin = true }) {
                     className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-xl"
                     disabled={otpLoading}
                   >
-                    {otpLoading ? "Verifying..." : "Verify"}
+                    {otpLoading ? 'Verifying...' : 'Verify'}
                   </Button>
                 </div>
               </form>
@@ -1069,6 +1064,6 @@ export default function AuthPage({ isLogin = true }) {
           </div>
         )
       }
-    </div >
+    </div>
   );
 }

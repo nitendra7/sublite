@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
-const EmailSettings = () => {
+function EmailSettings() {
+  const { toast } = useToast();
   const [settings, setSettings] = useState({
     smtpHost: 'smtp.gmail.com',
     smtpPort: '587',
@@ -13,7 +15,7 @@ const EmailSettings = () => {
     enableNotifications: true,
     enableBookingEmails: true,
     enablePaymentEmails: true,
-    enableMarketingEmails: false
+    enableMarketingEmails: false,
   });
 
   const [testEmail, setTestEmail] = useState('');
@@ -21,7 +23,7 @@ const EmailSettings = () => {
   const [testing, setTesting] = useState(false);
 
   const handleChange = (key, value) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
@@ -29,20 +31,31 @@ const EmailSettings = () => {
     try {
       // API call would go here
       // await api.put('/admin/settings/email', settings);
-      
+
       setTimeout(() => {
-        alert('Email settings saved successfully!');
+        toast({
+          title: 'Success',
+          description: 'Email settings saved successfully!',
+        });
         setSaving(false);
       }, 1000);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
       setSaving(false);
     }
   };
 
   const handleTestEmail = async () => {
     if (!testEmail) {
-      alert('Please enter an email address');
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter an email address',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -50,13 +63,20 @@ const EmailSettings = () => {
     try {
       // API call would go here
       // await api.post('/admin/settings/email/test', { email: testEmail });
-      
+
       setTimeout(() => {
-        alert(`Test email sent to ${testEmail}`);
+        toast({
+          title: 'Success',
+          description: `Test email sent to ${testEmail}`,
+        });
         setTesting(false);
       }, 1500);
     } catch (error) {
-      console.error('Error sending test email:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send test email',
+        variant: 'destructive',
+      });
       setTesting(false);
     }
   };
@@ -206,6 +226,6 @@ const EmailSettings = () => {
       </div>
     </div>
   );
-};
+}
 
 export default EmailSettings;

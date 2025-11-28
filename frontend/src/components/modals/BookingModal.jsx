@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import {
   X,
   Calendar,
@@ -9,17 +9,19 @@ import {
   Plus,
   BadgeIndianRupee,
   Loader2,
-} from "lucide-react";
-import api from "../../utils/api";
-import { useUser } from "../../context/UserContext";
+} from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
+import api from '../../utils/api';
+import { useUser } from '../../context/UserContext';
 
-const BookingModal = ({ isOpen, onClose, service }) => {
+function BookingModal({ isOpen, onClose, service }) {
   const { user, fetchUserProfile } = useUser();
+  const { toast } = useToast();
   const [rentalDuration, setRentalDuration] = useState(7); // Default 7 days
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState("");
+  const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   // Calculate total cost based on rental duration
@@ -41,8 +43,12 @@ const BookingModal = ({ isOpen, onClose, service }) => {
 
   const handleTopUp = async () => {
     const amount = parseFloat(topUpAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid amount.");
+    if (Number.isNaN(amount) || amount <= 0) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Please enter a valid amount.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -50,47 +56,58 @@ const BookingModal = ({ isOpen, onClose, service }) => {
     setShowAddMoneyModal(false);
 
     try {
-      const orderRes = await api.post(`/payments/create-order`, { amount });
+      const orderRes = await api.post('/payments/create-order', { amount });
       const orderData = orderRes.data;
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_your_key_here",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_here',
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "SubLite Wallet Top-Up",
-        description: "Add money to your wallet",
+        name: 'SubLite Wallet Top-Up',
+        description: 'Add money to your wallet',
         order_id: orderData.id,
-        handler: async function (response) {
+        async handler(response) {
           try {
-            await api.post(`/payments/verify`, {
+            await api.post('/payments/verify', {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
             await fetchUserProfile();
-            setTopUpAmount("");
-            alert("Payment successful! Your wallet has been topped up.");
+            setTopUpAmount('');
+            toast({
+              title: 'Success',
+              description: 'Payment successful! Your wallet has been topped up.',
+            });
           } catch (error) {
-            console.error("Payment verification error:", error);
-            alert("Payment verification failed. Please contact support.");
+            // console.error('Payment verification error:', error);
+            toast({
+              title: 'Payment Failed',
+              description: 'Payment verification failed. Please contact support.',
+              variant: 'destructive',
+            });
           } finally {
             setPaymentProcessing(false);
           }
         },
         prefill: {
-          name: user?.name || "",
-          email: user?.email || "",
+          name: user?.name || '',
+          email: user?.email || '',
         },
         theme: {
-          color: "#2bb6c4",
+          color: '#2bb6c4',
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error("Payment error:", error);
-      alert("Failed to initiate payment. Please try again.");
+      // console.error('Payment error:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Failed to initiate payment. Please try again.',
+        variant: 'destructive',
+      });
       setPaymentProcessing(false);
     }
   };
@@ -102,18 +119,18 @@ const BookingModal = ({ isOpen, onClose, service }) => {
     setError(null);
 
     try {
-      const response = await api.post(`/bookings`, {
+      const response = await api.post('/bookings', {
         serviceId: service._id,
-        rentalDuration: rentalDuration,
-        paymentMethod: "wallet",
+        rentalDuration,
+        paymentMethod: 'wallet',
       });
 
-      const data = response.data;
+      const { data } = response;
 
-      alert(
-        data.message ||
-          'Booking successful! Check "My Subscriptions" for details.',
-      );
+      toast({
+        title: 'Booking Successful',
+        description: data.message || 'Booking successful! Check "My Subscriptions" for details.',
+      });
       onClose();
       // Refresh the page to show updated data
       window.location.reload();
@@ -149,18 +166,23 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                 {service.serviceName}
               </h3>
               <p className="text-sm text-gray-300 mb-3 leading-relaxed">
-                {service.description || "Premium subscription service"}
+                {service.description || 'Premium subscription service'}
               </p>
               <div className="flex items-center text-sm text-gray-400">
                 <span>
-                  By{" "}
-                  {service.providerId?.name ||
-                    service.providerId?.username ||
-                    "Provider"}
+                  By
+                  {' '}
+                  {service.providerId?.name
+                    || service.providerId?.username
+                    || 'Provider'}
                 </span>
                 <span className="mx-2">•</span>
                 <span className="text-[#5ed1dc]">
-                  {service.availableSlots}/{service.maxUsers} slots available
+                  {service.availableSlots}
+                  /
+                  {service.maxUsers}
+                  {' '}
+                  slots available
                 </span>
               </div>
             </div>
@@ -178,15 +200,14 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                   <button
                     key={days}
                     onClick={() => setRentalDuration(days)}
-                    className={`p-3 rounded-2xl text-center border transition-all duration-200 ${
-                      rentalDuration === days
-                        ? "bg-[#2bb6c4] text-white border-[#2bb6c4] shadow-lg"
-                        : "bg-[#2a3343] text-gray-300 border-gray-600 hover:bg-[#343e52] hover:border-[#2bb6c4]"
+                    className={`p-3 rounded-2xl text-center border transition-all duration-200 ${rentalDuration === days
+                      ? 'bg-[#2bb6c4] text-white border-[#2bb6c4] shadow-lg'
+                      : 'bg-[#2a3343] text-gray-300 border-gray-600 hover:bg-[#343e52] hover:border-[#2bb6c4]'
                     }`}
                   >
                     <div className="font-semibold text-lg">{days}</div>
                     <div className="text-xs opacity-75">
-                      {days === 1 ? "day" : "days"}
+                      {days === 1 ? 'day' : 'days'}
                     </div>
                   </button>
                 ))}
@@ -202,9 +223,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                   min="1"
                   max="90"
                   value={rentalDuration}
-                  onChange={(e) =>
-                    setRentalDuration(parseInt(e.target.value) || 1)
-                  }
+                  onChange={(e) => setRentalDuration(parseInt(e.target.value, 10) || 1)}
                   className="w-full px-4 py-3 border border-gray-600 rounded-2xl bg-[#2a3343] text-white placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent transition-all"
                 />
               </div>
@@ -220,31 +239,39 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-300">Base monthly rate:</span>
                   <span className="text-white font-medium">
-                    ₹{service.rentalPrice}
+                    ₹
+                    {service.rentalPrice}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Daily rate:</span>
                   <span className="text-white font-medium">
-                    ₹{baseDailyRate.toFixed(2)}
+                    ₹
+                    {baseDailyRate.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Platform fee (10%):</span>
                   <span className="text-white font-medium">
-                    ₹{platformFee.toFixed(2)}
+                    ₹
+                    {platformFee.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Duration:</span>
                   <span className="text-white font-medium">
-                    {rentalDuration} days
+                    {rentalDuration}
+                    {' '}
+                    days
                   </span>
                 </div>
                 <hr className="border-gray-600" />
                 <div className="flex justify-between font-bold text-lg">
                   <span className="text-white">Total:</span>
-                  <span className="text-[#5ed1dc]">₹{totalCost}</span>
+                  <span className="text-[#5ed1dc]">
+                    ₹
+                    {totalCost}
+                  </span>
                 </div>
               </div>
             </div>
@@ -257,18 +284,20 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                   Wallet Balance:
                 </span>
                 <span
-                  className={`font-bold text-lg ${
-                    hasSufficientBalance ? "text-[#5ed1dc]" : "text-red-400"
+                  className={`font-bold text-lg ${hasSufficientBalance ? 'text-[#5ed1dc]' : 'text-red-400'
                   }`}
                 >
-                  ₹{user?.walletBalance || 0}
+                  ₹
+                  {user?.walletBalance || 0}
                 </span>
               </div>
               {!hasSufficientBalance && (
                 <div className="mt-4 p-4 bg-red-900/20 border border-red-800 rounded-2xl">
                   <p className="text-red-300 text-sm mb-3">
                     Insufficient balance. Need ₹
-                    {totalCost - (user?.walletBalance || 0)} more.
+                    {totalCost - (user?.walletBalance || 0)}
+                    {' '}
+                    more.
                   </p>
                   <button
                     onClick={() => setShowAddMoneyModal(true)}
@@ -344,21 +373,22 @@ const BookingModal = ({ isOpen, onClose, service }) => {
             <button
               onClick={handleBooking}
               disabled={
-                isLoading ||
-                !hasSufficientBalance ||
-                service.availableSlots <= 0
+                isLoading
+                || !hasSufficientBalance
+                || service.availableSlots <= 0
               }
               className="flex-1 px-4 py-3 bg-[#2bb6c4] text-white rounded-2xl hover:bg-[#1ea1b0] disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium"
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
                   Booking...
                 </>
               ) : (
                 <>
                   <CreditCard size={16} className="mr-2" />
-                  Book for ₹{totalCost}
+                  Book for ₹
+                  {totalCost}
                 </>
               )}
             </button>
@@ -385,13 +415,13 @@ const BookingModal = ({ isOpen, onClose, service }) => {
                 <button
                   key={amount}
                   onClick={() => setTopUpAmount(amount.toString())}
-                  className={`py-3 px-4 rounded-2xl font-medium transition-all duration-200 ${
-                    topUpAmount === amount.toString()
-                      ? "bg-[#2bb6c4] text-white"
-                      : "bg-[#2a3343] text-[#5ed1dc] hover:bg-[#343e52]"
+                  className={`py-3 px-4 rounded-2xl font-medium transition-all duration-200 ${topUpAmount === amount.toString()
+                    ? 'bg-[#2bb6c4] text-white'
+                    : 'bg-[#2a3343] text-[#5ed1dc] hover:bg-[#343e52]'
                   }`}
                 >
-                  ₹{amount}
+                  ₹
+                  {amount}
                 </button>
               ))}
               <button className="bg-[#2a3343] py-3 px-4 rounded-2xl text-[#5ed1dc] font-medium hover:bg-[#343e52] transition-colors">
@@ -417,9 +447,9 @@ const BookingModal = ({ isOpen, onClose, service }) => {
             <button
               onClick={handleTopUp}
               disabled={
-                paymentProcessing ||
-                !topUpAmount ||
-                parseFloat(topUpAmount) <= 0
+                paymentProcessing
+                || !topUpAmount
+                || parseFloat(topUpAmount) <= 0
               }
               className="w-full flex items-center justify-center gap-2 bg-[#2bb6c4] text-white py-4 px-6 rounded-2xl font-medium text-lg hover:bg-[#1ea1b0] disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
             >
@@ -444,7 +474,7 @@ const BookingModal = ({ isOpen, onClose, service }) => {
       )}
     </>
   );
-};
+}
 
 BookingModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

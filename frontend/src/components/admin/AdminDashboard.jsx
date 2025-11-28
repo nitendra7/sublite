@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
   BookCopy,
   DollarSign,
   TrendingUp,
-  Activity
+  Activity,
 } from 'lucide-react';
-import api from "../../utils/api";
+import api from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import Loading from '../ui/Loading';
 
-const AdminDashboard = () => {
+function AdminDashboard() {
   const { user, token } = useUser();
   const [stats, setStats] = useState({
     usersCount: 0,
@@ -19,18 +19,18 @@ const AdminDashboard = () => {
     revenueTotal: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/admin/stats`, {
+        const res = await api.get('/admin/stats', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStats(res.data);
       } catch (err) {
-        setError(err.message || "Something went wrong");
+        setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
@@ -58,14 +58,17 @@ const AdminDashboard = () => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-          Welcome back, {user?.name?.split(' ')[0] || 'Admin'}!
+          Welcome back,
+          {' '}
+          {user?.name?.split(' ')[0] || 'Admin'}
+          !
         </h1>
         <p className="text-gray-500 dark:text-gray-300">
           Here&apos;s what&apos;s happening with your platform today.
         </p>
       </div>
 
-      { /* Quick Stats Grid */ }
+      { /* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total Users */}
         <Link
@@ -80,8 +83,8 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="relative">
-              <span className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-[#e0f7fa] dark:bg-[#263238] opacity-90 z-0"></span>
-              <Users className="w-12 h-12 z-10 relative text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow-lg" aria-label="Users Icon"/>
+              <span className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-[#e0f7fa] dark:bg-[#263238] opacity-90 z-0" />
+              <Users className="w-12 h-12 z-10 relative text-[#2bb6c4] dark:text-[#5ed1dc] drop-shadow-lg" aria-label="Users Icon" />
             </div>
           </div>
         </Link>
@@ -111,7 +114,8 @@ const AdminDashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Total Revenue</p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
-                ₹{stats.revenueTotal.toFixed(2)}
+                ₹
+                {stats.revenueTotal.toFixed(2)}
               </p>
             </div>
             <DollarSign className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
@@ -158,7 +162,7 @@ const AdminDashboard = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Analytics & Insights</h2>
-              <TrendingUp size={32} className="text-[#2bb6c4] dark:text-[#5ed1dc]" aria-label="Analytics Icon"/>
+              <TrendingUp size={32} className="text-[#2bb6c4] dark:text-[#5ed1dc]" aria-label="Analytics Icon" />
             </div>
             <p className="text-gray-700 dark:text-gray-200 mb-6">
               View detailed analytics and platform performance metrics.
@@ -174,6 +178,6 @@ const AdminDashboard = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AdminDashboard;

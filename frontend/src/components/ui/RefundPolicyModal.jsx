@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
-import { X, Clock, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  X, Clock, Shield, AlertCircle, CheckCircle,
+} from 'lucide-react';
 
-const RefundPolicyModal = ({ isOpen, onClose }) => {
+function RefundPolicyModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
@@ -143,11 +145,11 @@ const RefundPolicyModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
-};
+}
 
 RefundPolicyModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
 
 export default RefundPolicyModal;

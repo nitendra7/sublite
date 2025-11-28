@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Star, ThumbsUp, PlusCircle, Edit, Trash2, Loader2, MessageSquare } from 'lucide-react';
+import {
+  Star, ThumbsUp, PlusCircle, Edit, Trash2, Loader2, MessageSquare,
+} from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import Loading from '../components/ui/Loading';
+import { useToast } from '../hooks/use-toast';
 import api from '../utils/api';
 
-const ReviewPage = () => {
+function ReviewPage() {
   const { user, token } = useUser();
+  const { toast } = useToast();
   const [reviews, setReviews] = useState([]);
   const [reviewableBookings, setReviewableBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,16 +32,15 @@ const ReviewPage = () => {
       setError(null);
 
       try {
-        const reviewsResponse = await api.get(`/reviews/my/reviews`);
+        const reviewsResponse = await api.get('/reviews/my/reviews');
         const reviewsData = reviewsResponse.data;
 
-        const bookingsResponse = await api.get(`/reviews/my/reviewable-bookings`);
+        const bookingsResponse = await api.get('/reviews/my/reviewable-bookings');
         const bookingsData = bookingsResponse.data;
 
         setReviews(reviewsData);
         setReviewableBookings(bookingsData);
       } catch (err) {
-        console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);
@@ -51,13 +54,13 @@ const ReviewPage = () => {
     try {
       const response = await api.patch(`/reviews/${reviewId}/helpful`);
       const { helpfulCount } = response.data;
-      setReviews(prevReviews =>
-        prevReviews.map(review =>
-          review._id === reviewId ? { ...review, helpfulCount } : review
-        )
-      );
+      setReviews((prevReviews) => prevReviews.map((review) => (review._id === reviewId ? { ...review, helpfulCount } : review)));
     } catch (err) {
-      console.error('Error marking review as helpful:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to mark review as helpful',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -82,7 +85,11 @@ const ReviewPage = () => {
 
   const handleSaveReview = async (reviewData) => {
     if (!token) {
-      alert('Please log in to submit a review');
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to submit a review',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -90,7 +97,7 @@ const ReviewPage = () => {
     try {
       let response;
       if (modalType === 'add') {
-        response = await api.post(`/reviews`, reviewData);
+        response = await api.post('/reviews', reviewData);
       } else {
         response = await api.put(`/reviews/${currentReview._id}`, reviewData);
       }
@@ -98,35 +105,48 @@ const ReviewPage = () => {
       const savedReview = response.data;
 
       if (modalType === 'add') {
-        setReviews(prev => [savedReview, ...prev]);
-        setReviewableBookings(prev => prev.filter(booking => booking._id !== selectedBookingToReview));
+        setReviews((prev) => [savedReview, ...prev]);
+        setReviewableBookings((prev) => prev.filter((booking) => booking._id !== selectedBookingToReview));
       } else {
-        setReviews(prev => prev.map(review =>
-          review._id === currentReview._id ? savedReview : review
-        ));
+        setReviews((prev) => prev.map((review) => (review._id === currentReview._id ? savedReview : review)));
       }
       closeReviewModal();
-      alert(modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!');
+      closeReviewModal();
+      toast({
+        title: 'Success',
+        description: modalType === 'add' ? 'Review submitted successfully!' : 'Review updated successfully!',
+      });
     } catch (err) {
-      console.error('Error saving review:', err);
-      alert(err.message || 'Failed to save review');
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save review',
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
+    // eslint-disable-next-line no-alert
     if (!window.confirm('Are you sure you want to delete this review?')) {
       return;
     }
 
     try {
       await api.delete(`/reviews/${reviewId}`);
-      setReviews(prev => prev.filter(review => review._id !== reviewId));
-      alert('Review deleted successfully!');
+      setReviews((prev) => prev.filter((review) => review._id !== reviewId));
+      setReviews((prev) => prev.filter((review) => review._id !== reviewId));
+      toast({
+        title: 'Success',
+        description: 'Review deleted successfully!',
+      });
     } catch (err) {
-      console.error('Error deleting review:', err);
-      alert(err.message || 'Failed to delete review');
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete review',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -138,7 +158,10 @@ const ReviewPage = () => {
     return (
       <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
         <div className="text-center text-red-500 dark:text-red-400">
-          <p>Error: {error}</p>
+          <p>
+            Error:
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -159,10 +182,13 @@ const ReviewPage = () => {
           </div>
           {reviewableBookings.length > 0 && (
             <button
+              type="button"
               onClick={openAddModal}
               className="flex items-center gap-2 bg-[#2bb6c4] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#1ea1b0] transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              <PlusCircle size={20} /> Add Review
+              <PlusCircle size={20} />
+              {' '}
+              Add Review
             </button>
           )}
         </div>
@@ -189,10 +215,9 @@ const ReviewPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Rating</p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-                {reviews.length > 0 
+                {reviews.length > 0
                   ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
-                  : '0.0'
-                }
+                  : '0.0'}
               </p>
             </div>
             <div className="w-12 h-12 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 rounded-xl flex items-center justify-center">
@@ -249,19 +274,25 @@ const ReviewPage = () => {
                     <Star
                       key={i}
                       size={18}
-                      fill={i < review.rating ? "#FFD700" : "none"}
-                      stroke={i < review.rating ? "#FFD700" : "currentColor"}
+                      fill={i < review.rating ? '#FFD700' : 'none'}
+                      stroke={i < review.rating ? '#FFD700' : 'currentColor'}
                       className={`${i < review.rating ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-600'}`}
                     />
                   ))}
-                  <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">({review.rating}/5)</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
+                    (
+                    {review.rating}
+                    /5)
+                  </span>
                 </div>
               </div>
 
               {/* Review Comment */}
               {review.comment && (
                 <p className="text-gray-700 dark:text-gray-200 text-base mb-4 italic leading-relaxed">
-                  &quot;{review.comment}&quot;
+                  &quot;
+                  {review.comment}
+                  &quot;
                 </p>
               )}
 
@@ -269,22 +300,37 @@ const ReviewPage = () => {
               <div className="mb-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Service Quality:</span>
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{review.serviceQuality}/5</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                    {review.serviceQuality}
+                    /5
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Response Time:</span>
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{review.responseTime}/5</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                    {review.responseTime}
+                    /5
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Overall Experience:</span>
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{review.overallExperience}/5</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                    {review.overallExperience}
+                    /5
+                  </span>
                 </div>
               </div>
 
               {/* Reviewer and Provider Info */}
               <div className="mb-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                <p>Reviewed by: <span className="font-medium text-gray-800 dark:text-gray-200">{review.clientId?.name || 'User'}</span></p>
-                <p>Provider: <span className="font-medium text-gray-800 dark:text-gray-200">{review.providerId?.name || 'Provider'}</span></p>
+                <p>
+                  Reviewed by:
+                  <span className="font-medium text-gray-800 dark:text-gray-200">{review.clientId?.name || 'User'}</span>
+                </p>
+                <p>
+                  Provider:
+                  <span className="font-medium text-gray-800 dark:text-gray-200">{review.providerId?.name || 'Provider'}</span>
+                </p>
               </div>
 
               {/* Verified and Helpful Count */}
@@ -300,10 +346,13 @@ const ReviewPage = () => {
                   </span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleHelpful(review._id)}
                   className="flex items-center gap-1 text-gray-600 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 transition-colors"
                 >
-                  <ThumbsUp size={16} /> {review.helpfulCount || 0}
+                  <ThumbsUp size={16} />
+                  {' '}
+                  {review.helpfulCount || 0}
                 </button>
               </div>
 
@@ -311,16 +360,22 @@ const ReviewPage = () => {
               {user && review.clientId && review.clientId._id === user._id && (
                 <div className="mt-4 flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
+                    type="button"
                     onClick={() => openEditModal(review)}
                     className="flex items-center gap-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 dark:bg-blue-800 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors"
                   >
-                    <Edit size={14} /> Edit
+                    <Edit size={14} />
+                    {' '}
+                    Edit
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDeleteReview(review._id)}
                     className="flex items-center gap-1 px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700 transition-colors"
                   >
-                    <Trash2 size={14} /> Delete
+                    <Trash2 size={14} />
+                    {' '}
+                    Delete
                   </button>
                 </div>
               )}
@@ -337,20 +392,21 @@ const ReviewPage = () => {
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
                 {modalType === 'add' ? 'Add Review' : 'Edit Review'}
               </h2>
-              
+
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const reviewData = {
                   bookingId: formData.get('bookingToReview'),
-                  rating: parseInt(formData.get('rating')),
+                  rating: parseInt(formData.get('rating'), 10),
                   comment: formData.get('comment'),
-                  serviceQuality: parseInt(formData.get('serviceQuality')),
-                  responseTime: parseInt(formData.get('responseTime')),
-                  overallExperience: parseInt(formData.get('overallExperience')),
+                  serviceQuality: parseInt(formData.get('serviceQuality'), 10),
+                  responseTime: parseInt(formData.get('responseTime'), 10),
+                  overallExperience: parseInt(formData.get('overallExperience'), 10),
                 };
                 handleSaveReview(reviewData);
-              }}>
+              }}
+              >
                 {/* Dropdown to select a completed booking to review */}
                 {modalType === 'add' && (
                   <div className="mb-4">
@@ -364,18 +420,26 @@ const ReviewPage = () => {
                       required
                     >
                       <option value="">-- Select a completed service --</option>
-                      {reviewableBookings.map(booking => {
+                      {reviewableBookings.map((booking) => {
                         const startDate = new Date(booking.bookingDetails?.startDate).toLocaleDateString('en-US', {
                           month: 'short',
-                          day: 'numeric'
+                          day: 'numeric',
                         });
                         const endDate = new Date(booking.bookingDetails?.endDate).toLocaleDateString('en-US', {
                           month: 'short',
-                          day: 'numeric'
+                          day: 'numeric',
                         });
                         return (
                           <option key={booking._id} value={booking._id}>
-                            {booking.serviceId?.serviceName} (by {booking.providerId?.name}) - Used {startDate} to {endDate}
+                            {booking.serviceId?.serviceName}
+                            {' '}
+                            (by
+                            {booking.providerId?.name}
+                            ) - Used
+                            {startDate}
+                            {' '}
+                            to
+                            {endDate}
                           </option>
                         );
                       })}
@@ -422,7 +486,7 @@ const ReviewPage = () => {
                     rows="3"
                     defaultValue={currentReview?.comment || ''}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent outline-none transition-all duration-200 resize-none"
-                  ></textarea>
+                  />
                 </div>
 
                 {/* Detailed Ratings */}
@@ -480,8 +544,9 @@ const ReviewPage = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
+
                     ) : (
-                      modalType === 'add' ? 'Submit Review' : 'Update Review'
+                      <span>{modalType === 'add' ? 'Submit Review' : 'Update Review'}</span>
                     )}
                   </button>
                   <button
@@ -499,6 +564,6 @@ const ReviewPage = () => {
       )}
     </div>
   );
-};
+}
 
 export default ReviewPage;

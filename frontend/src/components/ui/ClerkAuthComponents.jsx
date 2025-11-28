@@ -15,7 +15,7 @@ export function AuthHeader() {
           Sublite
         </h1>
       </div>
-      
+
       <div className="flex items-center space-x-4">
         <SignedOut>
           <div className="flex items-center space-x-2">
@@ -31,13 +31,13 @@ export function AuthHeader() {
             </SignUpButton>
           </div>
         </SignedOut>
-        
+
         <SignedIn>
-          <UserButton 
+          <UserButton
             afterSignOutUrl="/"
             appearance={{
               elements: {
-                avatarBox: "w-8 h-8",
+                avatarBox: 'w-8 h-8',
               },
             }}
           />

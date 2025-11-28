@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Save,
   ArrowLeft,
@@ -14,34 +14,34 @@ import {
   Eye,
   EyeOff,
   CheckCircle,
-} from "lucide-react";
-import api from "../utils/api";
+} from 'lucide-react';
+import api from '../utils/api';
 
-const AddServicePage = () => {
+function AddServicePage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showLocationFields, setShowLocationFields] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
-    serviceName: "",
-    serviceType: "Streaming",
-    description: "",
-    originalPrice: "",
-    maxUsers: "",
-    subscriptionExpiry: "",
-    accessInstructionsTemplate: "",
-    features: "",
+    serviceName: '',
+    serviceType: 'Streaming',
+    description: '',
+    originalPrice: '',
+    maxUsers: '',
+    subscriptionExpiry: '',
+    accessInstructionsTemplate: '',
+    features: '',
     credentials: {
-      username: "",
-      password: "",
-      profileName: "",
+      username: '',
+      password: '',
+      profileName: '',
     },
-    terms: "",
+    terms: '',
     location: {
-      city: "",
-      state: "",
-      country: "",
+      city: '',
+      state: '',
+      country: '',
     },
   });
 
@@ -55,32 +55,32 @@ const AddServicePage = () => {
 
     if (step === 1) {
       if (!formData.serviceName.trim()) {
-        errors.serviceName = "Service name is required";
+        errors.serviceName = 'Service name is required';
       }
       if (!formData.description.trim()) {
-        errors.description = "Description is required";
+        errors.description = 'Description is required';
       }
     }
 
     if (step === 2) {
       if (!formData.originalPrice || formData.originalPrice <= 0) {
-        errors.originalPrice = "Valid price is required";
+        errors.originalPrice = 'Valid price is required';
       }
       if (
-        !formData.maxUsers ||
-        formData.maxUsers <= 0 ||
-        formData.maxUsers > 10
+        !formData.maxUsers
+        || formData.maxUsers <= 0
+        || formData.maxUsers > 10
       ) {
-        errors.maxUsers = "Max users should be between 1-10";
+        errors.maxUsers = 'Max users should be between 1-10';
       }
     }
 
     if (step === 3) {
       if (!formData.credentials.username.trim()) {
-        errors.username = "Username/Email is required";
+        errors.username = 'Username/Email is required';
       }
       if (!formData.credentials.password.trim()) {
-        errors.password = "Password is required";
+        errors.password = 'Password is required';
       }
     }
 
@@ -152,33 +152,33 @@ const AddServicePage = () => {
       const submitData = {
         ...formData,
         features: formData.features
-          .split(",")
+          .split(',')
           .map((f) => f.trim())
           .filter((f) => f),
       };
 
       // Don't send location if not provided
       if (
-        !showLocationFields ||
-        (!formData.location.city &&
-          !formData.location.state &&
-          !formData.location.country)
+        !showLocationFields
+        || (!formData.location.city
+          && !formData.location.state
+          && !formData.location.country)
       ) {
         delete submitData.location;
       }
 
-      const response = await api.post(`/services`, submitData);
+      const response = await api.post('/services', submitData);
       const result = response.data;
 
       setSuccess(
         `Service "${result.serviceName}" added successfully! The rental price is ₹${result.rentalPrice}/slot.`,
       );
       setTimeout(() => {
-        navigate("/dashboard/subscriptions");
+        navigate('/dashboard/subscriptions');
       }, 3000);
     } catch (err) {
       setError(
-        err.response?.data?.message || err.message || "Something went wrong",
+        err.response?.data?.message || err.message || 'Something went wrong',
       );
     } finally {
       setIsLoading(false);
@@ -186,14 +186,14 @@ const AddServicePage = () => {
   };
 
   const getStepIcon = (step) => {
-    if (step < currentStep)
-      return <CheckCircle className="w-5 h-5 text-green-500" />;
-    if (step === currentStep)
+    if (step < currentStep) return <CheckCircle className="w-5 h-5 text-green-500" />;
+    if (step === currentStep) {
       return (
         <div className="w-5 h-5 bg-[#2bb6c4] rounded-full flex items-center justify-center text-white text-xs font-bold">
           {step}
         </div>
       );
+    }
     return (
       <div className="w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 text-xs font-bold">
         {step}
@@ -201,13 +201,12 @@ const AddServicePage = () => {
     );
   };
 
-  const calculatedRentalPrice =
-    formData.originalPrice && formData.maxUsers
-      ? Math.ceil(
-          (parseFloat(formData.originalPrice) / parseInt(formData.maxUsers)) *
-            1.1,
-        )
-      : 0;
+  const calculatedRentalPrice = formData.originalPrice && formData.maxUsers
+    ? Math.ceil(
+      (parseFloat(formData.originalPrice) / parseInt(formData.maxUsers, 10))
+      * 1.1,
+    )
+    : 0;
 
   return (
     <div className="p-4 md:p-8 min-h-full bg-gray-50 dark:bg-gray-900">
@@ -239,25 +238,25 @@ const AddServicePage = () => {
             <div className="flex items-center gap-2">
               {getStepIcon(1)}
               <span
-                className={`text-sm font-medium ${currentStep >= 1 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-sm font-medium ${currentStep >= 1 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 Service Info
               </span>
             </div>
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4"></div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4" />
             <div className="flex items-center gap-2">
               {getStepIcon(2)}
               <span
-                className={`text-sm font-medium ${currentStep >= 2 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-sm font-medium ${currentStep >= 2 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 Pricing
               </span>
             </div>
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4"></div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600 mx-4" />
             <div className="flex items-center gap-2">
               {getStepIcon(3)}
               <span
-                className={`text-sm font-medium ${currentStep >= 3 ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-sm font-medium ${currentStep >= 3 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 Credentials & Publish
               </span>
@@ -288,10 +287,9 @@ const AddServicePage = () => {
                       value={formData.serviceName}
                       onChange={handleChange}
                       placeholder="e.g., Netflix Premium Family Plan"
-                      className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                        fieldErrors.serviceName
-                          ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                      className={`w-full px-4 py-3 rounded-lg border transition-colors ${fieldErrors.serviceName
+                        ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                       } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                     />
                     {fieldErrors.serviceName && (
@@ -331,10 +329,9 @@ const AddServicePage = () => {
                     onChange={handleChange}
                     placeholder="Describe what's included, plan benefits, and any important details..."
                     rows="4"
-                    className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
-                      fieldErrors.description
-                        ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                    className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${fieldErrors.description
+                      ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                     } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                   />
                   {fieldErrors.description && (
@@ -390,10 +387,9 @@ const AddServicePage = () => {
                         placeholder="999"
                         min="1"
                         step="0.01"
-                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
-                          fieldErrors.originalPrice
-                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${fieldErrors.originalPrice
+                          ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                         } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                       />
                     </div>
@@ -418,10 +414,9 @@ const AddServicePage = () => {
                         placeholder="4"
                         min="1"
                         max="10"
-                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
-                          fieldErrors.maxUsers
-                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${fieldErrors.maxUsers
+                          ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                         } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                       />
                     </div>
@@ -439,7 +434,10 @@ const AddServicePage = () => {
                       <Info className="w-5 h-5 text-[#2bb6c4] dark:text-[#5ed1dc]" />
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          Calculated Rental Price: ₹{calculatedRentalPrice} per
+                          Calculated Rental Price: ₹
+                          {calculatedRentalPrice}
+                          {' '}
+                          per
                           slot
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -462,7 +460,7 @@ const AddServicePage = () => {
                         name="subscriptionExpiry"
                         value={formData.subscriptionExpiry}
                         onChange={handleChange}
-                        min={new Date().toISOString().split("T")[0]}
+                        min={new Date().toISOString().split('T')[0]}
                         className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent"
                       />
                     </div>
@@ -525,10 +523,9 @@ const AddServicePage = () => {
                         value={formData.credentials.username}
                         onChange={handleCredentialChange}
                         placeholder="your.email@example.com"
-                        className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                          fieldErrors.username
-                            ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                        className={`w-full px-4 py-3 rounded-lg border transition-colors ${fieldErrors.username
+                          ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                         } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                       />
                       {fieldErrors.username && (
@@ -544,15 +541,14 @@ const AddServicePage = () => {
                       </label>
                       <div className="relative">
                         <input
-                          type={showPassword ? "text" : "password"}
+                          type={showPassword ? 'text' : 'password'}
                           name="password"
                           value={formData.credentials.password}
                           onChange={handleCredentialChange}
                           placeholder="Enter account password"
-                          className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors ${
-                            fieldErrors.password
-                              ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10"
-                              : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                          className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors ${fieldErrors.password
+                            ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/10'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                           } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[#2bb6c4] focus:border-transparent`}
                         />
                         <button
@@ -635,25 +631,21 @@ const AddServicePage = () => {
                       <input
                         type="checkbox"
                         checked={showLocationFields}
-                        onChange={(e) =>
-                          setShowLocationFields(e.target.checked)
-                        }
+                        onChange={(e) => setShowLocationFields(e.target.checked)}
                         className="sr-only"
                       />
                       <div
-                        className={`w-11 h-6 rounded-full transition-colors ${
-                          showLocationFields
-                            ? "bg-[#2bb6c4]"
-                            : "bg-gray-300 dark:bg-gray-600"
+                        className={`w-11 h-6 rounded-full transition-colors ${showLocationFields
+                          ? 'bg-[#2bb6c4]'
+                          : 'bg-gray-300 dark:bg-gray-600'
                         }`}
                       >
                         <div
-                          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                            showLocationFields
-                              ? "translate-x-6"
-                              : "translate-x-1"
+                          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${showLocationFields
+                            ? 'translate-x-6'
+                            : 'translate-x-1'
                           } mt-1`}
-                        ></div>
+                        />
                       </div>
                     </div>
                   </label>
@@ -727,7 +719,7 @@ const AddServicePage = () => {
               </button>
             )}
 
-            <div className="flex-1"></div>
+            <div className="flex-1" />
 
             {currentStep < 3 && (
               <button
@@ -748,7 +740,7 @@ const AddServicePage = () => {
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Publishing...
                   </>
                 ) : (
@@ -764,6 +756,6 @@ const AddServicePage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AddServicePage;

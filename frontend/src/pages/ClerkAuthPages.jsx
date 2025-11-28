@@ -1,14 +1,14 @@
-import { useEffect } from "react";
-import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
-import { 
-  SignIn, 
-  SignUp, 
+import { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import {
+  SignIn,
+  SignUp,
   useAuth,
-  useUser as useClerkUser
-} from "@clerk/clerk-react";
+  useUser as useClerkUser,
+} from '@clerk/clerk-react';
 
-import { useUser } from "../context/UserContext";
+import { useUser } from '../context/UserContext';
 
 ClerkAuthPage.propTypes = {
   isLogin: PropTypes.bool,
@@ -36,31 +36,31 @@ export default function ClerkAuthPage({ isLogin = true }) {
   // Clerk appearance customization to match your design
   const clerkAppearance = {
     layout: {
-      logoImageUrl: "/logos/logo.png",
+      logoImageUrl: '/logos/logo.png',
       showOptionalFields: false,
     },
     elements: {
-      formButtonPrimary: 
-        "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2",
-      card: "shadow-xl border-0 bg-white dark:bg-gray-800 rounded-lg",
-      headerTitle: "text-2xl font-bold text-gray-900 dark:text-white mb-2",
-      headerSubtitle: "text-gray-600 dark:text-gray-400 mb-6",
-      socialButtonsBlockButton: "border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 rounded-lg mb-2",
-      dividerLine: "bg-gray-200 dark:bg-gray-600",
-      formFieldInput: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
-      footerActionLink: "text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300",
-      formFieldLabel: "block mb-2 text-sm font-medium text-gray-900 dark:text-white",
-      identityPreviewText: "text-gray-600 dark:text-gray-400",
-      formResendCodeLink: "text-blue-600 hover:text-blue-800 dark:text-blue-400",
+      formButtonPrimary:
+        'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2',
+      card: 'shadow-xl border-0 bg-white dark:bg-gray-800 rounded-lg',
+      headerTitle: 'text-2xl font-bold text-gray-900 dark:text-white mb-2',
+      headerSubtitle: 'text-gray-600 dark:text-gray-400 mb-6',
+      socialButtonsBlockButton: 'border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 rounded-lg mb-2',
+      dividerLine: 'bg-gray-200 dark:bg-gray-600',
+      formFieldInput: 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+      footerActionLink: 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
+      formFieldLabel: 'block mb-2 text-sm font-medium text-gray-900 dark:text-white',
+      identityPreviewText: 'text-gray-600 dark:text-gray-400',
+      formResendCodeLink: 'text-blue-600 hover:text-blue-800 dark:text-blue-400',
     },
     variables: {
-      colorPrimary: "#3b82f6",
-      colorBackground: "#ffffff",
-      colorInputBackground: "#f9fafb",
-      colorInputText: "#111827",
+      colorPrimary: '#3b82f6',
+      colorBackground: '#ffffff',
+      colorInputBackground: '#f9fafb',
+      colorInputText: '#111827',
       fontFamily: '"Inter", sans-serif',
-      borderRadius: "0.5rem",
-    }
+      borderRadius: '0.5rem',
+    },
   };
 
   return (
@@ -76,7 +76,7 @@ export default function ClerkAuthPage({ isLogin = true }) {
                 src="/logos/logo.png"
                 alt="Sublite"
                 onError={(e) => {
-                  e.target.src = "https://placehold.co/48x48/2bb6c4/ffffff?text=SL";
+                  e.target.src = 'https://placehold.co/48x48/2bb6c4/ffffff?text=SL';
                 }}
               />
               <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">
@@ -107,7 +107,7 @@ export default function ClerkAuthPage({ isLogin = true }) {
       <div className="pt-16 flex min-h-screen">
         {/* Left side - Image/Branding */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+          <div className="absolute inset-0 bg-black bg-opacity-20" />
           <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
             <div className="max-w-md text-center">
               <h1 className="text-4xl font-bold mb-6">
@@ -142,21 +142,19 @@ export default function ClerkAuthPage({ isLogin = true }) {
             <div className="mb-6 lg:hidden">
               <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
-                  onClick={() => window.location.href = '/login'}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    isLogin 
-                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow' 
-                      : 'text-gray-600 dark:text-gray-400'
+                  onClick={() => { window.location.href = '/login'; }}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${isLogin
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
+                    : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={() => window.location.href = '/register'}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    !isLogin 
-                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow' 
-                      : 'text-gray-600 dark:text-gray-400'
+                  onClick={() => { window.location.href = '/register'; }}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${!isLogin
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
+                    : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   Sign Up
@@ -167,7 +165,7 @@ export default function ClerkAuthPage({ isLogin = true }) {
             {/* Clerk Auth Components */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-1">
               {isLogin ? (
-                <SignIn 
+                <SignIn
                   appearance={clerkAppearance}
                   redirectUrl="/dashboard"
                   signUpUrl="/register"
@@ -175,7 +173,7 @@ export default function ClerkAuthPage({ isLogin = true }) {
                   path="/login"
                 />
               ) : (
-                <SignUp 
+                <SignUp
                   appearance={clerkAppearance}
                   redirectUrl="/dashboard"
                   signInUrl="/login"
@@ -188,11 +186,14 @@ export default function ClerkAuthPage({ isLogin = true }) {
             {/* Footer */}
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                By continuing, you agree to our{' '}
+                By continuing, you agree to our
+                {' '}
                 <a href="/terms" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
                   Terms of Service
-                </a>{' '}
-                and{' '}
+                </a>
+                {' '}
+                and
+                {' '}
                 <a href="/privacy" className="text-blue-600 hover:text-blue-800 dark:text-blue-400">
                   Privacy Policy
                 </a>

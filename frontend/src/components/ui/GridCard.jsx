@@ -1,4 +1,4 @@
-import { Users, Star } from "lucide-react";
+import { Users, Star } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 /**
@@ -9,42 +9,42 @@ import PropTypes from 'prop-types';
  * - onBook: function to call when "Book Now" is clicked
  * - disableBook: disables the Book button
  */
-const GridCard = ({
+function GridCard({
   service,
   existingBooking,
   onBook,
   disableBook = false,
   animationDelay = 0,
   disableFullClick = false,
-}) => {
+}) {
   const displayAvailableSlots = Math.min(service.availableSlots, service.maxUsers);
 
   return (
     <div
       className={
-        "relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 animate-fade-in flex flex-col h-full " +
-        (!disableFullClick && !disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))
-          ? "hover:shadow-xl hover:scale-[1.02] cursor-pointer"
-          : (disableFullClick ? "" : "cursor-not-allowed"))
+        `relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 animate-fade-in flex flex-col h-full ${
+          !disableFullClick && !disableBook && !(existingBooking && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus))
+            ? 'hover:shadow-xl hover:scale-[1.02] cursor-pointer'
+            : (disableFullClick ? '' : 'cursor-not-allowed')}`
       }
       style={{ animationDelay: `${animationDelay}ms` }}
       {...(!disableFullClick && {
         onClick: () => {
-          if (!disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))) {
+          if (!disableBook && !(existingBooking && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus))) {
             onBook(service);
           }
         },
-        tabIndex: (!disableBook && !(existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus))) ? 0 : -1,
-        role: "button",
-        "aria-disabled": disableBook || (existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus)),
+        tabIndex: (!disableBook && !(existingBooking && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus))) ? 0 : -1,
+        role: 'button',
+        'aria-disabled': disableBook || (existingBooking && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus)),
       })}
     >
       {/* Status Badge - top right */}
       <span
         className={`absolute top-4 right-4 px-1 py-1 rounded-full text-xs font-medium z-10 ${
-          service.serviceStatus === "active"
-            ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-            : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+          service.serviceStatus === 'active'
+            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
         }`}
       >
         {service.serviceStatus}
@@ -59,13 +59,13 @@ const GridCard = ({
 
         {/* Description */}
         <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 leading-relaxed">
-          {service.description || "No description available"}
+          {service.description || 'No description available'}
         </p>
 
         {/* Features (always centered in min-height area for alignment) */}
         <div className="flex flex-wrap items-center gap-2 mb-4 min-h-[56px]">
-          {service.features && service.features.length > 0 &&
-            service.features.map((feature, idx) => (
+          {service.features && service.features.length > 0
+            && service.features.map((feature, idx) => (
               <span
                 key={idx}
                 className="px-3 py-1 bg-[#2bb6c4]/10 dark:bg-[#5ed1dc]/10 text-[#2bb6c4] dark:text-[#5ed1dc] rounded-full text-xs font-medium"
@@ -79,13 +79,19 @@ const GridCard = ({
         <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <Users size={16} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-            {displayAvailableSlots}/{service.maxUsers} slots
+            {displayAvailableSlots}
+            /
+            {service.maxUsers}
+            {' '}
+            slots
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
           <Star size={14} className="text-[#2bb6c4] dark:text-[#5ed1dc]" />
           <span className="text-sm">
-            Provider: {service.providerId?.name || service.providerId?.username || "Unknown"}
+            Provider:
+            {' '}
+            {service.providerId?.name || service.providerId?.username || 'Unknown'}
           </span>
         </div>
       </div>
@@ -94,13 +100,14 @@ const GridCard = ({
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 mt-2">
         <div className="text-center">
           <p className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">
-            ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
+            ₹
+            {((service.rentalPrice / 28) * 1.1).toFixed(2)}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             per day (incl. commission)
           </p>
         </div>
-        {existingBooking && ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
+        {existingBooking && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus) ? (
           <button
             disabled
             className="px-6 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all duration-200"
@@ -113,17 +120,17 @@ const GridCard = ({
             disabled={disableBook}
             className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
               !disableBook
-                ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
             }`}
           >
-            {service.availableSlots > 0 ? "Book Now" : "Sold Out"}
+            {service.availableSlots > 0 ? 'Book Now' : 'Sold Out'}
           </button>
         )}
       </div>
     </div>
   );
-};
+}
 
 // PropTypes validation
 GridCard.propTypes = {

@@ -11,7 +11,7 @@ import {
   KeyRoundIcon,
   ServerCogIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 
 const sidebarLinks = [
@@ -74,22 +74,23 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
                     to={link.to}
                     className={`group flex items-center w-full text-left transition-all duration-200 rounded-xl p-3 relative overflow-hidden
                       ${active
-                        ? 'bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
+                      ? 'bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
                       }
                       ${sidebarOpen ? 'justify-start' : 'justify-center'}
                     `}
                   >
                     {/* Active indicator */}
                     {active && (
-                      <div className="absolute -left-2 top-0 bottom-0 w-1 bg-white"></div>
+                      <div className="absolute -left-2 top-0 bottom-0 w-1 bg-white" />
                     )}
 
                     <span className={`text-lg transition-all duration-200 ${
                       active
                         ? 'text-white'
                         : 'text-gray-500 dark:text-gray-400 group-hover:text-[#2bb6c4] dark:group-hover:text-[#5ed1dc]'
-                    }`}>
+                    }`}
+                    >
                       <Icon size={18} />
                     </span>
 
@@ -99,7 +100,7 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
 
                     {/* hover effect */}
                     {!active && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                     )}
                   </Link>
                 </li>
@@ -116,7 +117,8 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
             <div className="text-center">
               <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Admin Panel</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                Manage your platform<br />
+                Manage your platform
+                <br />
                 <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium">sublite.app</span>
               </p>
             </div>
@@ -138,7 +140,7 @@ function AdminSidebar({ sidebarOpen, handleSidebarToggle }) {
 
 AdminSidebar.propTypes = {
   sidebarOpen: PropTypes.bool.isRequired,
-  handleSidebarToggle: PropTypes.func.isRequired
+  handleSidebarToggle: PropTypes.func.isRequired,
 };
 
 export default AdminSidebar;

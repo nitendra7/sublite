@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
-const SystemSettings = () => {
+function SystemSettings() {
+  const { toast } = useToast();
   const [settings, setSettings] = useState({
     siteName: 'Service Platform',
     siteDescription: 'Professional service booking platform',
@@ -19,13 +21,13 @@ const SystemSettings = () => {
     enableCache: true,
     cacheExpiration: 3600,
     enableLogging: true,
-    logLevel: 'info'
+    logLevel: 'info',
   });
 
   const [saving, setSaving] = useState(false);
 
   const handleChange = (key, value) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
@@ -33,13 +35,21 @@ const SystemSettings = () => {
     try {
       // API call would go here
       // await api.put('/admin/settings/system', settings);
-      
+
       setTimeout(() => {
-        alert('System settings saved successfully!');
+        toast({
+          title: 'Success',
+          description: 'System settings saved successfully!',
+        });
         setSaving(false);
       }, 1000);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      // console.error('Error saving settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
       setSaving(false);
     }
   };
@@ -112,7 +122,7 @@ const SystemSettings = () => {
             <input
               type="number"
               value={settings.sessionTimeout}
-              onChange={(e) => handleChange('sessionTimeout', parseInt(e.target.value))}
+              onChange={(e) => handleChange('sessionTimeout', parseInt(e.target.value, 10))}
               className="w-full p-2 border rounded"
             />
           </div>
@@ -185,7 +195,7 @@ const SystemSettings = () => {
             <input
               type="number"
               value={settings.itemsPerPage}
-              onChange={(e) => handleChange('itemsPerPage', parseInt(e.target.value))}
+              onChange={(e) => handleChange('itemsPerPage', parseInt(e.target.value, 10))}
               className="w-full p-2 border rounded"
             />
           </div>
@@ -194,7 +204,7 @@ const SystemSettings = () => {
             <input
               type="number"
               value={settings.maxFileUploadSize}
-              onChange={(e) => handleChange('maxFileUploadSize', parseInt(e.target.value))}
+              onChange={(e) => handleChange('maxFileUploadSize', parseInt(e.target.value, 10))}
               className="w-full p-2 border rounded"
             />
           </div>
@@ -213,7 +223,7 @@ const SystemSettings = () => {
               <input
                 type="number"
                 value={settings.cacheExpiration}
-                onChange={(e) => handleChange('cacheExpiration', parseInt(e.target.value))}
+                onChange={(e) => handleChange('cacheExpiration', parseInt(e.target.value, 10))}
                 className="w-full p-2 border rounded"
               />
             </div>
@@ -264,6 +274,6 @@ const SystemSettings = () => {
       </div>
     </div>
   );
-};
+}
 
 export default SystemSettings;

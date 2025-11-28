@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
-import { BookOpen, Users, Plus, TrendingUp, Star } from "lucide-react";
-import { Link } from "react-router-dom";
-import ProvidedServicesList from "../components/subscriptions/ProvidedServicesList";
-import JoinedSubscriptionsList from "../components/subscriptions/JoinedSubscriptionsList";
+import { useState, useEffect } from 'react';
+import {
+  BookOpen, Users, Plus, TrendingUp, Star,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import ProvidedServicesList from '../components/subscriptions/ProvidedServicesList';
+import JoinedSubscriptionsList from '../components/subscriptions/JoinedSubscriptionsList';
 
-import api from "../utils/api";
-import Loading from "../components/ui/Loading";
+import api from '../utils/api';
+import Loading from '../components/ui/Loading';
 
-const SubscriptionsPage = () => {
+function SubscriptionsPage() {
   const [providedServices, setProvidedServices] = useState([]);
   const [joinedSubscriptions, setJoinedSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +19,8 @@ const SubscriptionsPage = () => {
     const fetchData = async () => {
       try {
         // Fetch services provided by the user
-        const responseProvided = await api.get(`/services/my-services`);
-        const responseJoined = await api.get(`/bookings/my-joined`);
+        const responseProvided = await api.get('/services/my-services');
+        const responseJoined = await api.get('/bookings/my-joined');
 
         setProvidedServices(responseProvided.data);
         setJoinedSubscriptions(responseJoined.data);
@@ -33,9 +35,7 @@ const SubscriptionsPage = () => {
   }, []);
 
   const handleServiceDeleted = (deletedServiceId) => {
-    setProvidedServices((prev) =>
-      prev.filter((service) => service._id !== deletedServiceId),
-    );
+    setProvidedServices((prev) => prev.filter((service) => service._id !== deletedServiceId));
   };
 
   if (loading) {
@@ -46,7 +46,10 @@ const SubscriptionsPage = () => {
     return (
       <div className="p-6 md:p-10 min-h-full animate-fade-in bg-gray-50 dark:bg-gray-900">
         <div className="text-center text-red-500 dark:text-red-400">
-          <p>Error: {error}</p>
+          <p>
+            Error:
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -89,7 +92,7 @@ const SubscriptionsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 card-hover anim-fade-in-up stagger-1 relative overflow-hidden">
           {/* Background gradient accent */}
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#2bb6c4]/10 to-transparent rounded-bl-full"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#2bb6c4]/10 to-transparent rounded-bl-full" />
 
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
@@ -101,19 +104,21 @@ const SubscriptionsPage = () => {
                 {providedServices.length}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {providedServices.length === 1 ? "service" : "services"} active
+                {providedServices.length === 1 ? 'service' : 'services'}
+                {' '}
+                active
               </p>
             </div>
             <div className="w-14 h-14 bg-gradient-to-br from-[#2bb6c4]/15 to-[#5ed1dc]/15 rounded-2xl flex items-center justify-center card-hover relative">
               <Users className="w-7 h-7 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#2bb6c4] rounded-full anim-pulse-slow"></div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#2bb6c4] rounded-full anim-pulse-slow" />
             </div>
           </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 card-hover anim-fade-in-up stagger-2 relative overflow-hidden">
           {/* Background gradient accent */}
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#5ed1dc]/10 to-transparent rounded-bl-full"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#5ed1dc]/10 to-transparent rounded-bl-full" />
 
           <div className="flex items-center justify-between relative z-10">
             <div className="flex-1">
@@ -126,14 +131,15 @@ const SubscriptionsPage = () => {
               </p>
               <p className="text-sm text-gray-400 mt-1">
                 {joinedSubscriptions.length === 1
-                  ? "subscription"
-                  : "subscriptions"}{" "}
+                  ? 'subscription'
+                  : 'subscriptions'}
+                {' '}
                 active
               </p>
             </div>
             <div className="w-14 h-14 bg-gradient-to-br from-[#2bb6c4]/15 to-[#5ed1dc]/15 rounded-2xl flex items-center justify-center card-hover relative">
               <BookOpen className="w-7 h-7 text-[#2bb6c4] dark:text-[#5ed1dc]" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#5ed1dc] rounded-full anim-pulse-slow"></div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#5ed1dc] rounded-full anim-pulse-slow" />
             </div>
           </div>
         </div>
@@ -154,6 +160,6 @@ const SubscriptionsPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default SubscriptionsPage;

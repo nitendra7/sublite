@@ -1,23 +1,25 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
-const BackupRestore = () => {
+function BackupRestore() {
+  const { toast } = useToast();
   const [backups, setBackups] = useState([
     {
       id: 1,
       name: 'backup_2025_01_15',
       date: '2025-01-15T10:30:00',
       size: '250 MB',
-      status: 'completed'
+      status: 'completed',
     },
     {
       id: 2,
       name: 'backup_2025_01_14',
       date: '2025-01-14T10:30:00',
       size: '248 MB',
-      status: 'completed'
-    }
+      status: 'completed',
+    },
   ]);
   const [creating, setCreating] = useState(false);
 
@@ -26,7 +28,7 @@ const BackupRestore = () => {
     try {
       // API call would go here
       // await api.post('/admin/backup/create');
-      
+
       // Simulate backup creation
       setTimeout(() => {
         const newBackup = {
@@ -34,43 +36,66 @@ const BackupRestore = () => {
           name: `backup_${new Date().toISOString().split('T')[0]}`,
           date: new Date().toISOString(),
           size: '251 MB',
-          status: 'completed'
+          status: 'completed',
         };
         setBackups([newBackup, ...backups]);
         setCreating(false);
+        toast({
+          title: 'Success',
+          description: 'Backup created successfully',
+        });
       }, 2000);
     } catch (error) {
-      console.error('Error creating backup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create backup',
+        variant: 'destructive',
+      });
       setCreating(false);
     }
   };
 
-  const handleRestore = async (backupId) => {
-    if (!confirm('Are you sure you want to restore this backup? This will overwrite current data.')) {
+  const handleRestore = async (_backupId) => {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Are you sure you want to restore this backup? This will overwrite current data.')) {
       return;
     }
-    
+
     try {
       // API call would go here
       // await api.post(`/admin/backup/restore/${backupId}`);
-      alert('Backup restored successfully!');
+      toast({
+        title: 'Success',
+        description: 'Backup restored successfully!',
+      });
     } catch (error) {
-      console.error('Error restoring backup:', error);
-      alert('Failed to restore backup');
+      toast({
+        title: 'Error',
+        description: 'Failed to restore backup',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDownload = (backup) => {
     // In a real application, this would download the backup file
-    alert(`Downloading ${backup.name}...`);
+    toast({
+      title: 'Download',
+      description: `Downloading ${backup.name}...`,
+    });
   };
 
   const handleDelete = async (backupId) => {
-    if (!confirm('Are you sure you want to delete this backup?')) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Are you sure you want to delete this backup?')) {
       return;
     }
-    
-    setBackups(backups.filter(b => b.id !== backupId));
+
+    setBackups(backups.filter((b) => b.id !== backupId));
+    toast({
+      title: 'Success',
+      description: 'Backup deleted successfully',
+    });
   };
 
   return (
@@ -160,6 +185,6 @@ const BackupRestore = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default BackupRestore;

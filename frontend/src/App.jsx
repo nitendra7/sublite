@@ -1,10 +1,12 @@
 // App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import {
+  BrowserRouter as Router, Routes, Route, Navigate, Outlet,
+} from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+import { useEffect, lazy, Suspense } from 'react';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
 import { Toaster } from './components/ui/toaster.jsx';
-import { useAuth } from '@clerk/clerk-react';
-import { useEffect } from 'react';
 
 // Page components
 import HomePage from './pages/HomePage.jsx';
@@ -21,7 +23,6 @@ import EditServicePage from './pages/EditServicePage.jsx';
 import HelpPage from './pages/HelpPage.jsx';
 import SSOCallback from './pages/SSOCallback.jsx';
 import AdminLayout from './components/admin/AdminLayout.jsx';
-import { lazy, Suspense } from 'react';
 
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard.jsx'));
 const UserManagement = lazy(() => import('./components/admin/UserManagement.jsx'));
@@ -33,9 +34,8 @@ const Moderation = lazy(() => import('./components/admin/Moderation.jsx'));
 const Permissions = lazy(() => import('./components/admin/Permissions.jsx'));
 const SystemMonitoring = lazy(() => import('./components/admin/SystemMonitoring.jsx'));
 
-
 // PrivateRoute component: Guards routes, redirecting unauthenticated users to the login page.
-const PrivateRoute = () => {
+function PrivateRoute() {
   const { user, loading, fetchUserProfile } = useUser();
   const token = localStorage.getItem('token');
   const { isSignedIn } = useAuth();
@@ -56,16 +56,16 @@ const PrivateRoute = () => {
   }
 
   return (user || token || isSignedIn) ? <Outlet /> : <Navigate to="/login" replace />;
-};
+}
 
 // ProtectedLayout component: A layout component for protected routes.
 // It receives theme state from the top-level App component and passes it down.
-const ProtectedLayout = () => {
+function ProtectedLayout() {
   return <Outlet />;
-};
+}
 
 // AdminRoute component: Guards admin routes, redirecting non-admins to home or login.
-const AdminRoute = () => {
+function AdminRoute() {
   const { user, loading } = useUser();
   if (loading) {
     return (
@@ -76,8 +76,7 @@ const AdminRoute = () => {
   }
   // Adjust this check if your user object uses a different property for admin
   return user && user.isAdmin ? <Outlet /> : <Navigate to="/" replace />;
-};
-
+}
 
 function App() {
   // Consume ThemeContext at the top level to provide theme state globally.
@@ -93,7 +92,7 @@ function App() {
         <Routes>
           {/* Public routes: Accessible without authentication. */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<AuthPage isLogin={true} />} />
+          <Route path="/login" element={<AuthPage isLogin />} />
           <Route path="/register" element={<AuthPage isLogin={false} />} />
           <Route path="/sso-callback" element={<SSOCallback />} />
 
@@ -125,83 +124,83 @@ function App() {
               <Route path="/admin" element={<AdminLayout />}>
                 <Route
                   index
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <AdminDashboard />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="dashboard"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <AdminDashboard />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="users"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <UserManagement />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="services"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <ServiceList />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="bookings"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <BookingList />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="payments"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <PaymentList />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="analytics"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <Analytics />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="moderation"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <Moderation />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="permissions"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <Permissions />
                     </Suspense>
-                  }
+                  )}
                 />
                 <Route
                   path="monitoring"
-                  element={
+                  element={(
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                       <SystemMonitoring />
                     </Suspense>
-                  }
+                  )}
                 />
               </Route>
             </Route>

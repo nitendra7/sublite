@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AdminSidebar from './AdminSidebar';
 import { useTheme } from '../../context/ThemeContext';
 
-const AdminLayout = () => {
+function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { darkMode, toggleDarkMode } = useTheme();
 
@@ -18,9 +18,9 @@ const AdminLayout = () => {
         handleSidebarToggle={handleSidebarToggle}
       />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        { /* Admin Header */ }
+        { /* Admin Header */}
         <header className="relative z-10 flex items-center justify-between px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-sm -ml-px">
-          { /* Left Section - Logo and Brand */ }
+          { /* Left Section - Logo and Brand */}
           <div className="flex items-center gap-3">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
@@ -41,7 +41,8 @@ const AdminLayout = () => {
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
                 title="Back to User Dashboard"
-                onClick={() => window.location.href = '/dashboard'}
+                aria-label="Back to User Dashboard"
+                onClick={() => { window.location.href = '/dashboard'; }}
               >
                 <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -52,7 +53,8 @@ const AdminLayout = () => {
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
                 onClick={toggleDarkMode}
-                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
                 {darkMode ? (
                   <svg className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +71,7 @@ const AdminLayout = () => {
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
                 title="Notifications"
+                aria-label="Notifications"
               >
                 <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.618 4.618A9.955 9.955 0 0112 2c5.523 0 10 4.477 10 10 0 5.523-4.477 10-10 10a9.955 9.955 0 01-7.382-3.382L2 22l5-2.618z" />
@@ -98,6 +101,6 @@ const AdminLayout = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AdminLayout;

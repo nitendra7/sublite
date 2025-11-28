@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 import { FaMoon, FaSun } from 'react-icons/fa';
+import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 
-const Header = () => {
+function Header() {
   const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const hideAuthLinks = location.pathname === '/login' || location.pathname === '/register';
@@ -31,7 +31,7 @@ const Header = () => {
               <button
                 onClick={toggleDarkMode}
                 className="px-2 py-2 rounded-lg bg-white/80 dark:bg-gray-700 text-[var(--color-primary-dark)] dark:text-gray-300 hover:bg-[var(--color-primary-light)]/10 hover:text-[var(--color-primary-dark)] dark:hover:bg-gray-600 dark:hover:text-gray-100 transition-all duration-200 text-xs sm:text-base"
-                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
                 {darkMode ? <FaSun className="w-4 h-4" /> : <FaMoon className="w-4 h-4" />}
               </button>
@@ -57,5 +57,5 @@ const Header = () => {
       )}
     </header>
   );
-};
+}
 export default Header;

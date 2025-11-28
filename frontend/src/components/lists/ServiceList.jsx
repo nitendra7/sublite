@@ -5,9 +5,9 @@ export default function ServiceList() {
   const [services, setServices] = useState([]);
   const [error, setError] = useState('');
   useEffect(() => {
-    api.get(`/services`)
-      .then(res => {
-        const data = res.data;
+    api.get('/services')
+      .then((res) => {
+        const { data } = res;
         if (Array.isArray(data)) setServices(data);
         else setError(data.error || 'Failed to fetch services');
       })
@@ -18,8 +18,8 @@ export default function ServiceList() {
     <div>
       <h3>Services</h3>
       <ul>
-        {services.map(s => <li key={s._id}>{s.name}</li>)}
+        {services.map((s) => <li key={s._id}>{s.name}</li>)}
       </ul>
     </div>
   );
-} 
+}

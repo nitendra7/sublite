@@ -1,107 +1,111 @@
-import * as React from "react";
-import PropTypes from "prop-types";
-import { cn } from "../../lib/utils";
+import * as React from 'react';
+import PropTypes from 'prop-types';
+import { cn } from '../../lib/utils';
 
 const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     // Using CSS variables for consistent styling
     className={cn(
-      "rounded-3xl border-2 bg-white/80 dark:bg-gray-800/70 backdrop-blur-sm text-[var(--color-card-foreground)] shadow-xl border-gray-200 dark:border-gray-700 transition-all duration-250 ease-in-out hover:shadow-2xl",
-      className
+      'rounded-3xl border-2 bg-white/80 dark:bg-gray-800/70 backdrop-blur-sm text-[var(--color-card-foreground)] shadow-xl border-gray-200 dark:border-gray-700 transition-all duration-250 ease-in-out hover:shadow-2xl',
+      className,
     )}
     {...props}
   />
 ));
-Card.displayName = "Card";
+Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     // Standard flex/spacing with responsive adjustments for smaller screens
-    className={cn("flex flex-col space-y-1.5 p-4 sm:p-6", className)}
+    className={cn('flex flex-col space-y-1.5 p-4 sm:p-6', className)}
     {...props}
   />
 ));
-CardHeader.displayName = "CardHeader";
+CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef(({ className, ...props }, ref) => (
+const CardTitle = React.forwardRef(({ className, children, ...props }, ref) => (
   <h3
     ref={ref}
     // Using CSS variables for consistent styling
     className={cn(
-      "font-semibold leading-none tracking-tight text-[var(--color-card-foreground)]",
-      className
+      'font-semibold leading-none tracking-tight text-[var(--color-card-foreground)]',
+      className,
     )}
     {...props}
-  />
+  >
+    {children}
+  </h3>
 ));
-CardTitle.displayName = "CardTitle";
+CardTitle.displayName = 'CardTitle';
 
 const CardDescription = React.forwardRef(({ className, ...props }, ref) => (
   <p
     ref={ref}
     // Using CSS variables for consistent styling
-    className={cn("text-sm text-[var(--color-muted-foreground)]", className)}
+    className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
     {...props}
   />
 ));
-CardDescription.displayName = "CardDescription";
+CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     // Standard padding with responsive adjustments for smaller screens
-    className={cn("p-4 pt-0 sm:p-6 sm:pt-0", className)}
+    className={cn('p-4 pt-0 sm:p-6 sm:pt-0', className)}
     {...props}
   />
 ));
-CardContent.displayName = "CardContent";
+CardContent.displayName = 'CardContent';
 
 const CardFooter = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     // Standard flex/padding with responsive adjustments for smaller screens
-    className={cn("flex flex-col sm:flex-row items-center gap-3 p-4 pt-0 sm:p-6 sm:pt-0", className)}
+    className={cn('flex flex-col sm:flex-row items-center gap-3 p-4 pt-0 sm:p-6 sm:pt-0', className)}
     {...props}
   />
 ));
-CardFooter.displayName = "CardFooter";
+CardFooter.displayName = 'CardFooter';
 
 Card.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
 CardHeader.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
 CardTitle.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
 CardDescription.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
 CardContent.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
 CardFooter.propTypes = {
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
-  asChild: PropTypes.bool
+  asChild: PropTypes.bool,
 };
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export {
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent,
+};

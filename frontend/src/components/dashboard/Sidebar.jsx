@@ -1,4 +1,4 @@
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
 import {
   FaBars,
   FaBook,
@@ -10,66 +10,58 @@ import {
   FaPlus,
   FaEnvelope,
   FaQuestionCircle,
-} from "react-icons/fa";
-import { useUser } from "../../context/UserContext";
+} from 'react-icons/fa';
+import { useUser } from '../../context/UserContext';
 
 const sidebarItems = [
-  { name: "Dashboard", icon: <FaHome />, route: "/dashboard" },
+  { name: 'Dashboard', icon: <FaHome />, route: '/dashboard' },
   {
-    name: "My Subscriptions",
+    name: 'My Subscriptions',
     icon: <FaBook />,
-    route: "/dashboard/subscriptions",
+    route: '/dashboard/subscriptions',
   },
   {
-    name: "Available Plans",
+    name: 'Available Plans',
     icon: <FaListAlt />,
-    route: "/dashboard/available-plans",
+    route: '/dashboard/available-plans',
   },
-  { name: "Add Service", icon: <FaPlus />, route: "/dashboard/add-service" },
-  { name: "Wallet", icon: <FaWallet />, route: "/dashboard/wallet" },
-  { name: "Reviews", icon: <FaStar />, route: "/dashboard/reviews" },
+  { name: 'Add Service', icon: <FaPlus />, route: '/dashboard/add-service' },
+  { name: 'Wallet', icon: <FaWallet />, route: '/dashboard/wallet' },
+  { name: 'Reviews', icon: <FaStar />, route: '/dashboard/reviews' },
   {
-    name: "Notifications",
+    name: 'Notifications',
     icon: <FaBell />,
-    route: "/dashboard/notifications",
+    route: '/dashboard/notifications',
   },
-  { name: "Help", icon: <FaQuestionCircle />, route: "/dashboard/help" },
+  { name: 'Help', icon: <FaQuestionCircle />, route: '/dashboard/help' },
 ];
 
-function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
+function Sidebar({
+  sidebarOpen, active, onSidebarClick, handleSidebarToggle,
+}) {
   const { user } = useUser();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === 'admin';
 
   return (
     <nav
-      className={`z-20 flex flex-col justify-between items-center md:items-stretch shadow-lg bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out overflow-hidden h-screen ${
-        sidebarOpen ? "w-64" : "w-16"
-      }`}
+      className={`z-20 flex flex-col justify-between items-center md:items-stretch shadow-lg bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out overflow-hidden h-screen ${sidebarOpen ? 'w-64' : 'w-16'
+        }`}
     >
       {/* Header Section */}
       <div className="w-full">
-        <div className="flex items-center justify-between py-5 px-4 border-b border-gray-200 dark:border-gray-700 min-h-[65px]">
-          {sidebarOpen ? (
-            <div className="flex items-center space-x-3">
-              {!isAdmin ? <span className="text-base font-bold text-gray-800 dark:text-gray-100">Sublite</span> : null}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center w-full">
-              <button
-                className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-                onClick={handleSidebarToggle}
-              >
-                <FaBars className="text-lg" />
-              </button>
-            </div>
-          )}
-          {sidebarOpen && (
-            <button
-              className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-              onClick={handleSidebarToggle}
-            >
-              <FaBars className="text-lg" />
-            </button>
+        <div className={`flex items-center ${sidebarOpen ? 'justify-start px-4' : 'justify-center'} py-3 border-b border-gray-200 dark:border-gray-700 min-h-[73px] transition-all duration-300`}>
+          <button
+            className="p-2 rounded-xl text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+            onClick={handleSidebarToggle}
+            aria-label="Toggle Sidebar"
+          >
+            <FaBars className="text-xl" />
+          </button>
+
+          {sidebarOpen && !isAdmin && (
+            <span className="ml-3 text-lg font-bold text-gray-800 dark:text-gray-100 tracking-wide whitespace-nowrap overflow-hidden transition-opacity duration-300">
+              Menu
+            </span>
           )}
         </div>
 
@@ -80,26 +72,24 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
               <li key={item.name}>
                 <button
                   className={`group flex items-center w-full text-left transition-all duration-200 rounded-xl p-3 relative overflow-hidden
-                    ${
-                      active === idx
-                        ? "bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105"
-                        : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]"
+                    ${active === idx
+                      ? 'bg-gradient-to-r from-[#2bb6c4] to-[#1ea1b0] text-white shadow-lg transform scale-105'
+                      : 'text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#2bb6c4] dark:hover:text-[#5ed1dc]'
                     }
-                    ${sidebarOpen ? "justify-start" : "justify-center"}
+                    ${sidebarOpen ? 'justify-start' : 'justify-center'}
                   `}
                   onClick={() => onSidebarClick(idx, item.route)}
                 >
                   {/* Active indicator */}
                   {active === idx && (
-                    <div className="absolute -left-2 top-0 bottom-0 w-1 bg-white"></div>
+                    <div className="absolute -left-2 top-0 bottom-0 w-1 bg-white" />
                   )}
 
                   <span
-                    className={`text-lg transition-all duration-200 ${
-                      active === idx
-                        ? "text-white"
-                        : "text-gray-400 dark:text-gray-400 group-hover:text-[#2bb6c4] dark:group-hover:text-[#5ed1dc]"
-                    }`}
+                    className={`text-lg transition-all duration-200 ${active === idx
+                      ? 'text-white'
+                      : 'text-gray-400 dark:text-gray-400 group-hover:text-[#2bb6c4] dark:group-hover:text-[#5ed1dc]'
+                      }`}
                   >
                     {item.icon}
                   </span>
@@ -112,7 +102,7 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
 
                   {/* Hover effect */}
                   {!active === idx && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
                 </button>
               </li>
@@ -127,7 +117,8 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
           {sidebarOpen ? (
             <div className="text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Need Help?{" "}
+                Need Help?
+                {' '}
                 <a
                   href="mailto:sublite.app@gmail.com"
                   className="text-[#2bb6c4] dark:text-[#5ed1dc] font-medium hover:underline"
@@ -141,9 +132,7 @@ function Sidebar({ sidebarOpen, active, onSidebarClick, handleSidebarToggle }) {
               <button
                 className="p-2 rounded-lg text-gray-400 dark:text-gray-400 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 title="Contact us: sublite.app@gmail.com"
-                onClick={() =>
-                  (window.location.href = "mailto:sublite.app@gmail.com")
-                }
+                onClick={() => { window.location.href = 'mailto:sublite.app@gmail.com'; }}
               >
                 <FaEnvelope className="text-lg" />
               </button>

@@ -1,10 +1,12 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { Button } from "./button";
-import { Input } from "./input";
+import { useState } from 'react';
+import PropTypes from 'prop-types';
+import { Button } from './button';
+import { Input } from './input';
 
-const OtpModal = ({ isOpen, onVerify, onCancel, loading, error }) => {
-  const [otp, setOtp] = useState("");
+function OtpModal({
+  isOpen, onVerify, onCancel, loading, error,
+}) {
+  const [otp, setOtp] = useState('');
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
@@ -13,7 +15,7 @@ const OtpModal = ({ isOpen, onVerify, onCancel, loading, error }) => {
         <div className="mb-4">
           <Input
             value={otp}
-            onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+            onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
             maxLength={6}
             placeholder="Enter 6-digit OTP"
             className="text-center tracking-widest text-lg font-mono"
@@ -24,25 +26,25 @@ const OtpModal = ({ isOpen, onVerify, onCancel, loading, error }) => {
         <div className="flex justify-between gap-2">
           <Button variant="outline" onClick={onCancel} disabled={loading}>Cancel</Button>
           <Button onClick={() => onVerify(otp)} disabled={loading || otp.length !== 6} className="min-w-[90px]">
-            {loading ? "Verifying..." : "Verify"}
+            {loading ? 'Verifying...' : 'Verify'}
           </Button>
         </div>
       </div>
     </div>
   );
-};
+}
 
 OtpModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onVerify: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   loading: PropTypes.bool,
-  error: PropTypes.string
+  error: PropTypes.string,
 };
 
 OtpModal.defaultProps = {
   loading: false,
-  error: null
+  error: null,
 };
 
 export default OtpModal;

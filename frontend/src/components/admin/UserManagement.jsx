@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
+import {
+  Users, Trash2, Shield, ShieldOff,
+} from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 import { useUser } from '../../context/UserContext';
 import SectionHeader from './SectionHeader';
-import { Users, Trash2, Shield, ShieldOff } from 'lucide-react';
 import { API_BASE } from '../../utils/api';
 
-const UserManagement = () => {
+function UserManagement() {
+  const { toast } = useToast();
   const { token, user: currentUser } = useUser();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,26 +35,35 @@ const UserManagement = () => {
   }, [token]);
 
   const handleDelete = async (userId) => {
+    // eslint-disable-next-line no-alert
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
-              const res = await fetch(`${API_BASE}/users/${userId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
-              });
+      const res = await fetch(`${API_BASE}/users/${userId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete user');
-      setUsers(users.filter(u => u._id !== userId));
-      alert('User deleted successfully.');
+      setUsers(users.filter((u) => u._id !== userId));
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully.',
+      });
     } catch (err) {
-      alert(err.message);
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
     }
   };
 
   const handleToggleAdmin = async (userId, currentIsAdmin) => {
-    const action = currentIsAdmin ? 'remove admin rights from' : 'make admin' ;
-    if (! window.confirm(`Are you sure you want to ${action} this user?`)) return;
+    const action = currentIsAdmin ? 'remove admin rights from' : 'make admin';
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
     try {
-              const res = await fetch(`${API_BASE}/users/${userId}/role`, {
+      const res = await fetch(`${API_BASE}/users/${userId}/role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -60,10 +73,17 @@ const UserManagement = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to update admin status');
-      setUsers(users.map(u => u._id === userId ? { ...u, isAdmin: data.isAdmin } : u));
-      alert(`User is now ${data.isAdmin ? 'an admin' : 'a regular user'}.`);
+      setUsers(users.map((u) => (u._id === userId ? { ...u, isAdmin: data.isAdmin } : u)));
+      toast({
+        title: 'Success',
+        description: `User is now ${data.isAdmin ? 'an admin' : 'a regular user'}.`,
+      });
     } catch (err) {
-      alert(err.message);
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -71,7 +91,7 @@ const UserManagement = () => {
     return (
       <div className="p-6 md:p-10 min-h-full animate-fade-in">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb6c4] mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-300">Loading users...</p>
         </div>
       </div>
@@ -93,12 +113,12 @@ const UserManagement = () => {
       <SectionHeader
         icon={Users}
         title="User Management"
-        actions={
+        actions={(
           <button className="bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <Users size={16} />
             Add User
           </button>
-        }
+        )}
       />
 
       {/* User Stats Cards */}
@@ -118,7 +138,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Admins</p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
-                {users.filter(u => u.isAdmin).length}
+                {users.filter((u) => u.isAdmin).length}
               </p>
             </div>
             <Shield className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
@@ -130,7 +150,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-100">Regular Users</p>
               <p className="text-2xl font-bold text-[#2bb6c4] dark:text-gray-100">
-                {users.filter(u => !u.isAdmin).length}
+                {users.filter((u) => !u.isAdmin).length}
               </p>
             </div>
             <Users className="w-8 h-8 text-[#2bb6c4] dark:text-[#5ed1dc]" />
@@ -155,19 +175,19 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {users.map(user => (
+              {users.map((user) => (
                 <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">{user.name || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{user.email || 'N/A'}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      user.isAdmin
-                        ? 'bg-[#e0f7fa] dark:bg-[#263238] text-[#2bb6c4] dark:text-[#5ed1dc]'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                    }`}>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${user.isAdmin
+                      ? 'bg-[#e0f7fa] dark:bg-[#263238] text-[#2bb6c4] dark:text-[#5ed1dc]'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    }`}
+                    >
                       {user.isAdmin ? 'Admin' : 'User'}
                     </span>
-                  
+
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -175,10 +195,9 @@ const UserManagement = () => {
                         <>
                           <button
                             onClick={() => handleToggleAdmin(user._id, user.isAdmin)}
-                            className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              user.isAdmin
-                                ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
-                                : 'bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white'
+                            className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${user.isAdmin
+                              ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
+                              : 'bg-[#2bb6c4] hover:bg-[#1ea1b0] text-white'
                             }`}
                           >
                             {user.isAdmin ? <ShieldOff size={14} className="mr-1" /> : <Shield size={14} className="mr-1" />}
@@ -207,6 +226,6 @@ const UserManagement = () => {
       </div>
     </div>
   );
-};
+}
 
 export default UserManagement;

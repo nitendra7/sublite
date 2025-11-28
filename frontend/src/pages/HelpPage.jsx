@@ -1,104 +1,105 @@
-import { useState } from "react";
-import { HelpCircle, MessageSquare, Mail } from "lucide-react";
-import { CreditCard, Shield, Bell, Wallet, Star } from "lucide-react";
-import RefundPolicyModal from "../components/ui/RefundPolicyModal";
+import { useState } from 'react';
+import {
+  HelpCircle, MessageSquare, Mail, CreditCard, Shield, Bell, Wallet, Star,
+} from 'lucide-react';
+import RefundPolicyModal from '../components/ui/RefundPolicyModal';
 
-const HelpPage = () => {
+function HelpPage() {
   const [showRefundPolicy, setShowRefundPolicy] = useState(false);
 
   const helpSections = [
     {
-      title: "Booking & Payments",
+      title: 'Booking & Payments',
       icon: <CreditCard className="w-6 h-6" />,
       items: [
         {
-          question: "How do I book a service?",
+          question: 'How do I book a service?',
           answer:
-            "Browse available plans, select a service, choose your rental duration, and confirm the booking. Payment is deducted from your wallet balance.",
+            'Browse available plans, select a service, choose your rental duration, and confirm the booking. Payment is deducted from your wallet balance.',
         },
         {
-          question: "What payment methods are accepted?",
+          question: 'What payment methods are accepted?',
           answer:
-            "We accept wallet payments and Razorpay for adding money to your wallet. All service bookings are paid through your wallet balance.",
+            'We accept wallet payments and Razorpay for adding money to your wallet. All service bookings are paid through your wallet balance.',
         },
         {
-          question: "Can I cancel a booking?",
+          question: 'Can I cancel a booking?',
           answer:
             "Bookings are automatically cancelled if the provider doesn't respond within 15 minutes. You'll receive a full refund to your wallet.",
         },
       ],
     },
     {
-      title: "Refunds & Cancellations",
+      title: 'Refunds & Cancellations',
       icon: <Shield className="w-6 h-6" />,
       items: [
         {
-          question: "When do I get refunded?",
+          question: 'When do I get refunded?',
           answer:
             "You receive an automatic refund if the service provider doesn't respond with access details within 15 minutes of your booking.",
         },
         {
-          question: "How long do refunds take?",
+          question: 'How long do refunds take?',
           answer:
-            "Refunds are processed immediately and credited to your wallet balance within seconds. No manual action required.",
+            'Refunds are processed immediately and credited to your wallet balance within seconds. No manual action required.',
         },
         {
-          question: "Where can I see my refunds?",
+          question: 'Where can I see my refunds?',
           answer:
             "All refunds appear in your wallet transaction history. You'll also receive a notification when a refund is processed.",
         },
       ],
     },
     {
-      title: "Notifications & Communication",
+      title: 'Notifications & Communication',
       icon: <Bell className="w-6 h-6" />,
       items: [
         {
-          question: "How do I know if my booking is confirmed?",
+          question: 'How do I know if my booking is confirmed?',
           answer:
             "You'll receive a notification when the provider sends access details. Check your notifications page for updates.",
         },
         {
-          question: "What notifications will I receive?",
+          question: 'What notifications will I receive?',
           answer:
             "You'll get notifications for new bookings, access details received, booking cancellations, refunds, and payment confirmations.",
         },
       ],
     },
     {
-      title: "Wallet & Transactions",
+      title: 'Wallet & Transactions',
       icon: <Wallet className="w-6 h-6" />,
       items: [
         {
-          question: "How do I add money to my wallet?",
+          question: 'How do I add money to my wallet?',
           answer:
             "Go to the Wallet page and use the 'Add Money' feature. You can add funds via Razorpay payment gateway.",
         },
         {
-          question: "Can I withdraw money from my wallet?",
+          question: 'Can I withdraw money from my wallet?',
           answer:
-            "Currently, wallet funds can be used for service bookings. Withdrawal features may be added in future updates.",
+            'Currently, wallet funds can be used for service bookings. Withdrawal features may be added in future updates.',
         },
         {
-          question: "How do I check my transaction history?",
+          question: 'How do I check my transaction history?',
           answer:
-            "Visit the Wallet page to see all your transactions including payments, refunds, and wallet top-ups.",
+            'Visit the Wallet page to see all your transactions including payments, refunds, and wallet top-ups.',
         },
       ],
     },
     {
-      title: "Reviews & Ratings",
+      title: 'Reviews & Ratings',
       icon: <Star className="w-6 h-6" />,
       items: [
         {
-          question: "When can I review a service?",
+          question: 'When can I review a service?',
           answer:
-            "You can review a service after your booking is completed. Visit the Reviews page to leave your feedback.",
+            'You can review a service after your booking is completed. Visit the Reviews page to leave your feedback.',
         },
         {
-          question: "How do ratings work?",
+          question: 'How do ratings work?',
           answer:
-            "Ratings help other users choose reliable services. You can rate services from 1-5 stars and leave detailed comments.",
+            'Ratings help other users choose reliable services. You can rate services from 1-5 stars and leave detailed comments.',
         },
       ],
     },
@@ -222,6 +223,6 @@ const HelpPage = () => {
       />
     </div>
   );
-};
+}
 
 export default HelpPage;

@@ -1,27 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 
-const AuditLog = () => {
+function AuditLog() {
+  const { toast } = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     action: 'all',
     user: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
   });
 
   useEffect(() => {
     fetchAuditLogs();
-  }, [filters]);
+  }, [fetchAuditLogs, filters]);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
       // API call would go here
       // const response = await api.get('/admin/audit-logs', { params: filters });
       // setLogs(response.data);
-      
+
       // Mock data for demonstration
       setLogs([
         {
@@ -30,7 +32,7 @@ const AuditLog = () => {
           user: 'john@example.com',
           timestamp: new Date().toISOString(),
           details: 'Successful login from IP 192.168.1.1',
-          status: 'success'
+          status: 'success',
         },
         {
           id: 2,
@@ -38,18 +40,22 @@ const AuditLog = () => {
           user: 'admin@example.com',
           timestamp: new Date().toISOString(),
           details: 'Updated service pricing',
-          status: 'success'
-        }
+          status: 'success',
+        },
       ]);
     } catch (error) {
-      console.error('Error fetching audit logs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch audit logs',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const getStatusColor = (status) => {
@@ -165,6 +171,6 @@ const AuditLog = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default AuditLog;

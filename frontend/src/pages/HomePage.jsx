@@ -1,25 +1,33 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import PropTypes from "prop-types";
-import Header from "../components/ui/Header";
-import Footer from "../components/ui/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
-import { Target, Clock, CreditCard, Zap, Users, DollarSign, Star } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import {
+  Target, Clock, CreditCard, Zap, Users, DollarSign, Star,
+} from 'lucide-react';
+import Header from '../components/ui/Header';
+import Footer from '../components/ui/Footer';
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
+} from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from '../components/ui/tabs';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '../components/ui/tooltip';
 
-const AppIcon = ({ name, size = 48 }) => {
+function AppIcon({ name, size = 48 }) {
   const iconPaths = {
-    Netflix: "/icons/netflix.svg",
-    Spotify: "/icons/spotify.svg",
-    GamePass: "/icons/xbox.svg",
-    "Prime Video": "/icons/primevideo.svg",
-    "JioHotstar": "/icons/hotstar.svg",
-    "YouTube Premium": "/icons/yt.svg",
-    "OpenAI": "/icons/chatgpt.svg",
-    "GitHub Copilot": "/icons/copilot.svg",
-    "Adobe CC": "/icons/adobe.svg",
+    Netflix: '/icons/netflix.svg',
+    Spotify: '/icons/spotify.svg',
+    GamePass: '/icons/xbox.svg',
+    'Prime Video': '/icons/primevideo.svg',
+    JioHotstar: '/icons/hotstar.svg',
+    'YouTube Premium': '/icons/yt.svg',
+    OpenAI: '/icons/chatgpt.svg',
+    'GitHub Copilot': '/icons/copilot.svg',
+    'Adobe CC': '/icons/adobe.svg',
   };
 
   const iconSrc = iconPaths[name];
@@ -40,52 +48,65 @@ const AppIcon = ({ name, size = 48 }) => {
       ?
     </div>
   );
-};
-
+}
 
 // Services data would be fetched from API - using placeholders for now
 const services = [
-  { name: "Netflix", price: "₹18", duration: "3 days", savings: "Save ₹119" },
-  { name: "Spotify", price: "₹38", duration: "1 week", savings: "Save ₹89" },
-  { name: "Prime Video", price: "₹18", duration: "1 week", savings: "Save ₹224" },
-  { name: "JioHotstar", price: "₹25", duration: "1 week", savings: "Save ₹199" },
-  { name: "YouTube Premium", price: "₹45", duration: "1 week", savings: "Save ₹129" },
-  { name: "OpenAI", price: "₹89", duration: "3 days", savings: "Save ₹1,911" },
-  { name: "GitHub Copilot", price: "₹75", duration: "1 week", savings: "Save ₹325" },
-  { name: "Adobe CC", price: "₹89", duration: "2 days", savings: "Save ₹1,910" }
+  {
+    name: 'Netflix', price: '₹18', duration: '3 days', savings: 'Save ₹119',
+  },
+  {
+    name: 'Spotify', price: '₹38', duration: '1 week', savings: 'Save ₹89',
+  },
+  {
+    name: 'Prime Video', price: '₹18', duration: '1 week', savings: 'Save ₹224',
+  },
+  {
+    name: 'JioHotstar', price: '₹25', duration: '1 week', savings: 'Save ₹199',
+  },
+  {
+    name: 'YouTube Premium', price: '₹45', duration: '1 week', savings: 'Save ₹129',
+  },
+  {
+    name: 'OpenAI', price: '₹89', duration: '3 days', savings: 'Save ₹1,911',
+  },
+  {
+    name: 'GitHub Copilot', price: '₹75', duration: '1 week', savings: 'Save ₹325',
+  },
+  {
+    name: 'Adobe CC', price: '₹89', duration: '2 days', savings: 'Save ₹1,910',
+  },
 ];
 
 const steps = [
   {
-    number: "01",
-    title: "Browse & Select",
-    description: "Choose from Netflix, Spotify, Game Pass and more premium services",
-    icon: Target
+    number: '01',
+    title: 'Browse & Select',
+    description: 'Choose from Netflix, Spotify, Game Pass and more premium services',
+    icon: Target,
   },
   {
-    number: "02",
-    title: "Pick Duration",
-    description: "Rent for 1 day, 3 days, 1 week - exactly what you need",
-    icon: Clock
+    number: '02',
+    title: 'Pick Duration',
+    description: 'Rent for 1 day, 3 days, 1 week - exactly what you need',
+    icon: Clock,
   },
   {
-    number: "03",
-    title: "Secure Payment",
-    description: "Pay in INR with UPI, cards, or digital wallet",
-    icon: CreditCard
+    number: '03',
+    title: 'Secure Payment',
+    description: 'Pay in INR with UPI, cards, or digital wallet',
+    icon: CreditCard,
   },
   {
-    number: "04",
-    title: "Instant Access",
-    description: "Get login credentials on WhatsApp within minutes",
-    icon: Zap
-  }
+    number: '04',
+    title: 'Instant Access',
+    description: 'Get login credentials on WhatsApp within minutes',
+    icon: Zap,
+  },
 ];
 
-const fontFamily = 'Inter, Roboto, Arial, sans-serif';
-
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("popular");
+  const [activeTab, setActiveTab] = useState('popular');
 
   return (
     <TooltipProvider>
@@ -269,13 +290,13 @@ export default function HomePage() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="flex w-full max-w-md mx-auto mb-8 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden" role="tablist" aria-label="Service categories">
-              <TabsTrigger value="popular" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === "popular" ? "bg-[#2bb6c4] text-white" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`} role="tab" aria-selected={activeTab === "popular"} aria-controls="popular-panel">
+              <TabsTrigger value="popular" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === 'popular' ? 'bg-[#2bb6c4] text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`} role="tab" aria-selected={activeTab === 'popular'} aria-controls="popular-panel">
                 Popular
               </TabsTrigger>
-              <TabsTrigger value="streaming" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === "streaming" ? "bg-[#2bb6c4] text-white" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`} role="tab" aria-selected={activeTab === "streaming"} aria-controls="streaming-panel">
+              <TabsTrigger value="streaming" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === 'streaming' ? 'bg-[#2bb6c4] text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`} role="tab" aria-selected={activeTab === 'streaming'} aria-controls="streaming-panel">
                 Streaming
               </TabsTrigger>
-              <TabsTrigger value="ai" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === "ai" ? "bg-[#2bb6c4] text-white" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`} role="tab" aria-selected={activeTab === "ai"} aria-controls="ai-panel">
+              <TabsTrigger value="ai" className={`px-6 py-3 font-medium text-sm text-center transition-all duration-300 flex-1 ${activeTab === 'ai' ? 'bg-[#2bb6c4] text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`} role="tab" aria-selected={activeTab === 'ai'} aria-controls="ai-panel">
                 AI Tools
               </TabsTrigger>
             </TabsList>
@@ -290,7 +311,7 @@ export default function HomePage() {
 
             <TabsContent value="streaming" id="streaming-panel" className="mt-6" role="tabpanel" aria-labelledby="streaming-tab">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {services.filter(s => ["Netflix", "Prime Video", "JioHotstar", "YouTube Premium", "Spotify"].includes(s.name)).map((service, index) => (
+                {services.filter((s) => ['Netflix', 'Prime Video', 'JioHotstar', 'YouTube Premium', 'Spotify'].includes(s.name)).map((service, index) => (
                   <ServiceCard key={service.name} service={service} index={index} />
                 ))}
               </div>
@@ -298,7 +319,7 @@ export default function HomePage() {
 
             <TabsContent value="ai" id="ai-panel" className="mt-6" role="tabpanel" aria-labelledby="ai-tab">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {services.filter(s => ["OpenAI", "GitHub Copilot", "Adobe CC"].includes(s.name)).map((service, index) => (
+                {services.filter((s) => ['OpenAI', 'GitHub Copilot', 'Adobe CC'].includes(s.name)).map((service, index) => (
                   <ServiceCard key={service.name} service={service} index={index} />
                 ))}
               </div>
@@ -316,7 +337,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {steps.map((step, index) => {
+              {steps.map((step) => {
                 const IconComponent = step.icon;
                 return (
                   <Card key={step.number} className="text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 card-hover">
@@ -366,7 +387,7 @@ export default function HomePage() {
 }
 
 // Shared ServiceCard Component
-function ServiceCard({ service, index }) {
+function ServiceCard({ service }) {
   return (
     <Card className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
       <div className="absolute top-4 right-4">
@@ -381,7 +402,10 @@ function ServiceCard({ service, index }) {
         <CardTitle className="text-xl text-gray-900 dark:text-white">{service.name}</CardTitle>
         <CardDescription className="text-base">
           <span className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc]">{service.price}</span>
-          <span className="text-gray-500 dark:text-gray-400 ml-2">for {service.duration}</span>
+          <span className="text-gray-500 dark:text-gray-400 ml-2">
+            for
+            {service.duration}
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
@@ -392,7 +416,10 @@ function ServiceCard({ service, index }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Get instant access to {service.name}</p>
+            <p>
+              Get instant access to
+              {service.name}
+            </p>
           </TooltipContent>
         </Tooltip>
       </CardContent>
@@ -403,11 +430,11 @@ function ServiceCard({ service, index }) {
 // PropTypes definitions
 AppIcon.propTypes = {
   name: PropTypes.string.isRequired,
-  size: PropTypes.number
+  size: PropTypes.number,
 };
 
 AppIcon.defaultProps = {
-  size: 48
+  size: 48,
 };
 
 ServiceCard.propTypes = {
@@ -416,7 +443,6 @@ ServiceCard.propTypes = {
     price: PropTypes.string.isRequired,
     duration: PropTypes.string.isRequired,
     color: PropTypes.string,
-    savings: PropTypes.string
+    savings: PropTypes.string,
   }).isRequired,
-  index: PropTypes.number.isRequired
 };

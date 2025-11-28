@@ -8,17 +8,15 @@
 export const filterValidServices = (services) => {
   if (!Array.isArray(services)) return [];
 
-  return services.filter(service => {
+  return services.filter((service) => {
     // Check if service exists and has a valid providerId
     if (!service || !service.providerId) {
-      console.warn('Service found with missing provider:', service?.serviceName || 'Unknown');
       return false;
     }
 
     // If providerId is populated as an object, check if it has valid data
     if (typeof service.providerId === 'object') {
       if (!service.providerId._id || !service.providerId.name) {
-        console.warn('Service found with invalid provider data:', service.serviceName);
         return false;
       }
     }
@@ -61,7 +59,7 @@ export const getProviderInfo = (service) => {
       name: service.providerId.name,
       username: service.providerId.username,
       rating: service.providerId.rating,
-      providerSettings: service.providerId.providerSettings
+      providerSettings: service.providerId.providerSettings,
     };
   }
 
@@ -71,7 +69,7 @@ export const getProviderInfo = (service) => {
     name: 'Unknown Provider',
     username: null,
     rating: null,
-    providerSettings: null
+    providerSettings: null,
   };
 };
 
@@ -90,13 +88,13 @@ export const cleanupServices = (services) => {
   const removedCount = originalCount - validServices.length;
 
   if (removedCount > 0) {
-    console.info(`Filtered out ${removedCount} services with missing providers`);
+    // Services removed
   }
 
   return {
     validServices,
     removedCount,
-    originalCount
+    originalCount,
   };
 };
 
@@ -119,7 +117,7 @@ export const formatServiceForDisplay = (service) => {
     formattedPrice: service.rentalPrice ? `₹${service.rentalPrice}` : 'Price not set',
     availabilityText: service.availableSlots > 0
       ? `${service.availableSlots} slots available`
-      : 'No slots available'
+      : 'No slots available',
   };
 };
 
@@ -136,7 +134,7 @@ export const groupServicesByProviderStatus = (services) => {
   const validServices = [];
   const invalidServices = [];
 
-  services.forEach(service => {
+  services.forEach((service) => {
     if (hasValidProvider(service)) {
       validServices.push(service);
     } else {
@@ -146,34 +144,8 @@ export const groupServicesByProviderStatus = (services) => {
 
   return {
     validServices,
-    invalidServices
+    invalidServices,
   };
-};
-
-/**
- * Reports services with missing providers to console (for debugging)
- * @param {Array} services - Array of services to check
- */
-export const reportMissingProviders = (services) => {
-  if (!Array.isArray(services)) return;
-
-  const invalidServices = services.filter(service => !hasValidProvider(service));
-
-  if (invalidServices.length > 0) {
-    console.group('🔍 Services with Missing Providers:');
-    invalidServices.forEach(service => {
-      console.warn({
-        serviceId: service._id,
-        serviceName: service.serviceName,
-        serviceType: service.serviceType,
-        providerId: service.providerId,
-        createdAt: service.createdAt
-      });
-    });
-    console.groupEnd();
-
-    console.warn(`⚠️ Found ${invalidServices.length} services with missing providers. These should be cleaned up.`);
-  }
 };
 
 /**
@@ -186,5 +158,5 @@ export default {
   cleanupServices,
   formatServiceForDisplay,
   groupServicesByProviderStatus,
-  reportMissingProviders
+
 };

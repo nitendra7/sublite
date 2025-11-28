@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
-const Reports = () => {
+function Reports() {
+  const { toast } = useToast();
   const [reportType, setReportType] = useState('bookings');
   const [dateRange, setDateRange] = useState({
     startDate: '',
-    endDate: ''
+    endDate: '',
   });
   const [generating, setGenerating] = useState(false);
 
@@ -16,12 +18,16 @@ const Reports = () => {
     { value: 'users', label: 'Users Report', description: 'User registration and activity data' },
     { value: 'services', label: 'Services Report', description: 'Service performance and popularity' },
     { value: 'reviews', label: 'Reviews Report', description: 'Customer reviews and ratings analysis' },
-    { value: 'transactions', label: 'Transactions Report', description: 'Payment and wallet transactions' }
+    { value: 'transactions', label: 'Transactions Report', description: 'Payment and wallet transactions' },
   ];
 
   const handleGenerateReport = async () => {
     if (!dateRange.startDate || !dateRange.endDate) {
-      alert('Please select date range');
+      toast({
+        title: 'Validation Error',
+        description: 'Please select date range',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -33,19 +39,30 @@ const Reports = () => {
       //   startDate: dateRange.startDate,
       //   endDate: dateRange.endDate
       // });
-      
+
       setTimeout(() => {
-        alert(`${reportTypes.find(r => r.value === reportType).label} generated successfully!`);
+        toast({
+          title: 'Success',
+          description: `${reportTypes.find((r) => r.value === reportType).label} generated successfully!`,
+        });
         setGenerating(false);
       }, 2000);
     } catch (error) {
-      console.error('Error generating report:', error);
+      // console.error('Error generating report:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate report',
+        variant: 'destructive',
+      });
       setGenerating(false);
     }
   };
 
   const handleExport = (format) => {
-    alert(`Exporting report as ${format.toUpperCase()}...`);
+    toast({
+      title: 'Exporting',
+      description: `Exporting report as ${format.toUpperCase()}...`,
+    });
   };
 
   return (
@@ -63,10 +80,9 @@ const Reports = () => {
             <div
               key={report.value}
               onClick={() => setReportType(report.value)}
-              className={`p-4 border rounded-lg cursor-pointer transition ${
-                reportType === report.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+              className={`p-4 border rounded-lg cursor-pointer transition ${reportType === report.value
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <h4 className="font-semibold mb-1">{report.label}</h4>
@@ -111,7 +127,7 @@ const Reports = () => {
               const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
               setDateRange({
                 startDate: lastWeek.toISOString().split('T')[0],
-                endDate: today.toISOString().split('T')[0]
+                endDate: today.toISOString().split('T')[0],
               });
             }}
             className="bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -124,7 +140,7 @@ const Reports = () => {
               const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
               setDateRange({
                 startDate: lastMonth.toISOString().split('T')[0],
-                endDate: today.toISOString().split('T')[0]
+                endDate: today.toISOString().split('T')[0],
               });
             }}
             className="bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -137,7 +153,7 @@ const Reports = () => {
               const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
               setDateRange({
                 startDate: firstDay.toISOString().split('T')[0],
-                endDate: today.toISOString().split('T')[0]
+                endDate: today.toISOString().split('T')[0],
               });
             }}
             className="bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -150,7 +166,7 @@ const Reports = () => {
               const lastYear = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
               setDateRange({
                 startDate: lastYear.toISOString().split('T')[0],
-                endDate: today.toISOString().split('T')[0]
+                endDate: today.toISOString().split('T')[0],
               });
             }}
             className="bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -190,6 +206,6 @@ const Reports = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Reports;

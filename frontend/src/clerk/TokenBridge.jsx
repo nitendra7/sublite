@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { setExternalTokenGetter } from '../utils/api';
 
 export default function TokenBridge() {
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     // Register a getter that returns a fresh Clerk token

@@ -13,11 +13,10 @@ const getApiBaseUrl = () => {
     // Ensure the URL ends with /api/v1 if it's not already included
     if (apiUrl.endsWith('/api/v1')) {
       return apiUrl;
-    } else if (apiUrl.endsWith('/')) {
-      return apiUrl + 'api/v1';
-    } else {
-      return apiUrl + '/api/v1';
+    } if (apiUrl.endsWith('/')) {
+      return `${apiUrl}api/v1`;
     }
+    return `${apiUrl}/api/v1`;
   }
 
   // Fallback to localhost for development or if no env var is set
@@ -50,14 +49,16 @@ api.interceptors.request.use(
   async (config) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      // eslint-disable-next-line no-param-reassign
+      config.headers.Authorization = `Bearer ${token}`;
       return config;
     }
     if (externalTokenGetter) {
       try {
         const extToken = await externalTokenGetter();
         if (extToken) {
-          config.headers['Authorization'] = `Bearer ${extToken}`;
+          // eslint-disable-next-line no-param-reassign
+          config.headers.Authorization = `Bearer ${extToken}`;
         }
       } catch (e) {
         // ignore, proceed without header
@@ -65,7 +66,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Helper: Refresh token
@@ -100,25 +101,27 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (
-      error.response &&
-      [401, 403].includes(error.response.status) &&
-      !originalRequest._retry
+      error.response
+      && [401, 403].includes(error.response.status)
+      // eslint-disable-next-line no-underscore-dangle
+      && !originalRequest._retry
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            originalRequest.headers.Authorization = `Bearer ${token}`;
             return api(originalRequest);
           })
           .catch((err) => Promise.reject(err));
       }
+      // eslint-disable-next-line no-underscore-dangle
       originalRequest._retry = true;
       isRefreshing = true;
       try {
         const newToken = await refreshAccessToken();
-        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         processQueue(null, newToken);
         return api(originalRequest);
       } catch (err) {
@@ -129,13 +132,11 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // Auth helpers
-export const isAuthenticated = () => {
-  return !!(localStorage.getItem('token') || localStorage.getItem('refreshToken'));
-};
+export const isAuthenticated = () => !!(localStorage.getItem('token') || localStorage.getItem('refreshToken'));
 
 export const logout = async () => {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -143,7 +144,7 @@ export const logout = async () => {
     try {
       await api.post('/auth/logout', { refreshToken });
     } catch (err) {
-      console.error('Logout API failed:', err);
+      // ignore
     }
   }
   localStorage.clear();

@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom';
 
-const Footer = () => {
+function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -21,7 +22,7 @@ const Footer = () => {
           <div className="space-y-2 md:space-y-4">
             <h3 className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">Support</h3>
             <div className="space-y-1">
-              <a href="#" className="block text-xs md:text-sm text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] transition-colors">Help Center</a>
+              <Link to="/help" className="block text-xs md:text-sm text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] transition-colors">Help Center</Link>
               <a
                 href="mailto:support@sublite.app?subject=Support Request"
                 className="block text-xs md:text-sm text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] transition-colors"
@@ -62,17 +63,21 @@ const Footer = () => {
         <div className="mt-4 pt-4 md:mt-8 md:pt-6 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              &copy; {currentYear} Sublite. All rights reserved.
+              &copy;
+              {' '}
+              {currentYear}
+              {' '}
+              Sublite. All rights reserved.
             </p>
             <div className="flex gap-4 text-xs">
-              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-[#2bb6c4] transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-[#2bb6c4] transition-colors">Terms of Service</a>
+              <Link to="/privacy" className="text-gray-500 dark:text-gray-400 hover:text-[#2bb6c4] transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="text-gray-500 dark:text-gray-400 hover:text-[#2bb6c4] transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
       </div>
     </footer>
   );
-};
+}
 
 export default Footer;

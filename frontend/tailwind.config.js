@@ -1,7 +1,7 @@
 module.exports = {
   darkMode: 'class',
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    './src/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {
@@ -50,19 +50,19 @@ module.exports = {
         },
       },
       transitionTimingFunction: {
-        'bounce': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        'elastic': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        elastic: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         'ease-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
         'ease-in': 'cubic-bezier(0.4, 0, 1, 1)',
         'ease-out': 'cubic-bezier(0, 0, 0.2, 1)',
       },
       transitionDuration: {
-        '150': '150ms',
-        '250': '250ms',
-        '350': '350ms',
-        '500': '500ms',
+        150: '150ms',
+        250: '250ms',
+        350: '350ms',
+        500: '500ms',
       },
     },
   },
   plugins: [],
-}
+};

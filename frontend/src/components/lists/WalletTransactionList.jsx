@@ -11,9 +11,9 @@ export default function WalletTransactionList() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get(`/wallettransactions`)
-      .then(res => {
-        const data = res.data;
+    api.get('/wallettransactions')
+      .then((res) => {
+        const { data } = res;
         if (Array.isArray(data)) setTransactions(data);
         else setError(data.error || 'Failed to fetch wallet transactions');
       })
@@ -26,17 +26,31 @@ export default function WalletTransactionList() {
     <div>
       <h2 className="mb-4">Wallet Transactions</h2>
       <div className="row g-4">
-        {transactions.map(t => (
+        {transactions.map((t) => (
           <div key={t._id || t.id} className="col-md-6 col-lg-4">
             <div className="card h-100 shadow-sm border-0 rounded-4">
               <div className="card-body">
                 <h5 className="card-title text-primary fw-bold mb-3">Wallet Transaction</h5>
-                <div className="mb-2"><span className="fw-semibold">Amount:</span> {t.amount}</div>
                 <div className="mb-2">
-                  <span className="fw-semibold">Type:</span> <span className={`badge bg-${t.type === 'credit' ? 'success' : 'danger'} text-uppercase`}>{t.type}</span>
+                  <span className="fw-semibold">Amount:</span>
+                  {' '}
+                  {t.amount}
                 </div>
-                <div className="mb-2"><span className="fw-semibold">Status:</span> {t.status}</div>
-                <div className="mb-2"><span className="fw-semibold">Date:</span> {formatDate(t.createdAt)}</div>
+                <div className="mb-2">
+                  <span className="fw-semibold">Type:</span>
+                  {' '}
+                  <span className={`badge bg-${t.type === 'credit' ? 'success' : 'danger'} text-uppercase`}>{t.type}</span>
+                </div>
+                <div className="mb-2">
+                  <span className="fw-semibold">Status:</span>
+                  {' '}
+                  {t.status}
+                </div>
+                <div className="mb-2">
+                  <span className="fw-semibold">Date:</span>
+                  {' '}
+                  {formatDate(t.createdAt)}
+                </div>
               </div>
             </div>
           </div>
@@ -44,4 +58,4 @@ export default function WalletTransactionList() {
       </div>
     </div>
   );
-} 
+}

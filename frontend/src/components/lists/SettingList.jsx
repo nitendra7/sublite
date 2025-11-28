@@ -5,9 +5,9 @@ export default function SettingList() {
   const [settings, setSettings] = useState([]);
   const [error, setError] = useState('');
   useEffect(() => {
-    api.get(`/settings`)
-      .then(res => {
-        const data = res.data;
+    api.get('/settings')
+      .then((res) => {
+        const { data } = res;
         if (Array.isArray(data)) setSettings(data);
         else setError(data.error || 'Failed to fetch settings');
       })
@@ -18,8 +18,15 @@ export default function SettingList() {
     <div>
       <h3>Settings</h3>
       <ul>
-        {settings.map(s => <li key={s._id}>{s.key}: {s.value}</li>)}
+        {settings.map((s) => (
+          <li key={s._id}>
+            {s.key}
+            :
+            {' '}
+            {s.value}
+          </li>
+        ))}
       </ul>
     </div>
   );
-} 
+}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import PropTypes from "prop-types";
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   Bell,
   CheckCircle,
@@ -8,13 +8,13 @@ import {
   Loader2,
   MessageSquare,
   Clock,
-} from "lucide-react";
-import { useUser } from "../context/UserContext";
-import Loading from "../components/ui/Loading";
+} from 'lucide-react';
+import { useUser } from '../context/UserContext';
+import Loading from '../components/ui/Loading';
 
-import api from "../utils/api";
+import api from '../utils/api';
 
-const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
+function SendCredentialsButton({ bookingId, onOpenModal }) {
   const [bookingStatus, setBookingStatus] = useState(null);
   const [bookingCreatedAt, setBookingCreatedAt] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,7 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
         setBookingStatus(booking.bookingStatus);
         setBookingCreatedAt(booking.createdAt);
       } catch (err) {
-        console.error("Failed to fetch booking details:", err);
+        // console.error('Failed to fetch booking details:', err);
       } finally {
         setIsLoading(false);
       }
@@ -38,7 +38,7 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   const isEligible = () => {
     if (isLoading || !bookingStatus || !bookingCreatedAt) return false;
-    if (bookingStatus !== "pending") return false;
+    if (bookingStatus !== 'pending') return false;
     const created = new Date(bookingCreatedAt);
     const now = new Date();
     const diffMinutes = (now - created) / (1000 * 60);
@@ -59,10 +59,9 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
 
   return (
     <button
-      className={`mt-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
-        isEligible()
-          ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl"
-          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+      className={`mt-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${isEligible()
+        ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow-lg hover:shadow-xl'
+        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
       }`}
       onClick={() => {
         if (isEligible()) {
@@ -72,14 +71,14 @@ const SendCredentialsButton = ({ bookingId, onOpenModal }) => {
       disabled={!isEligible()}
       title={
         !isEligible()
-          ? "Booking not eligible (must be pending and within 15 minutes)"
-          : ""
+          ? 'Booking not eligible (must be pending and within 15 minutes)'
+          : ''
       }
     >
       Send Credentials
     </button>
   );
-};
+}
 
 SendCredentialsButton.propTypes = {
   bookingId: PropTypes.string.isRequired,
@@ -105,13 +104,13 @@ export default function NotificationsPage() {
   const [showCredModal, setShowCredModal] = useState(false);
   const [credBookingId, setCredBookingId] = useState(null);
   const [credValues, setCredValues] = useState({
-    username: "",
-    password: "",
-    profileName: "",
-    accessInstructions: "",
+    username: '',
+    password: '',
+    profileName: '',
+    accessInstructions: '',
   });
   const [credLoading, setCredLoading] = useState(false);
-  const [credError, setCredError] = useState("");
+  const [credError, setCredError] = useState('');
   const [credBookingCreatedAt, setCredBookingCreatedAt] = useState(null);
 
   const markRead = async (notifId) => {
@@ -119,7 +118,7 @@ export default function NotificationsPage() {
       await api.patch(`/notifications/${notifId}/read`);
       return true;
     } catch (err) {
-      console.error("Failed to mark notification as read:", err);
+      // console.error('Failed to mark notification as read:', err);
       return false;
     }
   };
@@ -128,13 +127,13 @@ export default function NotificationsPage() {
     try {
       await api.patch(`/bookings/${bookingId}/confirm`);
     } catch (err) {
-      console.error("Failed to confirm booking:", err);
+      // console.error('Failed to confirm booking:', err);
     }
   };
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get(`/notifications`);
+      const response = await api.get('/notifications');
       setNotifications(response.data);
     } catch (err) {
       setError(err.message);
@@ -152,28 +151,28 @@ export default function NotificationsPage() {
 
       // Pre-fill credentials from the service
       if (booking.serviceId && booking.serviceId.credentials) {
-        const credentials = booking.serviceId.credentials;
+        const { credentials } = booking.serviceId;
         setCredValues({
-          username: credentials.username || "",
-          password: credentials.password || "",
-          profileName: credentials.profileName || "",
-          accessInstructions: booking.serviceId.accessInstructionsTemplate || "",
+          username: credentials.username || '',
+          password: credentials.password || '',
+          profileName: credentials.profileName || '',
+          accessInstructions: booking.serviceId.accessInstructionsTemplate || '',
         });
       } else {
         // Reset to empty if no credentials
         setCredValues({
-          username: "",
-          password: "",
-          profileName: "",
-          accessInstructions: "",
+          username: '',
+          password: '',
+          profileName: '',
+          accessInstructions: '',
         });
       }
 
       setShowCredModal(true);
-      setCredError("");
+      setCredError('');
     } catch (err) {
-      console.error("Failed to fetch booking details:", err);
-      setCredError("Failed to load booking details");
+      // console.error('Failed to fetch booking details:', err);
+      setCredError('Failed to load booking details');
     }
   };
 
@@ -184,22 +183,22 @@ export default function NotificationsPage() {
   const handleSendCredentials = async (e) => {
     e.preventDefault();
     setCredLoading(true);
-    setCredError("");
+    setCredError('');
 
     try {
       await api.post(`/bookings/${credBookingId}/send-message`, credValues);
       setShowCredModal(false);
       setCredValues({
-        username: "",
-        password: "",
-        profileName: "",
-        accessInstructions: "",
+        username: '',
+        password: '',
+        profileName: '',
+        accessInstructions: '',
       });
       await fetchNotifications();
     } catch (err) {
       // Extract error message from API response
-      const errorMessage = err.response?.data?.message || err.message || "Failed to send credentials";
-      console.error("Error sending credentials:", err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to send credentials';
+      // console.error('Error sending credentials:', err);
       setCredError(errorMessage);
     } finally {
       setCredLoading(false);
@@ -304,33 +303,23 @@ export default function NotificationsPage() {
             {notifications.map((n, idx) => (
               <div
                 key={n._id}
-                className={`p-6 transition-all duration-300 cursor-pointer animate-fade-in hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                  n.isRead ? "opacity-70" : "opacity-100"
+                className={`p-6 transition-all duration-300 cursor-pointer animate-fade-in hover:bg-gray-50 dark:hover:bg-gray-700/50 ${n.isRead ? 'opacity-70' : 'opacity-100'
                 }`}
                 style={{ animationDelay: `${idx * 100}ms` }}
                 onClick={async () => {
                   if (!n.isRead) {
-                    setNotifications((prev) =>
-                      prev.map((notification) =>
-                        notification._id === n._id
-                          ? { ...notification, isRead: true }
-                          : notification,
-                      ),
-                    );
+                    setNotifications((prev) => prev.map((notification) => (notification._id === n._id
+                      ? { ...notification, isRead: true }
+                      : notification)));
                     const success = await markRead(n._id);
                     if (!success) {
-                      setNotifications((prev) =>
-                        prev.map((notification) =>
-                          notification._id === n._id
-                            ? { ...notification, isRead: false }
-                            : notification,
-                        ),
-                      );
+                      setNotifications((prev) => prev.map((notification) => (notification._id === n._id
+                        ? { ...notification, isRead: false }
+                        : notification)));
                     }
                   }
                   setExpandedId(expandedId === n._id ? null : n._id);
-                  if (n.title === "New Booking!" && n.relatedId)
-                    await confirmBooking(n.relatedId);
+                  if (n.title === 'New Booking!' && n.relatedId) await confirmBooking(n.relatedId);
                 }}
               >
                 <div className="flex items-start gap-4">
@@ -343,7 +332,7 @@ export default function NotificationsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3
-                          className={`font-semibold text-lg ${n.isRead ? "text-gray-500 dark:text-gray-400" : "text-gray-800 dark:text-gray-100"}`}
+                          className={`font-semibold text-lg ${n.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-100'}`}
                         >
                           {n.title}
                         </h3>
@@ -358,7 +347,7 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Send Credentials Button */}
-                    {n.title === "New Booking!" && n.relatedId && (
+                    {n.title === 'New Booking!' && n.relatedId && (
                       <SendCredentialsButton
                         bookingId={n.relatedId}
                         onOpenModal={openCredModal}
@@ -455,7 +444,7 @@ export default function NotificationsPage() {
                           Sending...
                         </>
                       ) : (
-                        "Send Credentials"
+                        'Send Credentials'
                       )}
                     </button>
                     <button

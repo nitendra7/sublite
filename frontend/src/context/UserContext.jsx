@@ -1,22 +1,25 @@
 // src/context/UserContext.jsx
-import { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import {
+  createContext, useState, useEffect, useContext, useCallback, useMemo,
+} from 'react';
 import PropTypes from 'prop-types';
 import api, { setSessionExpiredHandler } from '../utils/api';
 
 // Create the Context with default values.
 const UserContext = createContext({
-  user: null, // Fetched user data
-  loading: true, // Data loading state
-  error: null, // Error message
-  fetchUserProfile: () => {}, // Function to trigger profile fetch
-  updateUserContext: () => {}, // Function to update user data in context
-  setAuthError: () => {}, // Function to set authentication errors
-  clearAuthData: () => {}, // Function to clear user data and token
-  userId: null, // User's ID
-  token: null, // Authentication token
+  user: null,
+  loading: true,
+  error: null,
+  fetchUserProfile: () => { },
+  updateUserContext: () => { },
+  setAuthError: () => { },
+  clearAuthData: () => { },
+  userId: null,
+  token: null,
 });
 
-// Helper hook to consume the context, ensuring it's used within a Provider.
+// Hook to consume UserContext.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
@@ -25,42 +28,40 @@ export const useUser = () => {
   return context;
 };
 
-// UserProvider Component: Provides user authentication and profile data to its children.
-export const UserProvider = ({ children }) => {
+// Provides user auth and profile data.
+export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // API_BASE now handled by utils/api singleton
-
-  // Clears all authentication-related data from localStorage and context.
+  // Clears auth data.
   const clearAuthData = useCallback(() => {
-    localStorage.removeItem("userId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
+    localStorage.removeItem('userId');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
     setUser(null);
     setError(null);
     setLoading(false);
   }, []);
 
-  // Fetches the user profile from the backend.
+  // Fetches user profile.
   const fetchUserProfile = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    const userIdToFetch = localStorage.getItem("userId");
-    const tokenToFetch = localStorage.getItem("token");
+    const userIdToFetch = localStorage.getItem('userId');
+    const tokenToFetch = localStorage.getItem('token');
 
     if (!userIdToFetch || !tokenToFetch) {
-      setError("Please log in to view your profile.");
+      setError('Please log in to view your profile.');
       setLoading(false);
       setUser(null);
       return;
     }
 
     try {
-      const res = await api.get(`/users/me`);
+      const res = await api.get('/users/me');
       setUser(res.data);
     } catch (err) {
       setError(`Failed to load user profile: ${err.message}`);
@@ -70,17 +71,17 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  // Effect to trigger fetching the user profile when the component mounts.
+  // Fetch profile on mount.
   useEffect(() => {
-    const initialUserId = localStorage.getItem("userId");
-    const initialToken = localStorage.getItem("token");
+    const initialUserId = localStorage.getItem('userId');
+    const initialToken = localStorage.getItem('token');
 
     if (initialUserId && initialToken) {
       fetchUserProfile();
     } else {
       setLoading(false);
       setUser(null);
-      setError("Please log in to view your profile.");
+      setError('Please log in to view your profile.');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
@@ -94,21 +95,21 @@ export const UserProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Updates the user object within the context directly.
-  // Allows immediate context rehydrate for login: set user and optimistically end loading, then fetch profile in background
+  // Updates user context and optionally fetches profile.
   const rehydrateUserContext = useCallback((userData, triggerProfileFetch = true) => {
     setUser(userData);
-    setLoading(false);
     if (userData?.name) {
       localStorage.setItem('userName', userData.name);
     }
     if (triggerProfileFetch) {
-      setTimeout(fetchUserProfile, 0); // trigger real fetch in background next tick
+      fetchUserProfile();
+    } else {
+      setLoading(false);
     }
   }, [fetchUserProfile]);
 
   const updateUserContext = useCallback((updatedUserData) => {
-    setUser(prevUser => {
+    setUser((prevUser) => {
       if (!prevUser) return updatedUserData;
       return { ...prevUser, ...updatedUserData };
     });
@@ -117,15 +118,15 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  // Allows other components to set an authentication-related error.
+  // Sets auth error.
   const setAuthError = useCallback((message) => {
     setError(message);
   }, []);
 
-  // Memoizes the context value to prevent unnecessary re-renders.
+  // Memoized context value.
   const contextValue = useMemo(() => {
-    const userIdInContext = localStorage.getItem("userId");
-    const tokenInContext = localStorage.getItem("token");
+    const userIdInContext = localStorage.getItem('userId');
+    const tokenInContext = localStorage.getItem('token');
 
     return {
       user,
@@ -163,7 +164,7 @@ export const UserProvider = ({ children }) => {
       )}
     </UserContext.Provider>
   );
-};
+}
 
 // PropTypes validation for UserProvider
 UserProvider.propTypes = {

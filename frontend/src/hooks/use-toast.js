@@ -1,13 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 1000;
 
 const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
+  ADD_TOAST: 'ADD_TOAST',
+  UPDATE_TOAST: 'UPDATE_TOAST',
+  DISMISS_TOAST: 'DISMISS_TOAST',
+  REMOVE_TOAST: 'REMOVE_TOAST',
 };
 
 let count = 0;
@@ -49,9 +49,7 @@ const reducer = (state, action) => {
     case actionTypes.UPDATE_TOAST:
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toastId ? { ...t, ...action.toast } : t
-        ),
+        toasts: state.toasts.map((t) => (t.id === action.toastId ? { ...t, ...action.toast } : t)),
       };
 
     case actionTypes.DISMISS_TOAST: {
@@ -67,14 +65,12 @@ const reducer = (state, action) => {
 
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t
-        ),
+        toasts: state.toasts.map((t) => (t.id === toastId || toastId === undefined
+          ? {
+            ...t,
+            open: false,
+          }
+          : t)),
       };
     }
     case actionTypes.REMOVE_TOAST:
@@ -88,6 +84,8 @@ const reducer = (state, action) => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       };
+    default:
+      return state;
   }
 };
 
@@ -103,23 +101,21 @@ function dispatch(action) {
 }
 
 function toast({
-  variant = "default",
+  variant = 'default',
   ...props
 }) {
   const id = genId();
 
-  const update = (props) =>
-    dispatch({
-      type: actionTypes.UPDATE_TOAST,
-      toast: props,
-      toastId: id,
-    });
+  const update = (props) => dispatch({
+    type: actionTypes.UPDATE_TOAST,
+    toast: props,
+    toastId: id,
+  });
 
-  const dismiss = () =>
-    dispatch({
-      type: actionTypes.DISMISS_TOAST,
-      toastId: id,
-    });
+  const dismiss = () => dispatch({
+    type: actionTypes.DISMISS_TOAST,
+    toastId: id,
+  });
 
   dispatch({
     type: actionTypes.ADD_TOAST,

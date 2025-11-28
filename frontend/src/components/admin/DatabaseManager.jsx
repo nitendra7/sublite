@@ -1,52 +1,78 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
-const DatabaseManager = () => {
-  const [stats, setStats] = useState({
+function DatabaseManager() {
+  const { toast } = useToast();
+  const [stats] = useState({
     totalCollections: 12,
     totalDocuments: 45678,
     databaseSize: '2.5 GB',
     indexSize: '450 MB',
-    lastBackup: '2025-01-15 10:30:00'
+    lastBackup: '2025-01-15 10:30:00',
   });
 
-  const [collections, setCollections] = useState([
-    { name: 'users', documents: 1234, size: '125 MB', indexes: 3 },
-    { name: 'bookings', documents: 5678, size: '580 MB', indexes: 5 },
-    { name: 'services', documents: 890, size: '95 MB', indexes: 4 },
-    { name: 'payments', documents: 4567, size: '450 MB', indexes: 4 },
-    { name: 'reviews', documents: 2345, size: '180 MB', indexes: 3 }
+  const [collections] = useState([
+    {
+      name: 'users', documents: 1234, size: '125 MB', indexes: 3,
+    },
+    {
+      name: 'bookings', documents: 5678, size: '580 MB', indexes: 5,
+    },
+    {
+      name: 'services', documents: 890, size: '95 MB', indexes: 4,
+    },
+    {
+      name: 'payments', documents: 4567, size: '450 MB', indexes: 4,
+    },
+    {
+      name: 'reviews', documents: 2345, size: '180 MB', indexes: 3,
+    },
   ]);
 
   const [optimizing, setOptimizing] = useState(false);
 
   const handleOptimizeCollection = async (collectionName) => {
-    if (!confirm(`Optimize ${collectionName} collection?`)) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(`Optimize ${collectionName} collection?`)) {
       return;
     }
 
-    alert(`Optimizing ${collectionName}...`);
+    toast({
+      title: 'Optimization',
+      description: `Optimizing ${collectionName}...`,
+    });
   };
 
   const handleRepairDatabase = async () => {
-    if (!confirm('This will repair the database. Continue?')) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('This will repair the database. Continue?')) {
       return;
     }
 
     setOptimizing(true);
     setTimeout(() => {
-      alert('Database repaired successfully!');
+      toast({
+        title: 'Success',
+        description: 'Database repaired successfully!',
+      });
       setOptimizing(false);
     }, 2000);
   };
 
   const handleRebuildIndexes = async (collectionName) => {
-    alert(`Rebuilding indexes for ${collectionName}...`);
+    toast({
+      title: 'Rebuilding Indexes',
+      description: `Rebuilding indexes for ${collectionName}...`,
+    });
   };
 
   const handleViewIndexes = (collectionName) => {
-    alert(`Viewing indexes for ${collectionName}`);
+    toast({
+      title: 'Indexes',
+      description: `Viewing indexes for ${collectionName}`,
+    });
   };
 
   return (
@@ -156,6 +182,6 @@ const DatabaseManager = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default DatabaseManager;

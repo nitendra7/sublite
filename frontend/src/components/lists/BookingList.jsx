@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import api from "../../utils/api";
-import { formatDate } from "../../utils/dateUtils";
+import { useEffect, useState } from 'react';
+import api from '../../utils/api';
+import { formatDate } from '../../utils/dateUtils';
 
 function BookingList() {
   const [bookings, setBookings] = useState([]);
@@ -8,12 +8,19 @@ function BookingList() {
 
   useEffect(() => {
     api
-      .get(`/bookings`)
+      .get('/bookings')
       .then((res) => setBookings(res.data))
       .catch((err) => setError(err.message));
   }, []);
 
-  if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
+  if (error) {
+    return (
+      <div style={{ color: 'red' }}>
+        Error:
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -27,24 +34,30 @@ function BookingList() {
                   {b.bookingDetails?.serviceName}
                 </h5>
                 <div className="mb-2">
-                  <span className="fw-semibold">Client:</span> {b.clientId}
+                  <span className="fw-semibold">Client:</span>
+                  {' '}
+                  {b.clientId}
                 </div>
                 <div className="mb-2">
-                  <span className="fw-semibold">Rental Price:</span>{" "}
+                  <span className="fw-semibold">Rental Price:</span>
+                  {' '}
                   {b.bookingDetails?.rentalPrice}
                 </div>
                 <div className="mb-2">
-                  <span className="fw-semibold">Start:</span>{" "}
+                  <span className="fw-semibold">Start:</span>
+                  {' '}
                   {formatDate(b.bookingDetails?.startDate)}
                 </div>
                 <div className="mb-2">
-                  <span className="fw-semibold">End:</span>{" "}
+                  <span className="fw-semibold">End:</span>
+                  {' '}
                   {formatDate(b.bookingDetails?.endDate)}
                 </div>
                 <div className="mb-2">
-                  <span className="fw-semibold">Payment Status:</span>{" "}
+                  <span className="fw-semibold">Payment Status:</span>
+                  {' '}
                   <span
-                    className={`badge bg-${b.paymentDetails?.paymentStatus === "completed" ? "success" : "secondary"} text-uppercase`}
+                    className={`badge bg-${b.paymentDetails?.paymentStatus === 'completed' ? 'success' : 'secondary'} text-uppercase`}
                   >
                     {b.paymentDetails?.paymentStatus}
                   </span>

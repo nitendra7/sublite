@@ -15,10 +15,10 @@ export const EASINGS = {
   // Standard easings
   default: 'cubic-bezier(0.4, 0, 0.2, 1)', // Material Design standard easing
   linear: 'linear',
-  easeIn: 'cubic-bezier(0.4, 0, 1, 1)',    // Material Design ease-in
-  easeOut: 'cubic-bezier(0, 0, 0.2, 1)',    // Material Design ease-out
+  easeIn: 'cubic-bezier(0.4, 0, 1, 1)', // Material Design ease-in
+  easeOut: 'cubic-bezier(0, 0, 0.2, 1)', // Material Design ease-out
   easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)', // Material Design ease-in-out
-  
+
   // Custom easings
   bounce: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
   elastic: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
@@ -29,7 +29,7 @@ export const TRANSITIONS = {
   default: `all ${DURATIONS.medium}ms ${EASINGS.default}`,
   fast: `all ${DURATIONS.fast}ms ${EASINGS.default}`,
   slow: `all ${DURATIONS.slow}ms ${EASINGS.default}`,
-  
+
   // Property-specific transitions
   transform: `transform ${DURATIONS.medium}ms ${EASINGS.default}`,
   opacity: `opacity ${DURATIONS.medium}ms ${EASINGS.easeInOut}`,
@@ -37,7 +37,7 @@ export const TRANSITIONS = {
   background: `background ${DURATIONS.fast}ms ${EASINGS.default}`,
   border: `border ${DURATIONS.fast}ms ${EASINGS.default}`,
   shadow: `box-shadow ${DURATIONS.medium}ms ${EASINGS.easeOut}`,
-  
+
   // Combined property transitions
   button: `background ${DURATIONS.fast}ms ${EASINGS.default}, color ${DURATIONS.fast}ms ${EASINGS.default}, border-color ${DURATIONS.fast}ms ${EASINGS.default}, box-shadow ${DURATIONS.fast}ms ${EASINGS.easeOut}`,
   scale: `transform ${DURATIONS.medium}ms ${EASINGS.bounce}`,
@@ -63,7 +63,7 @@ export const ANIMATIONS = {
 // Helper function to create transition string for specific properties
 export function createTransition(properties = ['all'], duration = DURATIONS.medium, easing = EASINGS.default) {
   if (Array.isArray(properties)) {
-    return properties.map(prop => `${prop} ${duration}ms ${easing}`).join(', ');
+    return properties.map((prop) => `${prop} ${duration}ms ${easing}`).join(', ');
   }
   return `${properties} ${duration}ms ${easing}`;
 }

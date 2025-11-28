@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid,
   AlertTriangle,
@@ -8,22 +8,23 @@ import {
   Plus,
   Users,
   IndianRupee,
-} from "lucide-react";
-import { useUser } from "../../context/UserContext";
-import Loading from "../ui/Loading";
+} from 'lucide-react';
+import { useUser } from '../../context/UserContext';
+import Loading from '../ui/Loading';
 import {
   filterValidServices,
-  reportMissingProviders,
-} from "../../utils/serviceUtils";
+} from '../../utils/serviceUtils';
 
-import api, { API_BASE } from "../../utils/api";
+import api from '../../utils/api';
 
 // DashboardOverview component displays a comprehensive summary of the user's dashboard.
-const DashboardOverview = () => {
+function DashboardOverview() {
   const { user, token } = useUser();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
-    subscriptions: { active: 0, completed: 0, provided: 0, paused: 0 },
+    subscriptions: {
+      active: 0, completed: 0, provided: 0, paused: 0,
+    },
     wallet: { balance: 0, transactions: 0 },
     reviews: { given: 0, received: 0 },
     notifications: { unread: 0, total: 0 },
@@ -41,27 +42,24 @@ const DashboardOverview = () => {
       setError(null);
 
       try {
-        console.log("API_BASE:", API_BASE);
-        console.log("Token:", token ? "Present" : "Missing");
-
         const results = await Promise.allSettled([
           // Fetch user's bookings/subscriptions
-          api.get("/bookings/my-bookings"),
+          api.get('/bookings/my-bookings'),
 
           // Fetch services provided by the user
-          api.get("/services/my-services"),
+          api.get('/services/my-services'),
 
           // Fetch wallet data
-          api.get("/wallettransactions"),
+          api.get('/wallettransactions'),
 
           // Fetch reviews data
-          api.get("/reviews/my/reviews"),
+          api.get('/reviews/my/reviews'),
 
           // Fetch notifications
-          api.get("/notifications"),
+          api.get('/notifications'),
 
           // Fetch available services
-          api.get("/services"),
+          api.get('/services'),
         ]);
 
         // Process results
@@ -74,48 +72,36 @@ const DashboardOverview = () => {
           servicesRes,
         ] = results;
 
-        const bookings =
-          bookingsRes.status === "fulfilled" ? bookingsRes.value.data : [];
+        const bookings = bookingsRes.status === 'fulfilled' ? bookingsRes.value.data : [];
 
-        const providedServices =
-          providedServicesRes.status === "fulfilled"
-            ? providedServicesRes.value.data
-            : [];
+        const providedServices = providedServicesRes.status === 'fulfilled'
+          ? providedServicesRes.value.data
+          : [];
 
-        const walletTransactions =
-          walletRes.status === "fulfilled" ? walletRes.value.data : [];
+        const walletTransactions = walletRes.status === 'fulfilled' ? walletRes.value.data : [];
 
-        const reviews =
-          reviewsRes.status === "fulfilled" ? reviewsRes.value.data : [];
+        const reviews = reviewsRes.status === 'fulfilled' ? reviewsRes.value.data : [];
 
-        const notifications =
-          notificationsRes.status === "fulfilled"
-            ? notificationsRes.value.data
-            : [];
+        const notifications = notificationsRes.status === 'fulfilled'
+          ? notificationsRes.value.data
+          : [];
 
-        const servicesData =
-          servicesRes.status === "fulfilled" ? servicesRes.value.data : [];
+        const servicesData = servicesRes.status === 'fulfilled' ? servicesRes.value.data : [];
 
         // Filter out services with missing providers
         const services = filterValidServices(servicesData);
 
-        // Report any services with missing providers for debugging
-        if (servicesData.length !== services.length) {
-          reportMissingProviders(servicesData);
-        }
-
         // Process data
         const activeBookings = bookings.filter(
-          (b) =>
-            b.bookingStatus === "active" ||
-            b.bookingStatus === "confirmed" ||
-            b.bookingStatus === "pending",
+          (b) => b.bookingStatus === 'active'
+            || b.bookingStatus === 'confirmed'
+            || b.bookingStatus === 'pending',
         );
         const completedBookings = bookings.filter(
-          (b) => b.bookingStatus === "completed",
+          (b) => b.bookingStatus === 'completed',
         );
         const pausedBookings = bookings.filter(
-          (b) => b.bookingStatus === "paused",
+          (b) => b.bookingStatus === 'paused',
         );
 
         const walletBalance = user?.walletBalance || 0;
@@ -146,8 +132,8 @@ const DashboardOverview = () => {
           recentActivity: walletTransactions.slice(0, 3), // Last 3 transactions
         });
       } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data");
+        // console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -175,7 +161,10 @@ const DashboardOverview = () => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">
-          Welcome back, {user?.name?.split(" ")[0] || "Nitendra"}!
+          Welcome back,
+          {' '}
+          {user?.name?.split(' ')[0] || 'Nitendra'}
+          !
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Here&apos;s what&apos;s happening with your subscriptions today.
@@ -192,7 +181,8 @@ const DashboardOverview = () => {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
           <div className="text-2xl font-bold text-[#2bb6c4] dark:text-[#5ed1dc] mb-1">
-            ₹{dashboardData.wallet.balance.toLocaleString("en-IN")}
+            ₹
+            {dashboardData.wallet.balance.toLocaleString('en-IN')}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Balance
@@ -278,7 +268,8 @@ const DashboardOverview = () => {
 
             <div className="text-center mb-6 flex-1 flex flex-col justify-center">
               <div className="text-4xl font-bold mb-2 text-[#2bb6c4] dark:text-[#5ed1dc]">
-                ₹{dashboardData.wallet.balance.toLocaleString("en-IN")}
+                ₹
+                {dashboardData.wallet.balance.toLocaleString('en-IN')}
               </div>
               {dashboardData.wallet.balance < 100 && (
                 <div className="flex items-center justify-center gap-1 text-orange-600 dark:text-orange-400 text-sm font-medium">
@@ -297,7 +288,7 @@ const DashboardOverview = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate("/dashboard/wallet#add-money");
+                  navigate('/dashboard/wallet#add-money');
                 }}
                 className="w-full bg-[#2bb6c4] hover:bg-[#1ea1b0] dark:bg-[#5ed1dc] dark:hover:bg-[#2bb6c4] text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2"
               >
@@ -430,25 +421,23 @@ const DashboardOverview = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        transaction.type === "credit"
-                          ? "bg-green-100 dark:bg-green-900/20"
-                          : "bg-red-100 dark:bg-red-900/20"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${transaction.type === 'credit'
+                        ? 'bg-green-100 dark:bg-green-900/20'
+                        : 'bg-red-100 dark:bg-red-900/20'
                       }`}
                     >
                       <span
-                        className={`text-sm font-bold ${
-                          transaction.type === "credit"
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
+                        className={`text-sm font-bold ${transaction.type === 'credit'
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-600 dark:text-red-400'
                         }`}
                       >
-                        {transaction.type === "credit" ? "+" : "-"}
+                        {transaction.type === 'credit' ? '+' : '-'}
                       </span>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {transaction.description || "Wallet Transaction"}
+                        {transaction.description || 'Wallet Transaction'}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(transaction.createdAt).toLocaleDateString()}
@@ -456,13 +445,13 @@ const DashboardOverview = () => {
                     </div>
                   </div>
                   <div
-                    className={`text-sm font-bold ${
-                      transaction.type === "credit"
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
+                    className={`text-sm font-bold ${transaction.type === 'credit'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
                     }`}
                   >
-                    {transaction.type === "credit" ? "+" : "-"}₹
+                    {transaction.type === 'credit' ? '+' : '-'}
+                    ₹
                     {transaction.amount}
                   </div>
                 </div>
@@ -473,6 +462,6 @@ const DashboardOverview = () => {
       )}
     </div>
   );
-};
+}
 
 export default DashboardOverview;

@@ -1,24 +1,27 @@
-import { useState, useEffect } from "react";
-import { Users, Star, LayoutGrid, List, Search } from "lucide-react";
-import { useUser } from "../context/UserContext";
-import Loading from "../components/ui/Loading";
-import BookingModal from "../components/modals/BookingModal";
+import { useState, useEffect } from 'react';
+import {
+  Users, LayoutGrid, List, Search,
+} from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
+import { useUser } from '../context/UserContext';
+import Loading from '../components/ui/Loading';
+import BookingModal from '../components/modals/BookingModal';
 import {
   filterValidServices,
-  reportMissingProviders,
-} from "../utils/serviceUtils";
+} from '../utils/serviceUtils';
 
-import api from "../utils/api";
+import api from '../utils/api';
 
-import GridCard from "../components/ui/GridCard";
+import GridCard from '../components/ui/GridCard';
 
-const Availableplans = () => {
+function Availableplans() {
   const { token } = useUser();
+  const { toast } = useToast();
   // MOBILE: expandedServiceId tracks which service is in "grid" (expanded) mode
   const [expandedServiceId, setExpandedServiceId] = useState(null);
   // DESKTOP: grid/list view for sm+ only
   const [isGridView, setIsGridView] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
@@ -29,9 +32,9 @@ const Availableplans = () => {
     const fetchData = async () => {
       try {
         const [plansRes, bookingsRes] = await Promise.all([
-          api.get("/services"),
+          api.get('/services'),
           token
-            ? api.get("/bookings/my-bookings")
+            ? api.get('/bookings/my-bookings')
             : Promise.resolve({ data: null }),
         ]);
 
@@ -42,7 +45,7 @@ const Availableplans = () => {
 
           // Report any services with missing providers for debugging
           if (plansData.length !== validPlans.length) {
-            reportMissingProviders(plansData);
+            // console.warn('Some plans were filtered out due to missing providers');
           }
 
           const availablePlans = validPlans.filter(
@@ -50,7 +53,6 @@ const Availableplans = () => {
           );
           setPlans(availablePlans);
         } else {
-          console.error("API did not return an array of plans:", plansData);
           setPlans([]);
         }
         if (token && bookingsRes.data) {
@@ -58,17 +60,12 @@ const Availableplans = () => {
           if (Array.isArray(bookingsData)) {
             setUserBookings(bookingsData);
           } else {
-            console.error(
-              "Bookings API did not return an array:",
-              bookingsData,
-            );
             setUserBookings([]);
           }
         } else {
           setUserBookings([]);
         }
       } catch (error) {
-        console.error("Failed to fetch data:", error);
         setPlans([]);
       } finally {
         setLoading(false);
@@ -80,31 +77,37 @@ const Availableplans = () => {
 
   const handleBookService = async (service) => {
     if (!token) {
-      alert("Please login to book a service.");
+      toast({
+        title: 'Authentication Required',
+        description: 'Please login to book a service.',
+        variant: 'destructive',
+      });
       return;
     }
 
     try {
-      const response = await api.get(`/bookings/my-bookings`);
+      const response = await api.get('/bookings/my-bookings');
       const userBookingsCheck = response.data;
       const existingBooking = Array.isArray(userBookingsCheck)
         ? userBookingsCheck.find(
-            (booking) =>
-              booking.serviceId === service._id &&
-              ["pending", "confirmed", "active"].includes(
-                booking.bookingStatus,
-              ),
-          )
+          (booking) => booking.serviceId === service._id
+            && ['pending', 'confirmed', 'active'].includes(
+              booking.bookingStatus,
+            ),
+        )
         : null;
 
       if (existingBooking) {
-        alert(
-          "You have already booked this service. You cannot book the same service twice.",
-        );
+        toast({
+          title: 'Already Booked',
+          description: 'You have already booked this service. You cannot book the same service twice.',
+          variant: 'destructive',
+        });
         return;
       }
     } catch (error) {
-      console.error("Error checking existing bookings:", error);
+
+      // ignore
     }
 
     setSelectedService(service);
@@ -126,14 +129,13 @@ const Availableplans = () => {
   };
 
   const filteredPlans = plans.filter(
-    (service) =>
-      (service.serviceName || "")
+    (service) => (service.serviceName || '')
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+      || (service.providerId?.name || '')
         .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (service.providerId?.name || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (service.description || "")
+        .includes(searchTerm.toLowerCase())
+      || (service.description || '')
         .toLowerCase()
         .includes(searchTerm.toLowerCase()),
   );
@@ -171,9 +173,9 @@ const Availableplans = () => {
           <button
             onClick={handleToggleView}
             className="flex items-center justify-center p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all duration-200 group min-w-[48px] min-h-[48px]"
-            title={isGridView ? "Switch to List View" : "Switch to Grid View"}
+            title={isGridView ? 'Switch to List View' : 'Switch to Grid View'}
             aria-label={
-              isGridView ? "Switch to List View" : "Switch to Grid View"
+              isGridView ? 'Switch to List View' : 'Switch to Grid View'
             }
           >
             {isGridView ? (
@@ -198,12 +200,11 @@ const Availableplans = () => {
             {filteredPlans.map((service, index) => {
               const existingBooking = Array.isArray(userBookings)
                 ? userBookings.find(
-                    (booking) =>
-                      booking.serviceId === service._id &&
-                      ["pending", "confirmed", "active"].includes(
-                        booking.bookingStatus,
-                      ),
-                  )
+                  (booking) => booking.serviceId === service._id
+                    && ['pending', 'confirmed', 'active'].includes(
+                      booking.bookingStatus,
+                    ),
+                )
                 : null;
 
               // MOBILE: condensed by default, expand on tap
@@ -220,13 +221,13 @@ const Availableplans = () => {
                   {expandedServiceId === service._id ? (
                     // Expanded "grid" view for this service with smooth transition
                     <GridCard
-                      key={service._id + "-mobile-expanded"}
+                      key={`${service._id}-mobile-expanded`}
                       service={service}
                       existingBooking={existingBooking}
                       onBook={handleBookService}
                       disableBook={service.availableSlots <= 0}
                       animationDelay={index * 100}
-                      disableFullClick={true}
+                      disableFullClick
                     />
                   ) : (
                     // Condensed card for mobile list view
@@ -234,7 +235,7 @@ const Availableplans = () => {
                       className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 animate-fade-in overflow-hidden transition-all duration-500 ease-in-out"
                       style={{
                         maxHeight:
-                          expandedServiceId === service._id ? "0" : "220px",
+                          expandedServiceId === service._id ? '0' : '220px',
                         opacity: expandedServiceId === service._id ? 0 : 1,
                       }}
                     >
@@ -244,10 +245,9 @@ const Availableplans = () => {
                           {service.serviceName}
                         </span>
                         <span
-                          className={`px-1 py-1 rounded-full text-xs font-medium ${
-                            service.serviceStatus === "active"
-                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                              : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                          className={`px-1 py-1 rounded-full text-xs font-medium ${service.serviceStatus === 'active'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
                           }`}
                         >
                           {service.serviceStatus}
@@ -262,46 +262,49 @@ const Availableplans = () => {
                           />
                           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                             {service.availableSlots}
-                            /{service.maxUsers} slots
+                            /
+                            {service.maxUsers}
+                            {' '}
+                            slots
                           </span>
                         </span>
                         <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-bold text-xl">
-                          ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
+                          ₹
+                          {((service.rentalPrice / 28) * 1.1).toFixed(2)}
                         </span>
                       </div>
                       {/* Owner & action */}
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {service.providerId?.name ||
-                            service.providerId?.username ||
-                            "Unknown"}
+                          {service.providerId?.name
+                            || service.providerId?.username
+                            || 'Unknown'}
                         </span>
-                        {existingBooking &&
-                        ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
-                          <button
-                            disabled
-                            className="px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm"
-                          >
-                            Already Booked
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleBookService(service);
-                            }}
-                            disabled={service.availableSlots <= 0}
-                            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 z-10 ${
-                              service.availableSlots > 0
-                                ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow"
-                                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            }`}
-                          >
-                            {service.availableSlots > 0
-                              ? "Book Now"
-                              : "Sold Out"}
-                          </button>
-                        )}
+                        {existingBooking
+                          && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus) ? (
+                            <button
+                              disabled
+                              className="px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm"
+                            >
+                              Already Booked
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBookService(service);
+                              }}
+                              disabled={service.availableSlots <= 0}
+                              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 z-10 ${service.availableSlots > 0
+                                ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                              }`}
+                            >
+                              {service.availableSlots > 0
+                                ? 'Book Now'
+                                : 'Sold Out'}
+                            </button>
+                          )}
                       </div>
                     </div>
                   )}
@@ -314,19 +317,18 @@ const Availableplans = () => {
             {filteredPlans.map((service, index) => {
               const existingBooking = Array.isArray(userBookings)
                 ? userBookings.find(
-                    (booking) =>
-                      booking.serviceId === service._id &&
-                      ["pending", "confirmed", "active"].includes(
-                        booking.bookingStatus,
-                      ),
-                  )
+                  (booking) => booking.serviceId === service._id
+                    && ['pending', 'confirmed', 'active'].includes(
+                      booking.bookingStatus,
+                    ),
+                )
                 : null;
 
               // Desktop/tablet: grid (full card), list (condensed)
               if (isGridView) {
                 return (
                   <GridCard
-                    key={service._id + "-desktop"}
+                    key={`${service._id}-desktop`}
                     service={service}
                     existingBooking={existingBooking}
                     onBook={handleBookService}
@@ -334,68 +336,71 @@ const Availableplans = () => {
                     animationDelay={index * 100}
                   />
                 );
-              } else {
-                // Condensed list view for desktop/tablet
-                return (
-                  <div
-                    key={service._id + "-desktop-list"}
-                    className="hidden sm:flex bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 px-6 py-4 items-start justify-between gap-x-6 mb-4 animate-fade-in transition-all duration-300 hover:shadow-xl hover:scale-[1.02] transform-gpu will-change-transform relative overflow-hidden"
-                    style={{ animationDelay: `${index * 100}ms` }}
+              }
+              // Condensed list view for desktop/tablet
+              return (
+                <div
+                  key={`${service._id}-desktop-list`}
+                  className="hidden sm:flex bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 px-6 py-4 items-start justify-between gap-x-6 mb-4 animate-fade-in transition-all duration-300 hover:shadow-xl hover:scale-[1.02] transform-gpu will-change-transform relative overflow-hidden"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Status Badge - Positioned at top-left for better visibility */}
+                  <span
+                    className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium shadow-sm z-20 ${service.serviceStatus === 'active'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                      : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                    }`}
                   >
-                    {/* Status Badge - Positioned at top-left for better visibility */}
-                    <span
-                      className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium shadow-sm z-20 ${
-                        service.serviceStatus === "active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                          : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                      }`}
-                    >
-                      {typeof service.serviceStatus === "string"
-                        ? service.serviceStatus
-                            .replace(/^[^a-zA-Z]+/, "")
-                            .trim()
-                        : service.serviceStatus}
-                    </span>
+                    {typeof service.serviceStatus === 'string'
+                      ? service.serviceStatus
+                        .replace(/^[^a-zA-Z]+/, '')
+                        .trim()
+                      : service.serviceStatus}
+                  </span>
 
-                    {/* Left Column: Title, Slots, Provider */}
-                    <div className="flex flex-col min-w-0 flex-1 gap-y-2">
-                      {/* Title at top left */}
-                      <span className="font-bold text-lg text-gray-800 dark:text-gray-100 truncate max-w-[230px]">
-                        {service.serviceName}
-                      </span>
-                      {/* Slots in middle left */}
-                      <div className="flex items-center gap-2 text-[#2bb6c4] dark:text-[#5ed1dc] font-medium">
-                        <Users
-                          size={16}
-                          className="text-gray-600 dark:text-gray-400"
-                        />
-                        <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                          {service.availableSlots}/
-                          {service.maxUsers} slots
-                        </span>
-                      </div>
-                      {/* Provider name at bottom left */}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {service.providerId?.name ||
-                          service.providerId?.username ||
-                          "Unknown"}
+                  {/* Left Column: Title, Slots, Provider */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-y-2">
+                    {/* Title at top left */}
+                    <span className="font-bold text-lg text-gray-800 dark:text-gray-100 truncate max-w-[230px]">
+                      {service.serviceName}
+                    </span>
+                    {/* Slots in middle left */}
+                    <div className="flex items-center gap-2 text-[#2bb6c4] dark:text-[#5ed1dc] font-medium">
+                      <Users
+                        size={16}
+                        className="text-gray-600 dark:text-gray-400"
+                      />
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        {service.availableSlots}
+                        /
+                        {service.maxUsers}
+                        {' '}
+                        slots
                       </span>
                     </div>
-                    {/* Right: Price and Book */}
-                    <div className="flex items-center gap-x-4 min-w-fit z-10 mt-auto mb-2">
-                      {/* Price beside book button */}
-                      <div className="flex flex-col text-right">
-                        <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-bold text-xl">
-                          ₹{((service.rentalPrice / 28) * 1.1).toFixed(2)}
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          per day
-                        </span>
-                      </div>
-                      {/* Book Button */}
-                      <div className="flex flex-col items-end justify-center">
-                        {existingBooking &&
-                        ["pending", "confirmed", "active"].includes(existingBooking.bookingStatus) ? (
+                    {/* Provider name at bottom left */}
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {service.providerId?.name
+                        || service.providerId?.username
+                        || 'Unknown'}
+                    </span>
+                  </div>
+                  {/* Right: Price and Book */}
+                  <div className="flex items-center gap-x-4 min-w-fit z-10 mt-auto mb-2">
+                    {/* Price beside book button */}
+                    <div className="flex flex-col text-right">
+                      <span className="text-[#2bb6c4] dark:text-[#5ed1dc] font-bold text-xl">
+                        ₹
+                        {((service.rentalPrice / 28) * 1.1).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        per day
+                      </span>
+                    </div>
+                    {/* Book Button */}
+                    <div className="flex flex-col items-end justify-center">
+                      {existingBooking
+                        && ['pending', 'confirmed', 'active'].includes(existingBooking.bookingStatus) ? (
                           <button
                             disabled
                             className="px-4 py-2 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed text-sm"
@@ -406,22 +411,20 @@ const Availableplans = () => {
                           <button
                             onClick={() => handleBookService(service)}
                             disabled={service.availableSlots <= 0}
-                            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 z-10 ${
-                              service.availableSlots > 0
-                                ? "bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow"
-                                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 z-10 ${service.availableSlots > 0
+                              ? 'bg-[#2bb6c4] text-white hover:bg-[#1ea1b0] dark:bg-[#1ea1b0] dark:hover:bg-[#2bb6c4] shadow'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                             }`}
                           >
                             {service.availableSlots > 0
-                              ? "Book Now"
-                              : "Sold Out"}
+                              ? 'Book Now'
+                              : 'Sold Out'}
                           </button>
                         )}
-                      </div>
                     </div>
                   </div>
-                );
-              }
+                </div>
+              );
             })}
           </div>
         </>
@@ -432,12 +435,12 @@ const Availableplans = () => {
               <Search className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-              {searchTerm ? "No matching plans found" : "No plans available"}
+              {searchTerm ? 'No matching plans found' : 'No plans available'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
               {searchTerm
-                ? "Try adjusting your search terms or browse all available plans."
-                : "Check back later for new subscription opportunities."}
+                ? 'Try adjusting your search terms or browse all available plans.'
+                : 'Check back later for new subscription opportunities.'}
             </p>
           </div>
         </div>
@@ -451,6 +454,6 @@ const Availableplans = () => {
       />
     </div>
   );
-};
+}
 
 export default Availableplans;

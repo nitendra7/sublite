@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useClerk } from '@clerk/clerk-react';
-import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
+import {
+  useNavigate, Outlet, useLocation, Link,
+} from 'react-router-dom';
 import {
   FaBook, FaMoon, FaStar, FaSun, FaHome,
-  FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus, FaQuestionCircle
+  FaWallet, FaSignOutAlt, FaBell, FaCog, FaListAlt, FaPlus, FaQuestionCircle,
+  FaBars,
 } from 'react-icons/fa';
-import { FaBars } from 'react-icons/fa';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import Sidebar from '../components/dashboard/Sidebar';
 import { useUser } from '../context/UserContext';
@@ -81,8 +83,8 @@ function Dashboard() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target) &&
-        profileButtonRef.current && !profileButtonRef.current.contains(event.target)) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)
+        && profileButtonRef.current && !profileButtonRef.current.contains(event.target)) {
         setIsProfileMenuOpen(false);
       }
     };
@@ -99,20 +101,29 @@ function Dashboard() {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await api.get(`/notifications`);
+        const response = await api.get('/notifications');
         const notifications = response.data;
-        const unreadCount = notifications.filter(n => !n.isRead).length;
+        const unreadCount = notifications.filter((n) => !n.isRead).length;
         setUnreadNotifications(unreadCount);
       } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+
+        // ignore
       }
     };
 
     fetchNotifications();
   }, []);
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
   const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to log out?")) {
+    // eslint-disable-next-line no-alert
+    if (window.confirm('Are you sure you want to log out?')) {
       await signOut();
       clearAuthData();
       navigate('/login');
@@ -121,7 +132,7 @@ function Dashboard() {
   };
 
   const handleProfileClick = () => {
-    setIsProfileMenuOpen(prevState => !prevState);
+    setIsProfileMenuOpen((prevState) => !prevState);
   };
 
   if (loading) {
@@ -132,23 +143,16 @@ function Dashboard() {
     );
   }
 
-  // Handle authentication redirect in useEffect
-  useEffect(() => {
-    if (!isAuthenticated && !loading) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, loading, navigate]);
-
-  // Show loading spinner while checking authentication
+  // Loading spinner
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500" />
       </div>
     );
   }
 
-  // Don't render anything if not authenticated (will redirect in useEffect)
+  // Render nothing if unauthenticated
   if (!isAuthenticated) {
     return null;
   }
@@ -157,7 +161,7 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden" style={{ fontFamily }}>
-      {/* Desktop/Tablet Sidebar - Hidden on Mobile */}
+      {/* Desktop Sidebar */}
       <div className="hidden md:flex">
         <Sidebar
           sidebarOpen={sidebarOpen}
@@ -170,9 +174,9 @@ function Dashboard() {
         <header
           className="relative z-10 flex items-center justify-between px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 min-h-[60px] backdrop-blur-sm -ml-px"
         >
-          {/* Left Section - Mobile Menu Button + Logo and Brand */}
+          {/* Header Left */}
           <div className="flex items-center gap-3">
-            {/* Mobile hamburger menu button - Only visible on mobile */}
+            {/* Mobile Menu Button */}
             <button
               className="md:hidden p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
               onClick={() => setMobileMenuOpen(true)}
@@ -182,22 +186,22 @@ function Dashboard() {
             </button>
 
             <Link to="/dashboard" className="flex items-center space-x-2 cursor-pointer">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+              <div className="hidden md:flex w-10 h-10 rounded-full items-center justify-center shadow-lg">
                 <img src="/logos/logo.png" alt="logo" className="w-10 h-10 rounded-full object-cover" />
               </div>
               {!isAdmin && (
-                <div className="md:hidden">
+                <div>
                   <h2 className="font-bold text-xl text-[#2bb6c4] dark:text-[#5ed1dc] tracking-wide">Sublite</h2>
                 </div>
               )}
             </Link>
           </div>
 
-          {/* Right Section - Actions and User */}
+          {/* Header Right */}
           <div className="flex items-center gap-2">
             {/* Action Buttons */}
             <div className="flex items-center gap-1">
-              {/* Settings button - only show for admin users */}
+              {/* Admin Settings */}
               {user?.isAdmin && (
                 <button
                   className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group relative"
@@ -212,7 +216,7 @@ function Dashboard() {
               <button
                 className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
                 onClick={toggleDarkMode}
-                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
                 {darkMode ? (
                   <FaSun size={20} className="group-hover:rotate-12 transition-transform duration-300" />
@@ -228,9 +232,9 @@ function Dashboard() {
                 onClick={() => navigate('/dashboard/notifications')}
               >
                 <FaBell size={20} className="group-hover:scale-110 transition-transform duration-200" />
-                {/* Notification indicator - only show if there are unread notifications */}
+                {/* Unread indicator */}
                 {unreadNotifications > 0 && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                 )}
               </button>
             </div>
@@ -303,12 +307,12 @@ function Dashboard() {
         </main>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-start md:hidden">
-          {/* Mobile Sidebar Drawer */}
+          {/* Sidebar Drawer */}
           <div className="w-72 sm:w-80 bg-white dark:bg-gray-800 h-full shadow-2xl flex flex-col">
-            {/* Header - Logo + Close */}
+            {/* Drawer Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               {/* Logo Section */}
               <div className="flex items-center space-x-3 -ml-2">
@@ -322,6 +326,7 @@ function Dashboard() {
               <button
                 className="p-2 rounded-lg text-gray-500 hover:text-[#2bb6c4] hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -329,7 +334,7 @@ function Dashboard() {
               </button>
             </div>
 
-            {/* User Section - At Top */}
+            {/* User Info */}
             <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 {/* User Avatar + Info */}
@@ -353,7 +358,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Scrollable Navigation Section */}
+            {/* Navigation */}
             <div className="flex-1 overflow-y-auto">
               {/* Navigation Links */}
               <div className="px-4 py-6">
@@ -415,14 +420,15 @@ function Dashboard() {
             </div>
 
             {/* Separator Divider */}
-            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700" />
 
-            {/* Sticky Footer */}
+            {/* Footer */}
             <div className="p-4 space-y-3">
               {/* Logout Button */}
               <button
                 onClick={async () => {
-                  if (window.confirm("Are you sure you want to log out?")) {
+                  // eslint-disable-next-line no-alert
+                  if (window.confirm('Are you sure you want to log out?')) {
                     await signOut();
                     clearAuthData();
                     // This navigate is in an onClick handler, so it's fine
@@ -455,4 +461,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
